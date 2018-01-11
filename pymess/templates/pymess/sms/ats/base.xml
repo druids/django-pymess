@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<messages>
+  <auth>
+    <name>{{ username }}</name>
+    <password>{{ password }}</password>
+  </auth>
+  {% include template_type %}
+</messages>

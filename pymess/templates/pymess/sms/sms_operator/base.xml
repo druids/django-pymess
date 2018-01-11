@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<SmsServices>
+  <DataHeader>
+    <DataType>{{ type }}</DataType>
+    <UserName>{{ username }}</UserName>
+    <Password>{{ password }}</Password>
+  </DataHeader>
+  <DataArray>
+    {% include template_type %}
+  </DataArray>
+</SmsServices>

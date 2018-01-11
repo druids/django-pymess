@@ -1,0 +1,9 @@
+<DataTemplate>
+  {% for message in messages %}
+    <DataItem>
+      <MobileTerminate>{{ message.recipient }}</MobileTerminate>
+      <Text>{{ message.content }}</Text>
+      <SmsId>{{ prefix }}{{ message.pk }}</SmsId>
+    </DataItem>
+  {% endfor %}
+</DataTemplate>

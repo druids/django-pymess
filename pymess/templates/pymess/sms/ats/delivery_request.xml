@@ -1,0 +1,3 @@
+{% for message in messages %}
+  <dlr uniq="{{ prefix }}{{ message.pk }}">{{ prefix }}{{ message.pk }}</dlr>
+{% endfor %}

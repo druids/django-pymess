@@ -1,0 +1,5 @@
+{% for message in messages %}
+  <sms type="text" uniq="{{ prefix }}{{ message.pk }}" sender="{{ sender }}" recipient="{{ message.recipient }}" opmid="{{ opmid }}"  dlr="{{ dlr }}" validity="{{ validity }}" kw="{{ kw }}"{{ extra }}>
+    <body order="0" billing="{{ billing }}">{{ content }}</body>
+  </sms>
+{% endfor %}
