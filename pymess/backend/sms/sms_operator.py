@@ -16,7 +16,7 @@ from pymess.config import settings
 
 class SMSOperatorBackend(SMSBackend):
     """
-    SMS backend that implements ATS operator service https://www.atspraha.cz/
+    SMS backend that implements ATS operator service https://www.sms-operator.cz/
     Backend supports check SMS delivery
     """
 
@@ -79,6 +79,12 @@ class SMSOperatorBackend(SMSBackend):
 
     def __init__(self):
         self.config = settings.SMS_OPERATOR_CONFIG
+
+    def _get_extra_sender_data(self):
+        return {
+            'prefix': self.config.UNIQ_PREFIX,
+            'sender_state': None
+        }
 
     def _serialize_messages(self, messages, request_type):
         """
@@ -147,12 +153,14 @@ class SMSOperatorBackend(SMSBackend):
                 'SMS operator returned SMS info about unknown uniq: {}'.format(', '.join(map(str, extra_uniq)))
             )
 
-        for uniq, ats_state in parsed_response.items():
+        for uniq, sms_operator_state in parsed_response.items():
             sms = messages_dict[uniq]
-            state = self.SMS_OPERATOR_STATES_MAPPING.get(ats_state)
+            state = self.SMS_OPERATOR_STATES_MAPPING.get(sms_operator_state)
             error = (
-                self.SMS_OPERATOR_STATES.get_label(ats_state) if state == AbstractOutputSMSMessage.STATE.ERROR else None
+                self.SMS_OPERATOR_STATES.get_label(sms_operator_state)
+                if state == AbstractOutputSMSMessage.STATE.ERROR else None
             )
+            sms.extra_sender_data['sender_state'] = sms_operator_state
             change_and_save(
                 sms,
                 state=state,

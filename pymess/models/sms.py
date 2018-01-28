@@ -1,9 +1,11 @@
+from jsonfield.fields import JSONField
+
 import six
 from phonenumber_field.modelfields import PhoneNumberField
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.template import Template, Context
 
 from chamber.models import SmartModel
@@ -28,20 +30,29 @@ class AbstractOutputSMSMessage(SmartModel):
     )
 
     sent_at = models.DateTimeField(verbose_name=_('sent at'), null=True, blank=True, editable=False)
-    sender = PhoneNumberField(verbose_name=_('sender'), null=True, blank=True, editable=False)
-    recipient = PhoneNumberField(verbose_name=_('recipient'), null=False, blank=False)
+    sender = models.CharField(verbose_name=_('sender'), null=True, blank=True, max_length=20)
+    recipient = models.CharField(verbose_name=_('recipient'), null=False, blank=False, max_length=20)
     content = models.TextField(verbose_name=_('content'), null=False, blank=False, max_length=700)
     template_slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=True, blank=True, editable=False)
+    template = models.ForeignKey(settings.SMS_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
+                                 on_delete=models.SET_NULL)
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
     backend = models.SlugField(verbose_name=_('backend'), null=False, blank=False, editable=False)
     error = models.TextField(verbose_name=_('error'), null=True, blank=True, editable=False)
+    extra_sender_data = JSONField(verbose_name=_('extra sender data'), null=True, blank=True, editable=False)
 
-    def template(self):
-        return get_object_or_none(get_sms_template_model(), slug=self.template_slug) or self.template_slug
-    template.short_description = _('template')
+    def clean_recipient(self):
+        recipient = force_text(self.recipient)
+        if recipient:
+            recipient = recipient.replace(' ', '').replace('-', '')
+            if len(recipient) == 9 and settings.SMS_DEFAULT_PHONE_CODE:
+                recipient = ''.join((settings.SMS_DEFAULT_PHONE_CODE, recipient))
+            elif len(recipient) == 14 and recipient.startswith('00'):
+                recipient = '+' + recipient[2:]
+        self.recipient = recipient
 
     def clean_content(self):
-        if not settings.USE_ACCENT:
+        if not settings.SMS_USE_ACCENT:
             self.content = six.text_type(remove_accent(six.text_type(self.content)))
 
     @property
@@ -64,11 +75,19 @@ class AbstractSMSTemplate(SmartModel):
     slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
 
-    def render(self, phone, context):
+    def render(self, recipient, context):
         return Template(self.body).render(Context(context))
 
-    def send(self, phone, context):
-        get_sms_sender().send(phone, self.render(phone, context))
+    def can_send(self, recipient, context):
+        return True
+
+    def send(self, recipient, context):
+        if self.can_send(recipient,context):
+            return get_sms_sender().send(
+                recipient, self.render(recipient, context), template_slug=self.slug, template=self
+            )
+        else:
+            return None
 
     def __str__(self):
         return self.slug

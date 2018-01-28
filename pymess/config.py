@@ -7,7 +7,7 @@ from attrdict import AttrDict
 
 DEFAULTS = {
     'OUTPUT_SMS_MODEL': None,
-    'TEST_SMS_NUMBERS': {},
+    'SMS_TEMPLATE_MODEL': None,
     'ATS_SMS_CONFIG': {
         'UNIQ_PREFIX': 'test',
         'VALIDITY': 60,
@@ -21,12 +21,13 @@ DEFAULTS = {
     },
     'SNS': {
     },
-    'USE_ACCENT': False,
+    'SMS_USE_ACCENT': False,
     'IDLE_SENDING_MESSAGES_TIMEOUT_MINUTES': 20,
     'LOG_IDLE_MESSAGES': True,
     'SMS_SENDER_BACKEND': None,
     'PUSH_SENDER_BACKEND': None,
-    'SMS_TEMPLATE_MODEL': None,
+    'SMS_DEFAULT_PHONE_CODE': None,
+    'IDLE_MESSAGES_TIMEOUT_MINUTES': 10,
 }
 
 

@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 
 from chamber.shortcuts import bulk_change_and_save, get_object_or_none, change_and_save
@@ -16,7 +17,7 @@ from pymess.config import settings
 
 class ATSSMSBackend(SMSBackend):
     """
-    SMS backend that implements ATS operator service https://www.sms-operator.cz/
+    SMS backend that implements ATS operator service https://www.atspraha.cz/
     Backend supports check SMS delivery
     """
 
@@ -110,6 +111,20 @@ class ATSSMSBackend(SMSBackend):
     def __init__(self):
         self.config = settings.ATS_SMS_CONFIG
 
+    def _get_extra_sender_data(self):
+        return {
+            'prefix': self.config.UNIQ_PREFIX,
+            'validity': self.config.VALIDITY,
+            'kw': self.config.PROJECT_KEYWORD,
+            'textid': self.config.TEXTID,
+            'sender_state': None
+        }
+
+    def _get_extra_message_kwargs(self):
+        return {
+            'sender': self.config.OUTPUT_SENDER_NUMBER,
+        }
+
     def _serialize_messages(self, messages, request_type):
         """
         Serialize SMS messages to the XML
@@ -129,9 +144,9 @@ class ATSSMSBackend(SMSBackend):
                 'validity': self.config.VALIDITY,
                 'kw': self.config.PROJECT_KEYWORD,
                 'billing': 0,
-                'extra': ' textid="{textid}"'.format(
+                'extra': mark_safe(' textid="{textid}"'.format(
                     textid=self.config.TEXTID
-                ) if self.config.TEXTID else '',
+                )) if self.config.TEXTID else '',
             }
         )
 
@@ -170,22 +185,25 @@ class ATSSMSBackend(SMSBackend):
         :param change_sms_kwargs: extra kwargs that will be stored to the message object
         """
 
-        missing_uniq = set(messages.values('pk')) - set(parsed_response.keys())
+        messages_dict = {message.pk: message for message in messages}
+
+        missing_uniq = set(messages_dict.keys()) - set(parsed_response.keys())
         if missing_uniq:
             raise self.ATSSendingError(
                 'ATS operator not returned SMS info with uniq: {}'.format(', '.join(map(str, missing_uniq)))
             )
 
-        extra_uniq = set(parsed_response.keys()) - set(messages.values('pk'))
+        extra_uniq = set(parsed_response.keys()) - set(messages_dict.keys())
         if extra_uniq:
             raise self.ATSSendingError(
                 'ATS operator returned SMS info about unknown uniq: {}'.format(', '.join(map(str, extra_uniq)))
             )
 
         for uniq, ats_state in parsed_response.items():
-            sms = messages.get(pk=uniq)
+            sms = messages_dict[uniq]
             state = self.ATS_STATES_MAPPING.get(ats_state)
             error = self.ATS_STATES.get_label(ats_state) if state == AbstractOutputSMSMessage.STATE.ERROR else None
+            sms.extra_sender_data['sender_state'] = ats_state
             change_and_save(
                 sms,
                 state=state,

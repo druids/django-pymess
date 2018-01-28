@@ -7,7 +7,7 @@ from django.utils.encoding import force_text
 
 from chamber.exceptions import PersistenceException
 
-from pymess.config import settings, get_output_sms_model
+from pymess.config import settings, get_output_sms_model, get_sms_sender, get_sms_template_model
 from pymess.models import AbstractOutputSMSMessage
 
 
@@ -30,6 +30,18 @@ class SMSBackend(object):
         """
         raise NotImplementedError
 
+    def _get_extra_sender_data(self):
+        """
+        Gets arguments that will be saved with the sms message in the extra_sender_data field
+        """
+        return {}
+
+    def _get_extra_message_kwargs(self):
+        """
+        Gets model message kwargs that will be saved with the sms message
+        """
+        return {}
+
     def create_message(self, recipient, content, **sms_attrs):
         """
         Create SMS which will be logged in the database.
@@ -43,7 +55,9 @@ class SMSBackend(object):
                 content=content,
                 backend=self.name,
                 state=self.get_initial_sms_state(recipient),
-                **sms_attrs
+                extra_sender_data=self._get_extra_sender_data(),
+                **sms_attrs,
+                **self._get_extra_message_kwargs()
             )
         except PersistenceException as ex:
             raise self.SMSSendingError(force_text(ex))
@@ -61,7 +75,7 @@ class SMSBackend(object):
         can be overridden
         :param messages: list of SMS messages
         """
-        [self._publish_message(message) for message in messages]
+        [self.publish_message(message) for message in messages]
 
     def send(self, recipient, content, **sms_attrs):
         """
@@ -70,7 +84,9 @@ class SMSBackend(object):
         :param content: text content of the message
         :param sms_attrs: extra attributes that will be stored to the message
         """
-        self._publish_message(self.create_message(recipient, content, **sms_attrs))
+        message = self.create_message(recipient, content, **sms_attrs)
+        self.publish_message(message)
+        return message
 
     def bulk_send(self, recipients, content, **sms_attrs):
         """
@@ -79,7 +95,9 @@ class SMSBackend(object):
         :param content: content of messages
         :param sms_attrs: extra attributes that will be stored with messages
         """
-        self._publish_messages([self.create_message(recipient, content, **sms_attrs) for recipient in recipients])
+        messages = [self.create_message(recipient, content, **sms_attrs) for recipient in recipients]
+        self.publish_messages(messages)
+        return messages
 
     def get_initial_sms_state(self, recipient):
         """
@@ -111,3 +129,11 @@ class SMSBackend(object):
             LOGGER.warning('{count_sms} Output SMS is more than {timeout} minutes in state "SENDING"'.format(
                 count_sms=idle_output_sms.count(), timeout=settings.IDLE_MESSAGES_TIMEOUT_MINUTES
             ))
+
+
+def send_template(recipient, slug, context):
+    return get_sms_template_model().objects.get(slug=slug).send(recipient, context)
+
+
+def send(recipient, content, **sms_attrs):
+    return self.get_sms_sender().send(recipient, content, **sms_attrs).failed
