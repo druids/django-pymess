@@ -3,15 +3,15 @@
 SMS
 ===
 
-SMS messages that is stored inside Django model class defined later, are send via SMS backend. There are implemented several SMS backends, every backed uses differend SMS service like twillio or AWS SNS. For sending SMS message you can use function ``pymess.backend.sms.send`` or ``pymwess.backend.sms.send_template``.
+SMS messages that are stored inside Django model class defined later, are sent via SMS backend. There are implemented several SMS backends, every backed uses differend SMS service like twillio or AWS SNS. For sending SMS message you can use function ``pymess.backend.sms.send`` or ``pymwess.backend.sms.send_template``.
 
 .. function:: send(recipient, content, **sms_attrs)
 
-  Function has two required attributes ``recipient`` which is phone number of the receiver and ``content``. Attribute ``content`` is text message that will be send inside the SMS body. If setting ``PYMESS_SMS_USE_ACCENT`` is set to ``False`` accent in the content will be replaced by appropriate ascii characters. The last non required attribute ``**sms_attrs`` is extra data that will be stored inside SMS message model.
+  Function has two required attributes ``recipient`` which is phone number of the receiver and ``content``. Attribute ``content`` is a text message that will be sent inside the SMS body. If setting ``PYMESS_SMS_USE_ACCENT`` is set to ``False``, accent in the content will be replaced by appropriate ascii characters. The last non required attribute ``**sms_attrs`` is extra data that will be stored inside SMS message model.
 
 .. function:: send_template(recipient, slug, context)
 
-  The second function is used for sending prepared templates that is stored inside template model (class that extends ``pymess.models.sms.AbstractSMSTemplate``. The first attribute ``recipient`` is phone nnumber of the receiver, ``slug`` is key of the template and ``context`` is dictionary that contains context data for rendering SMS content from the template.
+  The second function is used for sending prepared templates that are stored inside template model (class that extends ``pymess.models.sms.AbstractSMSTemplate``). The first attribute ``recipient`` is phone number of the receiver, ``slug`` is key of the template and ``context`` is a dictionary that contains context data for rendering SMS content from the template.
 
 Models
 ------
@@ -22,15 +22,15 @@ As mentioned above there are two abstract Django model classes that you must ext
 
   .. attribute:: created_at
 
-    Django ``DateTimeField`` contains date and time of creation.
+    Django ``DateTimeField``, contains date and time of creation.
 
   .. attribute:: changed_at
 
-    Django ``DateTimeField`` contains date and time the of last change.
+    Django ``DateTimeField``, contains date and time the of last change.
 
   .. attribute:: sent_at
 
-    Django ``DateTimeField`` contains date and time of sending the SMS message
+    Django ``DateTimeField``, contains date and time of sending the SMS message.
 
   .. attribute:: recipient
 
@@ -38,19 +38,19 @@ As mentioned above there are two abstract Django model classes that you must ext
 
   .. attribute:: sender
 
-    ``CharField`` that contains phone number of the sender. Field can be empty if backend doesn't provides sender number.
+    ``CharField`` that contains phone number of the sender. Field can be empty if backend doesn't provide sender number.
 
   .. attribute:: content
 
-    ``TextField`` contains content of the SMS message.
+    ``TextField``, contains content of the SMS message.
 
   .. attribute:: template_slug
 
-    If SMS was send from the template there is key of the template.
+    If SMS was sent from the template, this attribute cointains key of the template.
 
   .. attribute:: template
 
-    If SMS was send from the template there foreign key to the template. The reason why there is ``template_slug`` and ``template`` fields is that a template instance can be removed and it is good to keep at least the key of the template.
+    If SMS was sent from the template, this attribute contains foreign key of the template. The reason why there is ``template_slug`` and ``template`` fields is that a template instance can be removed and it is good to keep at least the key of the template.
 
   .. attribute:: state
 
@@ -60,17 +60,17 @@ As mentioned above there are two abstract Django model classes that you must ext
       * UNKNOWN - SMS was sent to the external service but its state is unknown
       * SENDING - SMS was sent to the external service
       * SENT - SMS was sent to the receiver
-      * ERROR - error was raised during sending SMS message
+      * ERROR - error was raised during sending of the SMS message
       * DEBUG - SMS was not sent because system is in debug mode
       * DELIVERED - SMS was delivered to the receiver
 
   .. attribute:: backend
 
-    Field contains path to the SMS backend that was used for sending SMS message.
+    Field contains path to the SMS backend that was used for sending of the SMS message.
 
   .. attribute:: error
 
-    If error was raised during sending SMS message this field contains text description of the error.
+    If error was raised during sending of the SMS message this field contains text description of the error.
 
   .. attirubte:: extra_data
 
@@ -90,11 +90,11 @@ Your model that extends this class is set inside setting ``PYMESS_OUTPUT_SMS_MOD
 
   .. attribute:: created_at
 
-    Django ``DateTimeField`` contains date and time of creation.
+    Django ``DateTimeField``, contains date and time of creation.
 
   .. attribute:: changed_at
 
-    Django ``DateTimeField`` contains date and time the of last change.
+    Django ``DateTimeField``, contains date and time the of last change.
 
   .. attribute:: slug
 
@@ -106,15 +106,15 @@ Your model that extends this class is set inside setting ``PYMESS_OUTPUT_SMS_MOD
 
   .. method:: render(recipient, context)
 
-    Method that render template stored inside ``body`` field to the message content. By default is used standard Django template system.
+    Method that renders template stored inside ``body`` field to the message content. Standard Django template system is used by default.
 
   .. method:: can_send(recipient, context)
 
-    Method that returns by default ``True`` value. If you can restrict sending SMS template for some reasons you can rewrite this method.
+    Method that returns by default ``True`` value. If you need to restrict sending SMS template for some reasons, you can override this method.
 
   .. method:: send(recipient, context)
 
-    Method that check if message can be send, render message content and send it via defined backend. Finally the sent message is returned. If message cannot be sent is returned ``None``.
+    Method that checks if message can be sent, renders message content and sends it via defined backend. Finally, the sent message is returned. If message cannot be sent, ``None`` is returned.
 
 Your model that extends this class is set inside setting ``PYMESS_OUTPUT_SMS_MODEL``::
 
@@ -123,11 +123,11 @@ Your model that extends this class is set inside setting ``PYMESS_OUTPUT_SMS_MOD
 Backends
 --------
 
-Backend is class that is used for sending messages. Every backend must provide defined API by ``pymess.backends.sms.SMSBackend`` class. SMS backend is configured via ``PYMESS_SMS_SENDER_BACKEND`` (ex. ``SMS_SENDER_BACKEND = 'pymess.backend.sms.sns.SNSSMSBackend'``). There are currently implemented these SMS backends:
+Backend is a class that is used for sending messages. Every backend must provide API defined by ``pymess.backends.sms.SMSBackend`` class. SMS backend is configured via ``PYMESS_SMS_SENDER_BACKEND`` (ex. ``SMS_SENDER_BACKEND = 'pymess.backend.sms.sns.SNSSMSBackend'``). There are currently implemented following SMS backends:
 
 .. class:: pymess.backend.dummy.DummySMSBackend
 
-  Backend that can be used for testing. SMS is not send but is automatically set to the ``DEBUG`` state.
+  Backend that can be used for testing. SMS is not sent, but is automatically set to the ``DEBUG`` state.
 
 .. class:: pymess.backend.sns.SNSSMSBackend
 
@@ -144,8 +144,8 @@ Backend is class that is used for sending messages. Every backend must provide d
   Configuration of attributes according to ATS operator documentation::
 
     PYMESS_ATS_SMS_CONFIG = {
-        'URL': 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',  # If you uses default URL param needn't be set
-        'UNIQ_PREFIX': 'unique-id-prefix',  # If you uses SMS service for more applications you can define this prefix and it will be added to the message ID
+        'URL': 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',  # If you use default URL param, this doesn't need to be set
+        'UNIQ_PREFIX': 'unique-id-prefix',  # If you use SMS service for more applications you can define this prefix and it will be added to the message ID
         'USERNAME': 'username',
         'PASSWORD': 'password',
         'UNIQ_PREFIX': '',
@@ -161,7 +161,7 @@ Backend is class that is used for sending messages. Every backend must provide d
   Configuration of attributes according to SMS operator documentation::
 
     PYMESS_SMS_OPERATOR_CONFIG = {
-        'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',  # If you uses default URL param needn't be set
+        'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',  # If you use default URL param, this doesn't need to be set
         'UNIQ_PREFIX': 'unique-id-prefix',  # If you uses SMS service for more applications you can define this prefix and it will be added to the message ID
          'USERNAME': 'username',
          'PASSWORD': 'password',
@@ -171,27 +171,27 @@ Backend is class that is used for sending messages. Every backend must provide d
 Custom backend
 ^^^^^^^^^^^^^^
 
-If you can write your own Pymess SMS backend you must create class that inherits from ``pymess.backends.sms.SMSBackend``::
+If you want to write your own Pymess SMS backend, you must create class that inherits from ``pymess.backends.sms.SMSBackend``::
 
 .. class pymess.backends.sms.SMSBackend
 
   .. attribute:: name
 
-    Unique string name of SMS backend. You must define this value for your backend.
+    Unique string name of the SMS backend. You must define this value for your backend.
 
   .. method:: publish_message(message)
 
-    Method should send SMS message (obtained from the input attribute) and update its state. This method must be overridden for with custom backend.
+    This method should send SMS message (obtained from the input argument) and update its state. This method must be overridden in the custom backend.
 
   .. method:: publish_messages(messages)
 
-    If your service provides sending messages in batch you can override the ``publish_messages`` method. Input attribute is messages in the list. By default is used ``publish_message`` and messages are send one by one.
+    If your service that provides sending messages in batch, you can override the ``publish_messages`` method. Input argument is a list of messages. By default, ``publish_message`` method is used for sending and messages are send one by one.
 
   .. method:: bulk_check_sms_states()
 
-    If your service provides checking SMS state you can override this methodd and implement code that check if SMS messages were delivered.
+    If your service provides checking SMS state you can override this method and implement code that check if SMS messages were delivered.
 
 Commands
 --------
 
-Becaouse some services provides checking if SMS messages was delivered Pymess provides command that call backend method ``bulk_check_sms_state``. You can use this command inside cron and periodically call it. But SMS backend and service must provide it (has implemented method ``bulk_check_sms_states``).
+Because some services provide checking if SMS messages were delivered, Pymess provides a command that calls backend method ``bulk_check_sms_state``. You can use this command inside cron and periodically call it. But SMS backend and service must provide it (must have implemented method ``bulk_check_sms_states``).

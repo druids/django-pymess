@@ -6,7 +6,7 @@ Installation
 Using PIP
 ---------
 
-Django pyston is not currently inside *PyPE* but in the future you will be able to use:
+Django pymess is not currently inside *PyPI* but in the future you will be able to use:
 
 .. code-block:: console
 
@@ -29,7 +29,7 @@ Required Settings
 
 The following variables have to be added to or edited in the project's ``settings.py``:
 
-For using pymess you just add add ``pymess`` to ``INSTALLED_APPS`` variable::
+For using pymess you just add ``pymess`` to ``INSTALLED_APPS`` variable::
 
     INSTALLED_APPS = (
         ...
@@ -42,15 +42,15 @@ Setup
 
 .. attribute:: PYMESS_OUTPUT_SMS_MODEL
 
-  Setting Django model of SMS message. Pymess only defines abstract model class of SMS message ``pymess.models.sms.AbstractOutputSMSMessage`` you must inherit this model and sets the setting that references a custom SMS model:
+  Sets Django model of SMS message. Pymess only defines abstract model class of SMS message ``pymess.models.sms.AbstractOutputSMSMessage``. You must inherit this model and set the setting that references a custom SMS model:
 
 .. attribute:: PYMESS_SMS_TEMPLATE_MODEL
 
-  Similarly to ``PYMESS_OUTPUT_SMS_MODEL`` setting if you can use SMS templates you must set this settings wwithou your custom SMS template model that extends ``pymess.models.sms.AbstractSMSTemplate``.
+  Similarly to ``PYMESS_OUTPUT_SMS_MODEL`` setting if you want to use SMS templates you must set this setting with your custom SMS template model that extends ``pymess.models.sms.AbstractSMSTemplate``.
 
 .. attribute:: PYMESS_SMS_USE_ACCENT
 
-  Setting that sets if SMS will be send with accent or not. Default value is ``False``.
+  Setting that sets if SMS will be sent with accent or not. Default value is ``False``.
 
 .. attribute:: PYMESS_LOG_IDLE_MESSAGES
 
