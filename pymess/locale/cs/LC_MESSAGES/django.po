@@ -1,0 +1,327 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-30 21:02+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+#: backend/sms/ats_sms_operator.py:42 backend/sms/sms_operator.py:59
+msgid "not found"
+msgstr "nenalezeno"
+
+#: backend/sms/ats_sms_operator.py:43
+msgid "not sent yet"
+msgstr "zatím neodeslána"
+
+#: backend/sms/ats_sms_operator.py:44 models/push_notifications.py:49
+#: models/sms.py:26
+msgid "sent"
+msgstr "odeslána"
+
+#: backend/sms/ats_sms_operator.py:45 backend/sms/sms_operator.py:41
+#: models/sms.py:29
+msgid "delivered"
+msgstr "doručena"
+
+#: backend/sms/ats_sms_operator.py:46 backend/sms/sms_operator.py:42
+msgid "not delivered"
+msgstr "nedoručena"
+
+#: backend/sms/ats_sms_operator.py:47
+msgid "not able to determine the state"
+msgstr "není možné zjistit stav"
+
+#: backend/sms/ats_sms_operator.py:49
+msgid "authentication failed"
+msgstr "ověření se nezdařilo"
+
+#: backend/sms/ats_sms_operator.py:51
+msgid "DB error"
+msgstr "chyba databáze"
+
+#: backend/sms/ats_sms_operator.py:53
+msgid "SMS is OK and ready to be sent"
+msgstr "SMS je připravena k odeslání"
+
+#: backend/sms/ats_sms_operator.py:54
+msgid "unspecified error"
+msgstr "nespecifikovaná chyba"
+
+#: backend/sms/ats_sms_operator.py:55
+msgid "one of the requests has not unique \"uniq\""
+msgstr "jeden z požadavků nemá unikátní hodnotu \"uniq\""
+
+#: backend/sms/ats_sms_operator.py:56
+msgid "SMS has not unique \"uniq\""
+msgstr "SMS nemá unikátní hodnotu \"uniq\""
+
+#: backend/sms/ats_sms_operator.py:57
+msgid "SMS lacks keyword"
+msgstr "SMS postrádá klíčové slovo"
+
+#: backend/sms/ats_sms_operator.py:58
+msgid "keyword not valid"
+msgstr "neplatné klíčové slovo"
+
+#: backend/sms/ats_sms_operator.py:59
+msgid "no sender specified"
+msgstr "není specifikován odesílatel"
+
+#: backend/sms/ats_sms_operator.py:60
+msgid "sender not valid"
+msgstr "číslo odesílatele je neplatné"
+
+#: backend/sms/ats_sms_operator.py:61
+msgid "MO PR SMS not allowed"
+msgstr "SMS typu MO PR není povolena"
+
+#: backend/sms/ats_sms_operator.py:62
+msgid "MT PR SMS not allowed"
+msgstr "SMS typu MT PR není povolena"
+
+#: backend/sms/ats_sms_operator.py:63
+msgid "MT PR SMS daily limit exceeded"
+msgstr "počet SMS typu MT PR překročen denní limit"
+
+#: backend/sms/ats_sms_operator.py:64
+msgid "MT PR SMS total limit exceeded"
+msgstr "počet SMS typu MT PR překročen celkový limit"
+
+#: backend/sms/ats_sms_operator.py:65
+msgid "geographic number is not allowed"
+msgstr "geografické číslo není povoleno"
+
+#: backend/sms/ats_sms_operator.py:66
+msgid "MT SMS to Slovakia not allowed"
+msgstr "SMS typu MT na Slovensko není povolena"
+
+#: backend/sms/ats_sms_operator.py:67
+msgid "shortcodes not allowed"
+msgstr "zkratky nejsou povoleny"
+
+#: backend/sms/ats_sms_operator.py:68
+msgid "sender is unknown"
+msgstr "odesílatel je neznámý"
+
+#: backend/sms/ats_sms_operator.py:69
+msgid "type of SMS not specified"
+msgstr "type SMS zprávny není určen"
+
+#: backend/sms/ats_sms_operator.py:70
+msgid "SMS too long"
+msgstr "text SMS je moc dlouhý"
+
+#: backend/sms/ats_sms_operator.py:71
+msgid "too many SMS parts (max. is 10)"
+msgstr "příliš mnoho částí SMS (maximum je 10)"
+
+#: backend/sms/ats_sms_operator.py:72
+msgid "wrong number of sender/receiver"
+msgstr "špatné číslo odesílatele nebo příjemce"
+
+#: backend/sms/ats_sms_operator.py:73
+msgid "recipient is missing or in wrong format"
+msgstr "číslo příjemce chybí nebo je ve špatném formátu"
+
+#: backend/sms/ats_sms_operator.py:74
+msgid "using \"textid\" is not allowed"
+msgstr "použití hodnoty \"texstid\" není povoleno"
+
+#: backend/sms/ats_sms_operator.py:75
+msgid "\"textid\" is in wrong format"
+msgstr "hodnota \"textid\" má špatný formát"
+
+#: backend/sms/ats_sms_operator.py:76
+msgid "long SMS with \"textid\" not allowed"
+msgstr "dlouhá SMS s \"textid\" není povolena"
+
+#: backend/sms/ats_sms_operator.py:78
+msgid "XML body missing"
+msgstr "chybí tělo XML zprávy"
+
+#: backend/sms/ats_sms_operator.py:79
+msgid "XML is not readable"
+msgstr "XML zpráva není validní"
+
+#: backend/sms/ats_sms_operator.py:80
+msgid "unknown HTTP method or not HTTP POST"
+msgstr "neznámá HTTP metoda"
+
+#: backend/sms/ats_sms_operator.py:81
+msgid "XML invalid"
+msgstr "XML má špatný formát"
+
+#: backend/sms/sms_operator.py:43
+msgid "number not exists"
+msgstr "číslo neexistuje"
+
+#: backend/sms/sms_operator.py:46
+msgid "timeouted"
+msgstr "vypršel čas na zpracování dotazu"
+
+#: backend/sms/sms_operator.py:47
+msgid "wrong number format"
+msgstr "špatný formát čísla"
+
+#: backend/sms/sms_operator.py:48
+msgid "another error"
+msgstr "jiná chyba"
+
+#: backend/sms/sms_operator.py:49
+msgid "event error"
+msgstr "chyba události"
+
+#: backend/sms/sms_operator.py:50
+msgid "SMS text too long"
+msgstr "text SMS je moc dlouhý"
+
+#: backend/sms/sms_operator.py:53
+msgid "partly delivered"
+msgstr "částečně doručeno"
+
+#: backend/sms/sms_operator.py:54 models/sms.py:24
+msgid "unknown"
+msgstr "stav neznámý"
+
+#: backend/sms/sms_operator.py:55
+msgid "partly delivered, partly unknown"
+msgstr "částečně doručeno, částečně neznáme"
+
+#: backend/sms/sms_operator.py:56
+msgid "partly not delivered, partly unknown"
+msgstr "částečně nedoručeno, částečně neznámé"
+
+#: backend/sms/sms_operator.py:58
+msgid "partly delivered, partly not delivered, partly unknown"
+msgstr "částečně doručeno, částečně nedoručeno, částečně neznámé"
+
+#: models/push_notifications.py:15
+msgid "user"
+msgstr "uživatel"
+
+#: models/push_notifications.py:17
+msgid "registration ID"
+msgstr "registrační ID"
+
+#: models/push_notifications.py:19
+msgid "is active"
+msgstr "je aktivní"
+
+#: models/push_notifications.py:20
+msgid "device ID"
+msgstr "ID zařízení"
+
+#: models/push_notifications.py:37
+msgid "user device"
+msgstr "zářízení uživatele"
+
+#: models/push_notifications.py:38
+msgid "user devices"
+msgstr "zařízení uživatelů"
+
+#: models/push_notifications.py:48 models/sms.py:23
+msgid "waiting"
+msgstr "čeká"
+
+#: models/push_notifications.py:50 models/push_notifications.py:59
+#: models/sms.py:27 models/sms.py:41
+msgid "error"
+msgstr "chyba"
+
+#: models/push_notifications.py:51 models/sms.py:28
+msgid "debug"
+msgstr "testovací"
+
+#: models/push_notifications.py:54
+msgid "user device ID"
+msgstr "ID zařízení uživatele"
+
+#: models/push_notifications.py:55 models/sms.py:35
+msgid "content"
+msgstr "obsah"
+
+#: models/push_notifications.py:56 models/sms.py:39
+msgid "state"
+msgstr "stav"
+
+#: models/push_notifications.py:57 models/push_notifications.py:74
+#: models/sms.py:36 models/sms.py:75
+msgid "slug"
+msgstr "slug"
+
+#: models/push_notifications.py:58 models/sms.py:40
+msgid "backend"
+msgstr "backend"
+
+#: models/push_notifications.py:63 models/sms.py:37
+msgid "template"
+msgstr "šablona"
+
+#: models/push_notifications.py:67
+msgid "push notification"
+msgstr "push notifikace"
+
+#: models/push_notifications.py:68
+msgid "push notifications"
+msgstr "push notifikace"
+
+#: models/push_notifications.py:76
+msgid "notification body"
+msgstr "obsah notifikace"
+
+#: models/push_notifications.py:89
+msgid "push notification template"
+msgstr "šablona push notifikace"
+
+#: models/push_notifications.py:90
+msgid "push notification templates"
+msgstr "šablony push notifikací"
+
+#: models/sms.py:25
+msgid "sending"
+msgstr "odesílá se"
+
+#: models/sms.py:32
+msgid "sent at"
+msgstr "odesláno v"
+
+#: models/sms.py:33
+msgid "sender"
+msgstr "odesílatel"
+
+#: models/sms.py:34
+msgid "recipient"
+msgstr "příjemce"
+
+#: models/sms.py:42
+msgid "extra sender data"
+msgstr "extra data"
+
+#: models/sms.py:67 models/sms.py:68
+msgid "output SMS"
+msgstr "odchozí SMS"
+
+#: models/sms.py:76
+msgid "message body"
+msgstr "tělo zprávy"
+
+#: models/sms.py:97
+msgid "SMS template"
+msgstr "SMS šablona"
+
+#: models/sms.py:98
+msgid "SMS templates"
+msgstr "SMS šablony"

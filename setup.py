@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from pyston.version import get_version
+from pymess.version import get_version
 
 
 setup(
@@ -10,7 +10,7 @@ setup(
     author='Lubos Matl,Oskar Hollman',
     author_email='matllubos@gmail.com',
     url='https://github.com/druids/django-pymess',
-    license='BSD',
+    license='LGPL',
     package_dir={'pymess': 'pymess'},
     include_package_data=True,
     packages=find_packages(),
