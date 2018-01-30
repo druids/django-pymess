@@ -14,6 +14,7 @@ from chamber.utils import remove_accent
 from chamber.utils.datastructures import ChoicesNumEnum
 
 from pymess.config import settings, get_sms_template_model, get_sms_sender
+from pymess.utils import normalize_phone_number
 
 
 @python_2_unicode_compatible
@@ -42,14 +43,7 @@ class AbstractOutputSMSMessage(SmartModel):
     extra_sender_data = JSONField(verbose_name=_('extra sender data'), null=True, blank=True, editable=False)
 
     def clean_recipient(self):
-        recipient = force_text(self.recipient)
-        if recipient:
-            recipient = recipient.replace(' ', '').replace('-', '')
-            if len(recipient) == 9 and settings.SMS_DEFAULT_PHONE_CODE:
-                recipient = ''.join((settings.SMS_DEFAULT_PHONE_CODE, recipient))
-            elif len(recipient) == 14 and recipient.startswith('00'):
-                recipient = '+' + recipient[2:]
-        self.recipient = recipient
+        self.recipient = normalize_phone_number(force_text(self.recipient))
 
     def clean_content(self):
         if not settings.SMS_USE_ACCENT:
