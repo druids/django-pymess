@@ -7,7 +7,7 @@
 Django-pymess's documentation
 ==============================
 
-Django-pymess is library for sending varios type of messages like: SMS, Push notifications or e-mails
+Django-pymess is a library for sending various type of messages like: SMS, Push notifications or e-mails
 
 Project Home
 ------------
