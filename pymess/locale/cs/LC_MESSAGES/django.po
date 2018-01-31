@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-30 21:02+0100\n"
+"POT-Creation-Date: 2018-01-31 13:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+#: backend/sms/__init__.py:136 backend/sms/sms_operator.py:46
+msgid "timeouted"
+msgstr "vypršel čas na zpracování dotazu"
 
 #: backend/sms/ats_sms_operator.py:42 backend/sms/sms_operator.py:59
 msgid "not found"
@@ -27,12 +31,12 @@ msgid "not sent yet"
 msgstr "zatím neodeslána"
 
 #: backend/sms/ats_sms_operator.py:44 models/push_notifications.py:49
-#: models/sms.py:26
+#: models/sms.py:27
 msgid "sent"
 msgstr "odeslána"
 
 #: backend/sms/ats_sms_operator.py:45 backend/sms/sms_operator.py:41
-#: models/sms.py:29
+#: models/sms.py:30
 msgid "delivered"
 msgstr "doručena"
 
@@ -168,10 +172,6 @@ msgstr "XML má špatný formát"
 msgid "number not exists"
 msgstr "číslo neexistuje"
 
-#: backend/sms/sms_operator.py:46
-msgid "timeouted"
-msgstr "vypršel čas na zpracování dotazu"
-
 #: backend/sms/sms_operator.py:47
 msgid "wrong number format"
 msgstr "špatný formát čísla"
@@ -192,7 +192,7 @@ msgstr "text SMS je moc dlouhý"
 msgid "partly delivered"
 msgstr "částečně doručeno"
 
-#: backend/sms/sms_operator.py:54 models/sms.py:24
+#: backend/sms/sms_operator.py:54 models/sms.py:25
 msgid "unknown"
 msgstr "stav neznámý"
 
@@ -232,16 +232,16 @@ msgstr "zářízení uživatele"
 msgid "user devices"
 msgstr "zařízení uživatelů"
 
-#: models/push_notifications.py:48 models/sms.py:23
+#: models/push_notifications.py:48 models/sms.py:24
 msgid "waiting"
 msgstr "čeká"
 
 #: models/push_notifications.py:50 models/push_notifications.py:59
-#: models/sms.py:27 models/sms.py:41
+#: models/sms.py:28 models/sms.py:42
 msgid "error"
 msgstr "chyba"
 
-#: models/push_notifications.py:51 models/sms.py:28
+#: models/push_notifications.py:51 models/sms.py:29
 msgid "debug"
 msgstr "testovací"
 
@@ -249,24 +249,24 @@ msgstr "testovací"
 msgid "user device ID"
 msgstr "ID zařízení uživatele"
 
-#: models/push_notifications.py:55 models/sms.py:35
+#: models/push_notifications.py:55 models/sms.py:36
 msgid "content"
 msgstr "obsah"
 
-#: models/push_notifications.py:56 models/sms.py:39
+#: models/push_notifications.py:56 models/sms.py:40
 msgid "state"
 msgstr "stav"
 
 #: models/push_notifications.py:57 models/push_notifications.py:74
-#: models/sms.py:36 models/sms.py:75
+#: models/sms.py:37 models/sms.py:69
 msgid "slug"
 msgstr "slug"
 
-#: models/push_notifications.py:58 models/sms.py:40
+#: models/push_notifications.py:58 models/sms.py:41
 msgid "backend"
 msgstr "backend"
 
-#: models/push_notifications.py:63 models/sms.py:37
+#: models/push_notifications.py:63 models/sms.py:38
 msgid "template"
 msgstr "šablona"
 
@@ -290,38 +290,38 @@ msgstr "šablona push notifikace"
 msgid "push notification templates"
 msgstr "šablony push notifikací"
 
-#: models/sms.py:25
+#: models/sms.py:26
 msgid "sending"
 msgstr "odesílá se"
 
-#: models/sms.py:32
+#: models/sms.py:33
 msgid "sent at"
 msgstr "odesláno v"
 
-#: models/sms.py:33
+#: models/sms.py:34
 msgid "sender"
 msgstr "odesílatel"
 
-#: models/sms.py:34
+#: models/sms.py:35
 msgid "recipient"
 msgstr "příjemce"
 
-#: models/sms.py:42
+#: models/sms.py:43
 msgid "extra sender data"
 msgstr "extra data"
 
-#: models/sms.py:67 models/sms.py:68
+#: models/sms.py:61 models/sms.py:62
 msgid "output SMS"
 msgstr "odchozí SMS"
 
-#: models/sms.py:76
+#: models/sms.py:70
 msgid "message body"
 msgstr "tělo zprávy"
 
-#: models/sms.py:97
+#: models/sms.py:91
 msgid "SMS template"
 msgstr "SMS šablona"
 
-#: models/sms.py:98
+#: models/sms.py:92
 msgid "SMS templates"
 msgstr "SMS šablony"
