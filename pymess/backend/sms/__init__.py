@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 from django.utils.encoding import force_text
+from django.utils.translation import ugettext
 
 from chamber.exceptions import PersistenceException
 
@@ -129,6 +130,11 @@ class SMSBackend(object):
             LOGGER.warning('{count_sms} Output SMS is more than {timeout} minutes in state "SENDING"'.format(
                 count_sms=idle_output_sms.count(), timeout=settings.IDLE_MESSAGES_TIMEOUT_MINUTES
             ))
+
+        if settings.SET_ERROR_TO_IDLE_MESSAGES:
+            idle_output_sms.objects.all().update(
+                state=AbstractOutputSMSMessage.STATE.ERROR, error=ugettext('timeouted')
+            )
 
 
 def send_template(recipient, slug, context):
