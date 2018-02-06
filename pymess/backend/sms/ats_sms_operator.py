@@ -171,7 +171,7 @@ class ATSSMSBackend(SMSBackend):
                 raise self.ATSSendingError(
                     'ATS operator returned invalid response status code: {}'.format(resp.status_code)
                 )
-            self._update_sms_states_from_response(messages, self._parse_response_codes(resp.text))
+            self._update_sms_states_from_response(messages, self._parse_response_codes(resp.text), **change_sms_kwargs)
         except requests.exceptions.RequestException as ex:
             raise self.ATSSendingError(
                 'ATS operator returned returned exception: {}'.format(force_text(ex))
