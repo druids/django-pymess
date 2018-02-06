@@ -132,7 +132,7 @@ class SMSBackend(object):
             ))
 
         if settings.SET_ERROR_TO_IDLE_MESSAGES:
-            idle_output_sms.objects.all().update(
+            idle_output_sms.update(
                 state=AbstractOutputSMSMessage.STATE.ERROR, error=ugettext('timeouted')
             )
 
