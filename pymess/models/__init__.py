@@ -1,2 +1,2 @@
 from .sms import *
-from .push_notifications import *
+from .emails import *

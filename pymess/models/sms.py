@@ -1,24 +1,35 @@
 from jsonfield.fields import JSONField
 
 import six
-from phonenumber_field.modelfields import PhoneNumberField
 
+from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
-from django.utils.encoding import python_2_unicode_compatible, force_text
+from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.encoding import force_text
 from django.template import Template, Context
+from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
 
 from chamber.models import SmartModel
-from chamber.shortcuts import get_object_or_none
 from chamber.utils import remove_accent
 from chamber.utils.datastructures import ChoicesNumEnum
 
-from pymess.config import settings, get_sms_template_model, get_sms_sender
+from pymess.config import settings, get_sms_sender
 from pymess.utils import normalize_phone_number
 
+from .common import RelatedObjectManager
 
-@python_2_unicode_compatible
-class AbstractOutputSMSMessage(SmartModel):
+
+__ALL__ = (
+    'OutputSMSMessage',
+    'OutputSMSRelatedObjects',
+    'AbstractSMSTemplate',
+    'AbstractEmailTemplate',
+    'SMSTemplate',
+)
+
+
+class OutputSMSMessage(SmartModel):
 
     STATE = ChoicesNumEnum(
         ('WAITING', _('waiting'), 1),
@@ -36,11 +47,13 @@ class AbstractOutputSMSMessage(SmartModel):
     content = models.TextField(verbose_name=_('content'), null=False, blank=False, max_length=700)
     template_slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=True, blank=True, editable=False)
     template = models.ForeignKey(settings.SMS_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
-                                 on_delete=models.SET_NULL)
+                                 on_delete=models.SET_NULL, related_name='output_sms_messages')
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
-    backend = models.SlugField(verbose_name=_('backend'), null=False, blank=False, editable=False)
+    backend = models.CharField(verbose_name=_('backend'), null=True, blank=True, editable=False, max_length=250)
     error = models.TextField(verbose_name=_('error'), null=True, blank=True, editable=False)
+    extra_data = JSONField(verbose_name=_('extra data'), null=True, blank=True, editable=False)
     extra_sender_data = JSONField(verbose_name=_('extra sender data'), null=True, blank=True, editable=False)
+    tag = models.SlugField(verbose_name=_('tag'), null=True, blank=True, editable=False)
 
     def clean_recipient(self):
         self.recipient = normalize_phone_number(force_text(self.recipient))
@@ -57,28 +70,54 @@ class AbstractOutputSMSMessage(SmartModel):
         return str(self.recipient)
 
     class Meta:
-        abstract = True
         verbose_name = _('output SMS')
         verbose_name_plural = _('output SMS')
         ordering = ('-created_at',)
 
 
-@python_2_unicode_compatible
+class OutputSMSRelatedObject(SmartModel):
+
+    output_sms_message = models.ForeignKey(OutputSMSMessage, verbose_name=_('output SMS message'), null=False,
+                                           blank=False, related_name='related_objects')
+    content_type = models.ForeignKey(ContentType, null=False, blank=False)
+    object_id = models.TextField(null=False, blank=False, db_index=True)
+    object_id_int = models.PositiveIntegerField(null=True, blank=True)
+
+    objects = RelatedObjectManager()
+
+
 class AbstractSMSTemplate(SmartModel):
 
     slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
 
-    def render(self, recipient, context):
-        return Template(self.body).render(Context(context))
+    def clean_body(self, context_data=None):
+        try:
+            self.render_body(context_data or {})
+        except (TemplateSyntaxError, TemplateDoesNotExist) as ex:
+            raise ValidationError(ugettext('Error during template body rendering: "{}"').format(ex))
 
-    def can_send(self, recipient, context):
+    def get_body(self):
+        return self.body
+
+    def _update_context_data(self, context_data):
+        return context_data
+
+    def render_body(self, context_data):
+        context_data = self._update_context_data(context_data)
+        return Template(self.get_body()).render(Context(context_data))
+
+    def can_send(self, recipient, context_data):
         return True
 
-    def send(self, recipient, context):
-        if self.can_send(recipient,context):
+    def send(self, recipient, context_data, related_objects=None, tag=None):
+        if self.can_send(recipient,context_data):
             return get_sms_sender().send(
-                recipient, self.render(recipient, context), template_slug=self.slug, template=self
+                recipient,
+                self.render_body(context_data),
+                template=self,
+                related_objects=related_objects,
+                tag=tag
             )
         else:
             return None
@@ -90,3 +129,7 @@ class AbstractSMSTemplate(SmartModel):
         abstract = True
         verbose_name = _('SMS template')
         verbose_name_plural = _('SMS templates')
+
+
+class SMSTemplate(AbstractSMSTemplate):
+    pass

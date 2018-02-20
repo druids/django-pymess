@@ -8,8 +8,9 @@ from django.utils.translation import ugettext
 
 from chamber.exceptions import PersistenceException
 
-from pymess.config import settings, get_output_sms_model, get_sms_sender, get_sms_template_model
-from pymess.models import AbstractOutputSMSMessage
+from pymess.config import settings, get_sms_template_model, get_sms_sender
+from pymess.models import OutputSMSMessage
+from pymess.utils import fullname
 
 
 LOGGER = logging.getLogger(__name__)
@@ -24,13 +25,6 @@ class SMSBackend(object):
     class SMSSendingError(Exception):
         pass
 
-    @property
-    def name(self):
-        """
-        Every backend must have defined unique name.
-        """
-        raise NotImplementedError
-
     def _get_extra_sender_data(self):
         """
         Gets arguments that will be saved with the sms message in the extra_sender_data field
@@ -43,7 +37,18 @@ class SMSBackend(object):
         """
         return {}
 
-    def create_message(self, recipient, content, **sms_attrs):
+    def update_message(self, message, extra_sender_data=None, **kwargs):
+        extra_sender_data = {
+            **self._get_extra_sender_data(),
+            **({} if extra_sender_data is None else extra_sender_data)
+        }
+        message.change_and_save(
+            backend=fullname(self),
+            extra_sender_data=extra_sender_data,
+            **kwargs
+        )
+
+    def create_message(self, recipient, content, related_objects, tag, template, **sms_kwargs):
         """
         Create SMS which will be logged in the database.
         :param recipient: phone number of the recipient
@@ -51,15 +56,19 @@ class SMSBackend(object):
         :param sms_attrs: extra attributes that will be saved with the message
         """
         try:
-            return get_output_sms_model().objects.create(
+            message = OutputSMSMessage.objects.create(
                 recipient=recipient,
                 content=content,
-                backend=self.name,
                 state=self.get_initial_sms_state(recipient),
-                extra_sender_data=self._get_extra_sender_data(),
-                **sms_attrs,
+                extra_data=sms_kwargs,
+                tag=tag,
+                template=template,
+                template_slug=template.slug if template else None,
                 **self._get_extra_message_kwargs()
             )
+            if related_objects:
+                message.related_objects.create_from_related_objects(*related_objects)
+            return message
         except PersistenceException as ex:
             raise self.SMSSendingError(force_text(ex))
 
@@ -78,14 +87,14 @@ class SMSBackend(object):
         """
         [self.publish_message(message) for message in messages]
 
-    def send(self, recipient, content, **sms_attrs):
+    def send(self, recipient, content, related_objects=None, tag=None, template=None, **sms_kwargs):
         """
         Send SMS with the text content to the phone number (recipient)
         :param recipient: phone number of the recipient
         :param content: text content of the message
         :param sms_attrs: extra attributes that will be stored to the message
         """
-        message = self.create_message(recipient, content, **sms_attrs)
+        message = self.create_message(recipient, content, related_objects, tag, template, **sms_kwargs)
         self.publish_message(message)
         return message
 
@@ -105,7 +114,7 @@ class SMSBackend(object):
         returns initial state for logged SMS instance.
         :param recipient: phone number of the recipient
         """
-        return AbstractOutputSMSMessage.STATE.WAITING
+        return OutputSMSMessage.STATE.WAITING
 
     def _update_sms_states(self, messages):
         """
@@ -118,28 +127,39 @@ class SMSBackend(object):
         """
         Method that find messages that is not in the final state and updates its states.
         """
-        messages_to_check = get_output_sms_model().objects.filter(state=AbstractOutputSMSMessage.STATE.SENDING)
+        messages_to_check = OutputSMSMessage.objects.filter(state=OutputSMSMessage.STATE.SENDING)
         if messages_to_check.exists():
             self._update_sms_states(messages_to_check)
 
-        idle_output_sms = get_output_sms_model().objects.filter(
-            state=AbstractOutputSMSMessage.STATE.SENDING,
-            created_at__lt=timezone.now() - timedelta(minutes=settings.IDLE_MESSAGES_TIMEOUT_MINUTES)
+        idle_output_sms = OutputSMSMessage.objects.filter(
+            state=OutputSMSMessage.STATE.SENDING,
+            created_at__lt=timezone.now() - timedelta(minutes=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES)
         )
-        if settings.LOG_IDLE_MESSAGES and idle_output_sms.exists():
+        if settings.SMS_LOG_IDLE_MESSAGES and idle_output_sms.exists():
             LOGGER.warning('{count_sms} Output SMS is more than {timeout} minutes in state "SENDING"'.format(
-                count_sms=idle_output_sms.count(), timeout=settings.IDLE_MESSAGES_TIMEOUT_MINUTES
+                count_sms=idle_output_sms.count(), timeout=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES
             ))
 
-        if settings.SET_ERROR_TO_IDLE_MESSAGES:
+        if settings.SMS_SET_ERROR_TO_IDLE_MESSAGES:
             idle_output_sms.update(
-                state=AbstractOutputSMSMessage.STATE.ERROR, error=ugettext('timeouted')
+                state=OutputSMSMessage.STATE.ERROR, error=ugettext('timeouted')
             )
 
 
-def send_template(recipient, slug, context):
-    return get_sms_template_model().objects.get(slug=slug).send(recipient, context)
+def send_template(recipient, slug, context_data, related_objects=None, tag=None):
+    return get_sms_template_model().objects.get(slug=slug).send(
+        recipient,
+        context_data,
+        related_objects=related_objects,
+        tag=tag
+    )
 
 
-def send(recipient, content, **sms_attrs):
-    return self.get_sms_sender().send(recipient, content, **sms_attrs).failed
+def send(recipient, content, related_objects=None, tag=None, **sms_attrs):
+    return get_sms_sender().send(
+        recipient,
+        content,
+        related_objects=related_objects,
+        tag=tag,
+        **sms_attrs
+    ).failed
