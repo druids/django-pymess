@@ -98,14 +98,17 @@ class SMSBackend(object):
         self.publish_message(message)
         return message
 
-    def bulk_send(self, recipients, content, **sms_attrs):
+    def bulk_send(self, recipients, content, related_objects=None, tag=None, template=None, **sms_attrs):
         """
         Send more SMS messages in one bulk
         :param recipients: list of phone numbers of recipients
         :param content: content of messages
         :param sms_attrs: extra attributes that will be stored with messages
         """
-        messages = [self.create_message(recipient, content, **sms_attrs) for recipient in recipients]
+        messages = [
+            self.create_message(recipient, content, related_objects, tag, template, **sms_attrs)
+            for recipient in recipients
+        ]
         self.publish_messages(messages)
         return messages
 
