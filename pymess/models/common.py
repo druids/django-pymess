@@ -18,4 +18,3 @@ class RelatedObjectManager(Manager):
             self.create_from_related_object(related_object)
             for related_object in related_objects
         ]
-

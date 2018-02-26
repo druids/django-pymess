@@ -38,6 +38,13 @@ class SMSBackend(object):
         return {}
 
     def update_message(self, message, extra_sender_data=None, **kwargs):
+        """
+        Method for updating state of the message after sending
+        :param message: SMS message object
+        :param extra_sender_data: extra data that will be saved to the extra_sender_data field
+        :param kwargs: changed object kwargs
+        :return:
+        """
         extra_sender_data = {
             **self._get_extra_sender_data(),
             **({} if extra_sender_data is None else extra_sender_data)
@@ -53,7 +60,11 @@ class SMSBackend(object):
         Create SMS which will be logged in the database.
         :param recipient: phone number of the recipient
         :param content: content of the SMS message
-        :param sms_attrs: extra attributes that will be saved with the message
+        :param related_objects: list of related objects that will be linked with the SMS message using generic
+        relation
+        :param tag: string mark that will be saved with the message
+        :param template: template object from which content of the message was created
+        :param sms_kwargs: extra attributes that will be saved with the message
         """
         try:
             message = OutputSMSMessage.objects.create(
@@ -92,21 +103,29 @@ class SMSBackend(object):
         Send SMS with the text content to the phone number (recipient)
         :param recipient: phone number of the recipient
         :param content: text content of the message
-        :param sms_attrs: extra attributes that will be stored to the message
+        :param related_objects: list of related objects that will be linked with the SMS message using generic
+        relation
+        :param tag: string mark that will be saved with the message
+        :param template: template object from which content of the message was create
+        :param sms_kwargs: extra attributes that will be stored to the message
         """
         message = self.create_message(recipient, content, related_objects, tag, template, **sms_kwargs)
         self.publish_message(message)
         return message
 
-    def bulk_send(self, recipients, content, related_objects=None, tag=None, template=None, **sms_attrs):
+    def bulk_send(self, recipients, content, related_objects=None, tag=None, template=None, **sms_kwargs):
         """
         Send more SMS messages in one bulk
         :param recipients: list of phone numbers of recipients
-        :param content: content of messages
-        :param sms_attrs: extra attributes that will be stored with messages
+        :param content: text content of the messages
+        :param related_objects: list of related objects that will be linked with the SMS message using generic
+        relation
+        :param tag: string mark that will be saved with the message
+        :param template: template object from which content of the message was create
+        :param sms_kwargs: extra attributes that will be stored with messages
         """
         messages = [
-            self.create_message(recipient, content, related_objects, tag, template, **sms_attrs)
+            self.create_message(recipient, content, related_objects, tag, template, **sms_kwargs)
             for recipient in recipients
         ]
         self.publish_messages(messages)
@@ -150,6 +169,16 @@ class SMSBackend(object):
 
 
 def send_template(recipient, slug, context_data, related_objects=None, tag=None):
+    """
+    Helper for building and sending SMS message from a template.
+    :param recipient: phone number of the recipient
+    :param slug: slug of a SMS template
+    :param context_data: dict of data that will be sent to the template renderer
+    :param related_objects: list of related objects that will be linked with the SMS message using generic
+        relation
+    :param tag: string mark that will be saved with the message
+    :return: SMS message object or None if template cannot be sent
+    """
     return get_sms_template_model().objects.get(slug=slug).send(
         recipient,
         context_data,
@@ -158,11 +187,20 @@ def send_template(recipient, slug, context_data, related_objects=None, tag=None)
     )
 
 
-def send(recipient, content, related_objects=None, tag=None, **sms_attrs):
+def send(recipient, content, related_objects=None, tag=None, **sms_kwargs):
+    """
+    Helper for sending SMS message.
+    :param recipient: phone number of the recipient
+    :param content: text content of the messages
+    :param related_objects:
+    :param tag: string mark that will be saved with the message
+    :param sms_kwargs: extra attributes that will be stored with messages
+    :return: True if SMS was successfully sent or False if message is in error state
+    """
     return get_sms_sender().send(
         recipient,
         content,
         related_objects=related_objects,
         tag=tag,
-        **sms_attrs
+        **sms_kwargs
     ).failed

@@ -79,16 +79,25 @@ class OutputSMSRelatedObject(SmartModel):
 
     output_sms_message = models.ForeignKey(OutputSMSMessage, verbose_name=_('output SMS message'), null=False,
                                            blank=False, related_name='related_objects')
-    content_type = models.ForeignKey(ContentType, null=False, blank=False)
-    object_id = models.TextField(null=False, blank=False, db_index=True)
-    object_id_int = models.PositiveIntegerField(null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, verbose_name=_('content type of the related object'),
+                                     null=False, blank=False)
+    object_id = models.TextField(verbose_name=_('ID of the related object'), null=False, blank=False)
+    object_id_int = models.PositiveIntegerField(verbose_name=_('ID of the related object in int format'), null=True,
+                                                blank=True, db_index=True)
 
     objects = RelatedObjectManager()
+
+    class Meta:
+        verbose_name = _('related object of a SMS message')
+        verbose_name_plural = _('related objects of SMS messages')
+        ordering = ('-created_at',)
+
 
 
 class AbstractSMSTemplate(SmartModel):
 
-    slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False)
+    slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False,
+                            db_index=True)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
 
     def clean_body(self, context_data=None):
@@ -129,6 +138,7 @@ class AbstractSMSTemplate(SmartModel):
         abstract = True
         verbose_name = _('SMS template')
         verbose_name_plural = _('SMS templates')
+        ordering = ('-created_at',)
 
 
 class SMSTemplate(AbstractSMSTemplate):

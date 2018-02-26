@@ -128,7 +128,7 @@ class ATSSMSBackend(SMSBackend):
         Serialize SMS messages to the XML
         :param messages: list of SMS messages
         :param request_type: type of the request to the ATS operator
-        :return: serialized XML message that will be send to the ATS service
+        :return: serialized XML message that will be sent to the ATS service
         """
         return render_to_string(
             self.TEMPLATES['base'], {

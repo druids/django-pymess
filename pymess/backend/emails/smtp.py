@@ -14,10 +14,6 @@ class SMTPEmailBackend(EmailBackend):
     """
 
     def publish_message(self, message):
-        """
-        Method uses SMTP client to send e-mail message
-        """
-
         email_message = EmailMultiAlternatives(
             message.subject,
             ' ',

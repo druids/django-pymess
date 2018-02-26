@@ -5,7 +5,7 @@ from pymess.config import get_email_sender
 
 class Command(BaseCommand):
     """
-    Command for seding E-mails in batch.
+    Command for sending e-mails in batch.
     """
 
     def handle(self, *args, **kwargs):

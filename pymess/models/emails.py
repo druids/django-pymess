@@ -40,7 +40,6 @@ class EmailMessage(SmartModel):
     sender_name = models.CharField(verbose_name=_('sender name'), blank=True, null=True, max_length=250)
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
     content = models.TextField(verbose_name=_('content'), null=False, blank=False)
-
     template_slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=True, blank=True, editable=False)
     template = models.ForeignKey(settings.EMAIL_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='email_messages')
@@ -53,6 +52,9 @@ class EmailMessage(SmartModel):
 
     @property
     def friendly_sender(self):
+        """
+        returns sender with sender name in standard address format if sender name was defined
+        """
         return '{} <{}>'.format(self.sender_name, self.sender) if self.sender_name else self.sender
 
     @property
@@ -69,11 +71,18 @@ class EmailRelatedObject(SmartModel):
 
     email_message = models.ForeignKey(EmailMessage, verbose_name=_('e-mail message'), null=False,
                                       blank=False, related_name='related_objects')
-    content_type = models.ForeignKey(ContentType, null=False, blank=False)
-    object_id = models.TextField(null=False, blank=False, db_index=True)
-    object_id_int = models.PositiveIntegerField(null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, verbose_name=_('content type of the related object'),
+                                     null=False, blank=False)
+    object_id = models.TextField(verbose_name=_('ID of the related object'), null=False, blank=False)
+    object_id_int = models.PositiveIntegerField(verbose_name=_('ID of the related object in int format'), null=True,
+                                                blank=True, db_index=True)
 
     objects = RelatedObjectManager()
+
+    class Meta:
+        verbose_name = _('related object of a e-mail message')
+        verbose_name_plural = _('related objects of e-mail messages')
+        ordering = ('-created_at',)
 
 
 class AttachmentManager(models.Manager):
@@ -95,7 +104,7 @@ class AttachmentManager(models.Manager):
 
 class Attachment(SmartModel):
 
-    email_message = models.ForeignKey(EmailMessage, related_name='attachments')
+    email_message = models.ForeignKey(EmailMessage, verbose_name=_('e-mail message'), related_name='attachments')
     content_type = models.CharField(verbose_name=_('content type'), blank=False, null=False, max_length=100)
     file = models.FileField(verbose_name=_('file'), null=False, blank=False, upload_to='pymess/emails')
 
@@ -111,7 +120,8 @@ class Attachment(SmartModel):
 
 class AbstractEmailTemplate(SmartModel):
 
-    slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False)
+    slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False,
+                            db_index=True)
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
     sender = models.EmailField(verbose_name=_('sender'), null=True, blank=True, max_length=200)
@@ -171,6 +181,7 @@ class AbstractEmailTemplate(SmartModel):
         abstract = True
         verbose_name = _('e-mail template')
         verbose_name_plural = _('e-mail templates')
+        ordering = ('-created_at',)
 
 
 class EmailTemplate(AbstractEmailTemplate):

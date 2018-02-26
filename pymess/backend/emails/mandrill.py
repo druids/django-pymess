@@ -16,7 +16,7 @@ from pymess.config import settings
 
 class MandrillEmailBackend(EmailBackend):
     """
-    E-mail backend implementing standard SMTP service
+    E-mail backend implementing Mandrill service (https://mandrillapp.com/api/docs/index.python.html).
     """
 
     MANDRILL_STATES = ChoicesEnum(

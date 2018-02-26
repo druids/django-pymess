@@ -19,12 +19,11 @@ DEFAULTS = {
         'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',
         'UNIQ_PREFIX': 'test',
     },
-    'SMS_SNS': {
+    'SMS_SNS_CONFIG': {
     },
     'SMS_USE_ACCENT': False,
     'SMS_DEFAULT_PHONE_CODE': None,
     'SMS_SENDER_BACKEND': 'pymess.backend.sms.dummy.DummySMSBackend',
-    'SMS_IDLE_SENDING_MESSAGES_TIMEOUT_MINUTES': 20,
     'SMS_LOG_IDLE_MESSAGES': True,
     'SMS_SET_ERROR_TO_IDLE_MESSAGES': True,
     'SMS_IDLE_MESSAGES_TIMEOUT_MINUTES': 10,
@@ -76,20 +75,35 @@ settings = Settings()
 
 
 def get_model(model_name):
+    """
+    Helper that returns django model class defined by string {app_label}.{model_name}
+    """
     return apps.get_model(*model_name.split('.'))
 
 
 def get_sms_template_model():
+    """
+    Function returns SMS template model defined in Pymess settings
+    """
     return get_model(settings.SMS_TEMPLATE_MODEL)
 
 
 def get_email_template_model():
+    """
+    Function returns e-mail template model defined in Pymess settings
+    """
     return get_model(settings.EMAIL_TEMPLATE_MODEL)
 
 
 def get_sms_sender():
+    """
+    Function returns SMS sender backend from string defined in Pymess settings
+    """
     return import_string(settings.SMS_SENDER_BACKEND)()
 
 
 def get_email_sender():
+    """
+    Function returns e-mail sender backend from string defined in Pymess settings
+    """
     return import_string(settings.EMAIL_SENDER_BACKEND)()

@@ -3,4 +3,264 @@
 E-mails
 =======
 
-In the development
+Like SMS E-mail messages are stored inside Django model class and sent via backend. Again we provide more e-mail backends, every backend uses different e-mail service like Mandrill, AWS SNS or standard SMTP. For sending e-mail message you can use function ``pymess.backend.email.send`` or ``pymwess.backend.email.send_template``.
+
+.. function:: pymess.backend.emails.send(sender, recipient, subject, content, sender_name=None, related_objects=None, attachments=None, tag=None, **email_kwargs)
+
+  Parameter ``sender`` define source e-mail address of the message, you can specify the name of the sender with optional parameter ``sender_name``.  ``recipient`` is destination e-mail address. Subject and HTML content of the e-mail message is defined with  ``subject`` and ``content`` parameters. Attribute ``related_objects`` should contain a list of objects that you want to connect with the send message (with generic relation). Optional parameter ``attachments`` should contains list of files that will be sent with the e-mail in format ``({file name}, {output stream with file content}, {content type})``.  ``tag`` is string mark which is stored with the sent SMS message . The last non required parameter ``**email_kwargs`` is extra data that will be stored inside e-mail message model in field ``extra_data``.
+
+.. function:: pymess.backend.emails.send_template(recipient, slug, context_data, related_objects=None, attachments=None, tag=None)
+
+  The second function is used for sending prepared templates that are stored inside template model (class that extends ``pymess.models.sms.AbstractEmailTemplate``). The first parameter ``recipient`` is e-mail address of the receiver, ``slug`` is key of the template, ``context_data`` is a dictionary that contains context data for rendering e-mail content from the template, ``related_objects`` should contains list of objects that you want to connect with the send message, ``attachments`` should contains list of files that will be send with the e-mail and ``tag`` is string mark which is stored with the sent SMS message.
+
+Models
+------
+
+.. class:: pymess.models.emails.EmailMessage
+
+  The model contains data of already sent e-mail messages.
+
+  .. attribute:: created_at
+
+    Django ``DateTimeField``, contains date and time of creation.
+
+  .. attribute:: changed_at
+
+    Django ``DateTimeField``, contains date and time the of last change.
+
+  .. attribute:: sent_at
+
+    Django ``DateTimeField``, contains date and time of sending the e-mail message.
+
+  .. attribute:: recipient
+
+    ``EmailField`` that contains e-mail address of the receiver.
+
+  .. attribute:: sender
+
+    ``EmailField`` that contains e-mail address of th sender.
+
+  .. attribute:: sender_name
+
+    ``CharField`` that contains readable/friendly sender name.
+
+  .. attribute:: subject
+
+    ``TextField``, contains subject of the e-mail message.
+
+  .. attribute:: content
+
+    ``TextField``, contains content of the e-mail message.
+
+  .. attribute:: template_slug
+
+    If e-mail was sent from the template, this attribute cointains key of the template.
+
+  .. attribute:: template
+
+    If e-mail was sent from the template, this attribute contains foreign key of the template. The reason why there is ``template_slug`` and ``template`` fields is that a template instance can be removed and it is good to keep at least the key of the template.
+
+  .. attribute:: state
+
+    Contains the current state of the message. Allowed states are:
+
+      * WAITING - e-mail was not sent to the external service
+      * SENDING - e-mail was sent to the external service
+      * SENT - e-mail was sent to the receiver
+      * ERROR - error was raised during sending of the e-mail message
+      * DEBUG - e-mail was not sent because system is in debug mode
+
+  .. attribute:: backend
+
+    Field contains path to the e-mail backend that was used for sending of the SMS message.
+
+  .. attribute:: error
+
+    If error was raised during sending of the SMS message this field contains text description of the error.
+
+  .. attribute:: extra_data
+
+    Extra data stored with ``JSONField``.
+
+  .. attribute:: extra_sender_data
+
+    Extra data related to the e-mail backend stored with ``JSONField``. Every SMS backend can have different extra data.
+
+  .. attribute:: tag
+
+    String tag that you can define during sending SMS message.
+
+  .. attribute:: failed
+
+    Returns ``True`` if SMS ended in ``ERROR`` state.
+
+  .. attribute:: related_objects
+
+    Returns DB manager of ``pymess.models.emails.EmailRelatedObject`` model that are related to the concrete e-mail message.
+
+
+.. class:: pymess.models.emails.EmailRelatedObject
+
+  Model for storing related objects that you can connect with the e-mail message.
+
+  .. attribute:: created_at
+
+    Django ``DateTimeField``, contains date and time of creation.
+
+  .. attribute:: changed_at
+
+    Django ``DateTimeField``, contains date and time the of last change.
+
+  .. attribute:: email_message
+
+    Foreign key to the e-mail message.
+
+  .. attribute:: content_type
+
+    Content type of the stored model (generic relation)
+
+  .. attribute:: object_id_int
+
+    If a related objects have primary key in integer format the key is stored here. This field uses db index, therefore filtering is much faster.
+
+  .. attribute:: object_id
+
+    Primary key of a related object stored in django ``TextField``.
+
+
+.. class:: pymess.models.emails.Attachment
+
+  Django model that contains e-mail attachments.
+
+  .. attribute:: created_at
+
+    Django ``DateTimeField``, contains date and time of creation.
+
+  .. attribute:: changed_at
+
+    Django ``DateTimeField``, contains date and time the of last change.
+
+  .. attribute:: email_message
+
+    Foreign key to the e-mail message.
+
+  .. attribute:: content_type
+
+    Django ``CharField``, contains content type of the attachment.
+
+  .. attribute:: file
+
+    Django ``FileField``, contains file which was send to the recipient.
+
+
+.. class:: pymess.models.emails.AbstractEmailTemplate
+
+  Abstract class of e-mail template which you can use to define your own e-mail template model. Your model that extends this class is set inside setting ``PYMESS_EMAIL_TEMPLATE_MODEL``::
+
+      PYMESS_EMAIL_TEMPLATE_MODEL = 'your_application.YourEmailTemplateModel'
+
+  .. attribute:: created_at
+
+    Django ``DateTimeField``, contains date and time of creation.
+
+  .. attribute:: changed_at
+
+    Django ``DateTimeField``, contains date and time the of last change.
+
+  .. attribute:: slug
+
+    Key of the e-mail template in the string format (Django slug).
+
+  .. attribute:: sender
+
+    ``EmailField`` that contains e-mail address of the sender.
+
+  .. attribute:: sender_name
+
+    ``CharField`` that contains readable/friendly sender name.
+
+  .. attribute:: subject
+
+    ``TextField``, contains subject of the e-mail message. Final e-mail subject is rendered with Django template system by default.
+
+  .. attribute:: body
+
+    Body of the e-mail message. Final e-mail content is rendered with Django template system by default.
+
+  .. method:: get_body()
+
+    Returns body of the model message. You can use it to update e-mail body before rendering.
+
+  .. method:: render_body(context_data)
+
+    Renders template stored inside ``body`` field to the message content. Standard Django template system is used by default.
+
+  .. method:: get_subject()
+
+    Returns subject of the model message. You can use it to update e-mail subject before rendering.
+
+  .. method:: render_subject(context_data)
+
+    Renders template stored inside ``subject`` field to the message content. Standard Django template system is used by default.
+
+  .. method:: can_send(recipient, context_data)
+
+    Returns by default ``True`` value. If you need to restrict sending e-mail template for some reasons, you can override this method.
+
+  .. method:: send(recipient, context_data, related_objects=None, tag=None, attachments=None)
+
+    Checks if message can be sent, renders message content and sends it via defined backend. Finally, the sent message is returned. If message cannot be sent, ``None`` is returned.
+
+.. class:: pymess.models.emails.EmailTemplate
+
+  Default template model class that only inherits from ``pymess.models.emails.AbstractEmailTemplate``
+
+
+Backends
+--------
+
+Backend is a class that is used for sending messages. Every backend must provide API defined by ``pymess.backends.emails.EmailBackend`` class. E-mail backend is configured via ``PYMESS_EMAIL_SENDER_BACKEND`` (ex. ``PYMESS_EMAIL_SENDER_BACKEND = 'pymess.backend.emails.smtp.SMTPEmailBackend'``). There are currently implemented following e-mail backends:
+
+.. class:: pymess.backend.emails.dummy.DummyEmailBackend
+
+  Backend that can be used for testing. E-mail is not sent, but is automatically set to the ``DEBUG`` state.
+
+.. class:: pymess.backend.emails.smtp.SMTPEmailBackend
+
+  Backend that uses standard SMTP service for sending e-mails. Configuration of SMTP is same as Django configuration.
+
+.. class:: pymess.backend.emails.mandrill.MandrillEmailBackend
+
+  Backend that uses mandrill service for sending e-mail messages (https://mandrillapp.com/api/docs/index.python.html). For this purpose you must have installed ``mandrill`` library.
+
+  Configuration of attributes according to Mandrill operator documentation (the names of the configuration are the same)::
+
+    PYMESS_EMAIL_MANDRILL_CONFIG = {
+        'KEY': '',  # Mandrill notification key
+        'HEADERS': None,
+        'TRACK_OPENS': False,
+        'TRACK_CLICKS': False,
+        'AUTO_TEXT': False,
+        'INLINE_CSS': False,
+        'URL_STRIP_QS': False,
+        'PRESERVE_RECIPIENTS': False,
+        'VIEW_CONTENT_LINK': True,
+        'ASYNC': False,
+    }
+
+
+Custom backend
+^^^^^^^^^^^^^^
+
+If you want to write your own Pymess e-mail backend, you must create class that inherits from ``pymess.backends.emails.EmailBackend``::
+
+.. class pymess.backends.sms.EmailBackend
+
+  .. method:: publish_message(message)
+
+    This method should send e-mail message (obtained from the input argument) and update its state. This method must be overridden in the custom backend.
+
+Commands
+--------
+
+As mentioned e-mails can be sent in a batch with Django command ``send_emails_batch``.

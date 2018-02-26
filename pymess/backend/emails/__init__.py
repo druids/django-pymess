@@ -15,8 +15,8 @@ LOGGER = logging.getLogger(__name__)
 
 class EmailBackend(object):
     """
-    Base class for E-mail backend containing implementation of concrete SMS service that
-    is used for sending SMS messages.
+    Base class for E-mail backend containing implementation of e-mail service that
+    is used for sending messages.
     """
 
     class EmailSendingError(Exception):
@@ -24,17 +24,24 @@ class EmailBackend(object):
 
     def _get_extra_sender_data(self):
         """
-        Gets arguments that will be saved with the sms message in the extra_sender_data field
+        Gets arguments that will be saved with the message in the extra_sender_data field.
         """
         return {}
 
     def _get_extra_message_kwargs(self):
         """
-        Gets model message kwargs that will be saved with the sms message
+        Gets model message kwargs that will be saved with the message.
         """
         return {}
 
     def update_message(self, message, extra_sender_data=None, **kwargs):
+        """
+        Method for updating state of the message after sending
+        :param message: e-mail message object
+        :param extra_sender_data: extra data that will be saved to the extra_sender_data field
+        :param kwargs: changed object kwargs
+        :return:
+        """
         extra_sender_data = {
             **self._get_extra_sender_data(),
             **({} if extra_sender_data is None else extra_sender_data)
@@ -48,10 +55,18 @@ class EmailBackend(object):
     def create_message(self, sender, sender_name, recipient, subject, content, related_objects, tag, template,
                        attachments, **email_kwargs):
         """
-        Create E-mail which will be logged in the database.
-        :param recipient: phone number of the recipient
-        :param content: content of the SMS message
-        :param sms_attrs: extra attributes that will be saved with the message
+        Create e-mail which will be logged in the database.
+        :param sender: e-mail address of the sender
+        :param sender_name: friendly name of the sender
+        :param recipient: e-mail address of the receiver
+        :param subject: subject of the e-mail message
+        :param content: content of the e-mail message
+        :param related_objects: list of related objects that will be linked with the e-mail message using generic
+        relation
+        :param tag: string mark that will be saved with the message
+        :param template: template object from which content, subject and sender of the message was created
+        :param attachments: list of files that will be sent with the message as attachments
+        :param email_kwargs: extra data that will be saved in JSON format in the extra_data model field
         """
         try:
             message = EmailMessage.objects.create(
@@ -73,12 +88,11 @@ class EmailBackend(object):
                 message.attachments.create_from_tripples(*attachments)
             return message
         except PersistenceException as ex:
-            raise ex
             raise self.EmailSendingError(force_text(ex))
 
     def publish_message(self, message):
         """
-        Place for implementation logic of sending SMS message.
+        Place for implementation logic of sending e-mail message.
         :param message: SMS message instance
         """
         raise NotImplementedError
@@ -86,10 +100,18 @@ class EmailBackend(object):
     def send(self, sender, recipient, subject, content, sender_name=None, related_objects=None, tag=None,
              template=None, attachments=None, **email_kwargs):
         """
-        Send SMS with the text content to the phone number (recipient)
-        :param recipient: phone number of the recipient
-        :param content: text content of the message
-        :param sms_attrs: extra attributes that will be stored to the message
+        Send e-mail with defined values
+        :param sender: e-mail address of the sender
+        :param recipient: e-mail address of the receiver
+        :param subject: subject of the e-mail message
+        :param content: content of the e-mail message
+        :param sender_name: friendly name of the sender
+        :param related_objects: list of related objects that will be linked with the e-mail message with generic
+            relation
+        :param tag: string mark that will be saved with the message
+        :param template: template object from which content, subject and sender was created
+        :param attachments: list of files that will be sent with the message as attachments
+        :param email_kwargs: extra data that will be saved in JSON format in the extra_data model field
         """
         message = self.create_message(
             sender, sender_name, recipient, subject, content, related_objects, tag, template, attachments, **email_kwargs
@@ -100,12 +122,15 @@ class EmailBackend(object):
 
     def get_initial_email_state(self, recipient):
         """
-        returns initial state for logged SMS instance.
-        :param recipient: phone number of the recipient
+        returns initial state for logged e-mail message.
+        :param recipient: e-mail address of the recipient
         """
         return EmailMessage.STATE.WAITING
 
     def send_batch(self):
+        """
+        Method for sending e-mails in a batch mode.
+        """
         if not settings.EMAIL_BATCH_SENDING:
             raise self.EmailSendingError('Batch sending is turned off')
 
@@ -137,6 +162,17 @@ class EmailBackend(object):
 
 
 def send_template(recipient, slug, context_data, related_objects=None, attachments=None, tag=None):
+    """
+    Helper for building and sending e-mail message from a template.
+    :param recipient: e-mail address of the receiver
+    :param slug: slug of the e-mail template
+    :param context_data: dict of data that will be sent to the template renderer
+    :param related_objects: list of related objects that will be linked with the e-mail message with generic
+        relation
+    :param attachments: list of files that will be sent with the message as attachments
+    :param tag: string mark that will be saved with the message 
+    :return: e-mail message object or None if template cannot be sent
+    """
     return get_email_template_model().objects.get(slug=slug).send(
         recipient,
         context_data,
@@ -146,7 +182,22 @@ def send_template(recipient, slug, context_data, related_objects=None, attachmen
     )
 
 
-def send(sender, recipient, subject, content, sender_name=None, related_objects=None, tag=None, **email_kwargs):
+def send(sender, recipient, subject, content, sender_name=None, related_objects=None, attachments=None, tag=None,
+         **email_kwargs):
+    """
+    Helper for sending e-mail message.
+    :param sender: e-mail address of the sender
+    :param recipient: e-mail address of the receiver
+    :param subject: subject of the e-mail message
+    :param content: content of the e-mail message
+    :param sender_name: friendly name of the sender
+    :param related_objects: list of related objects that will be linked with the e-mail message with generic
+        relation
+    :param tag: string mark that will be saved with the message
+    :param attachments: list of files that will be sent with the message as attachments
+    :param email_kwargs: extra data that will be saved in JSON format in the extra_data model field
+    :return: True if e-mail was successfully sent or False if e-mail is in error state
+    """
     return get_email_sender().send(
         sender,
         recipient,
@@ -155,5 +206,6 @@ def send(sender, recipient, subject, content, sender_name=None, related_objects=
         sender_name=sender_name,
         related_objects=related_objects,
         tag=tag,
+        attachments=attachments,
         **email_kwargs
     ).failed
