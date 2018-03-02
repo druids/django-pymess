@@ -4,11 +4,9 @@ from django.conf import settings
 from django.utils import timezone
 from django.utils.encoding import force_text
 
-from chamber.shortcuts import change_and_save
-
 from pymess.config import settings
 from pymess.backend.sms import SMSBackend
-from pymess.models import AbstractOutputSMSMessage
+from pymess.models import OutputSMSMessage
 
 
 class SNSSMSBackend(SMSBackend):
@@ -16,7 +14,6 @@ class SNSSMSBackend(SMSBackend):
     SMS backend implementing AWS SNS service via boto3 library https://aws.amazon.com/sns/
     """
 
-    name = 'sns'
     sns_client = None
 
     def _get_sns_client(self):
@@ -54,6 +51,6 @@ class SNSSMSBackend(SMSBackend):
             })
         try:
             sns_client.publish(**publish_kwargs)
-            change_and_save(message, state=AbstractOutputSMSMessage.STATE.SENT, sent_at=timezone.now())
+            self.update_message(message, state=OutputSMSMessage.STATE.SENT, sent_at=timezone.now())
         except Exception as ex:
-            change_and_save(message, state=AbstractOutputSMSMessage.STATE.ERROR, error=force_text(ex))
+            self.update_message(message, state=OutputSMSMessage.STATE.ERROR, error=force_text(ex))

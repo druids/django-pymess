@@ -25,5 +25,4 @@ Content
 
    installation
    sms
-   push
    emails

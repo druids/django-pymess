@@ -5,11 +5,10 @@ from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 
-from chamber.shortcuts import bulk_change_and_save, get_object_or_none, change_and_save
 from chamber.utils.datastructures import ChoicesNumEnum, Enum
 
 from pymess.backend.sms import SMSBackend
-from pymess.models import AbstractOutputSMSMessage
+from pymess.models import OutputSMSMessage
 from pymess.utils import logged_requests as requests
 from pymess.config import settings
 
@@ -19,8 +18,6 @@ class SMSOperatorBackend(SMSBackend):
     SMS backend that implements ATS operator service https://www.sms-operator.cz/
     Backend supports check SMS delivery
     """
-
-    name = 'sms-operator'
 
     class SMSOperatorSendingError(Exception):
         pass
@@ -60,21 +57,21 @@ class SMSOperatorBackend(SMSBackend):
     )
 
     SMS_OPERATOR_STATES_MAPPING = {
-        SMS_OPERATOR_STATES.DELIVERED: AbstractOutputSMSMessage.STATE.DELIVERED,
-        SMS_OPERATOR_STATES.NOT_DELIVERED: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.PHONE_NUMBER_NOT_EXISTS: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.TIMEOUTED: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.INVALID_PHONE_NUMBER: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.ANOTHER_ERROR: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.EVENT_ERROR: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.SMS_TEXT_TOO_LONG: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.PARTLY_DELIVERED: AbstractOutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.UNKNOWN: AbstractOutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.PARLY_DELIVERED_PARTLY_UNKNOWN: AbstractOutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN: AbstractOutputSMSMessage.STATE.SENDING,
+        SMS_OPERATOR_STATES.DELIVERED: OutputSMSMessage.STATE.DELIVERED,
+        SMS_OPERATOR_STATES.NOT_DELIVERED: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.PHONE_NUMBER_NOT_EXISTS: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.TIMEOUTED: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.INVALID_PHONE_NUMBER: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.ANOTHER_ERROR: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.EVENT_ERROR: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.SMS_TEXT_TOO_LONG: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.PARTLY_DELIVERED: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.UNKNOWN: OutputSMSMessage.STATE.SENDING,
+        SMS_OPERATOR_STATES.PARLY_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessage.STATE.SENDING,
+        SMS_OPERATOR_STATES.PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessage.STATE.SENDING,
         SMS_OPERATOR_STATES.PARTLY_DELIVERED_PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN:
-            AbstractOutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.NOT_FOUND: AbstractOutputSMSMessage.STATE.ERROR,
+            OutputSMSMessage.STATE.SENDING,
+        SMS_OPERATOR_STATES.NOT_FOUND: OutputSMSMessage.STATE.ERROR,
     }
 
     def __init__(self):
@@ -91,7 +88,7 @@ class SMSOperatorBackend(SMSBackend):
         Serialize SMS messages to the XML
         :param messages: list of SMS messages
         :param request_type: type of the request to the SMS operator
-        :return: serialized XML message that will be send to the SMS operator service
+        :return: serialized XML message that will be sent to the SMS operator service
         """
         return render_to_string(
             self.TEMPLATES['base'], {
@@ -158,10 +155,10 @@ class SMSOperatorBackend(SMSBackend):
             state = self.SMS_OPERATOR_STATES_MAPPING.get(sms_operator_state)
             error = (
                 self.SMS_OPERATOR_STATES.get_label(sms_operator_state)
-                if state == AbstractOutputSMSMessage.STATE.ERROR else None
+                if state == OutputSMSMessage.STATE.ERROR else None
             )
             sms.extra_sender_data['sender_state'] = sms_operator_state
-            change_and_save(
+            self.update_message(
                 sms,
                 state=state,
                 error=error,

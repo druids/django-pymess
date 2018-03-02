@@ -6,11 +6,10 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 
-from chamber.shortcuts import bulk_change_and_save, get_object_or_none, change_and_save
 from chamber.utils.datastructures import ChoicesNumEnum, Enum
 
 from pymess.backend.sms import SMSBackend
-from pymess.models import AbstractOutputSMSMessage
+from pymess.models import OutputSMSMessage
 from pymess.utils import logged_requests as requests
 from pymess.config import settings
 
@@ -20,8 +19,6 @@ class ATSSMSBackend(SMSBackend):
     SMS backend that implements ATS operator service https://www.atspraha.cz/
     Backend supports check SMS delivery
     """
-
-    name = 'ats-sms-operator'
 
     REQUEST_TYPES = Enum(
         'SMS',
@@ -82,31 +79,31 @@ class ATSSMSBackend(SMSBackend):
     )
 
     ATS_STATES_MAPPING = {
-        ATS_STATES.NOT_FOUND: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.NOT_SENT: AbstractOutputSMSMessage.STATE.SENDING,
-        ATS_STATES.SENT: AbstractOutputSMSMessage.STATE.SENT,
-        ATS_STATES.DELIVERED: AbstractOutputSMSMessage.STATE.DELIVERED,
-        ATS_STATES.NOT_DELIVERED: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.OK: AbstractOutputSMSMessage.STATE.SENDING,
-        ATS_STATES.UNSPECIFIED_ERROR: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.BATCH_WITH_NOT_UNIQUE_UNIQ: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SMS_NOT_UNIQUE_UNIQ: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SMS_NO_KW: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.KW_INVALID: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.NO_SENDER: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SENDER_INVALID: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.MO_PR_NOT_ALLOWED: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.MT_SK_NOT_ALLOWED: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SHORTCODES_NOT_ALLOWED: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.UNKNOWN_SENDER: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.UNSPECIFIED_SMS_TYPE: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.TOO_LONG: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.TOO_MANY_PARTS: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.WRONG_SENDER_OR_RECEIVER: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.NO_RECIPIENT_OR_WRONG_FORMAT: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.TEXTID_NOT_ALLOWED: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.WRONG_TEXTID: AbstractOutputSMSMessage.STATE.ERROR,
-        ATS_STATES.LONG_SMS_TEXTID_NOT_ALLOWED: AbstractOutputSMSMessage.STATE.ERROR,
+        ATS_STATES.NOT_FOUND: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.NOT_SENT: OutputSMSMessage.STATE.SENDING,
+        ATS_STATES.SENT: OutputSMSMessage.STATE.SENT,
+        ATS_STATES.DELIVERED: OutputSMSMessage.STATE.DELIVERED,
+        ATS_STATES.NOT_DELIVERED: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.OK: OutputSMSMessage.STATE.SENDING,
+        ATS_STATES.UNSPECIFIED_ERROR: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.BATCH_WITH_NOT_UNIQUE_UNIQ: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.SMS_NOT_UNIQUE_UNIQ: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.SMS_NO_KW: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.KW_INVALID: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.NO_SENDER: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.SENDER_INVALID: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.MO_PR_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.MT_SK_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.SHORTCODES_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.UNKNOWN_SENDER: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.UNSPECIFIED_SMS_TYPE: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.TOO_LONG: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.TOO_MANY_PARTS: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.WRONG_SENDER_OR_RECEIVER: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.NO_RECIPIENT_OR_WRONG_FORMAT: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.TEXTID_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.WRONG_TEXTID: OutputSMSMessage.STATE.ERROR,
+        ATS_STATES.LONG_SMS_TEXTID_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
     }
 
     def __init__(self):
@@ -131,7 +128,7 @@ class ATSSMSBackend(SMSBackend):
         Serialize SMS messages to the XML
         :param messages: list of SMS messages
         :param request_type: type of the request to the ATS operator
-        :return: serialized XML message that will be send to the ATS service
+        :return: serialized XML message that will be sent to the ATS service
         """
         return render_to_string(
             self.TEMPLATES['base'], {
@@ -203,9 +200,9 @@ class ATSSMSBackend(SMSBackend):
         for uniq, ats_state in parsed_response.items():
             sms = messages_dict[uniq]
             state = self.ATS_STATES_MAPPING.get(ats_state)
-            error = self.ATS_STATES.get_label(ats_state) if state == AbstractOutputSMSMessage.STATE.ERROR else None
+            error = self.ATS_STATES.get_label(ats_state) if state == OutputSMSMessage.STATE.ERROR else None
             sms.extra_sender_data['sender_state'] = ats_state
-            change_and_save(
+            self.update_message(
                 sms,
                 state=state,
                 error=error,
