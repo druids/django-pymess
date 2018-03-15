@@ -24,7 +24,7 @@ class SMTPEmailBackend(EmailBackend):
         for attachment in message.attachments.all():
             email_message.attach(
                 os.path.basename(attachment.file.name),
-                attachment.file.read(),
+                attachment.file.read().decode('utf-8'),
                 attachment.content_type,
             )
         try:
