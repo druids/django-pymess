@@ -9,7 +9,7 @@ DEFAULTS = {
     # SMS configuration
     'SMS_TEMPLATE_MODEL': 'pymess.SMSTemplate',
     'SMS_ATS_CONFIG': {
-        'UNIQ_PREFIX': 'test',
+        'UNIQ_PREFIX': '',
         'VALIDITY': 60,
         'TEXTID': None,
         'URL': 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',
@@ -17,7 +17,7 @@ DEFAULTS = {
     },
     'SMS_OPERATOR_CONFIG': {
         'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',
-        'UNIQ_PREFIX': 'test',
+        'UNIQ_PREFIX': '',
     },
     'SMS_SNS_CONFIG': {
     },

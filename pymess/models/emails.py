@@ -166,6 +166,7 @@ class AbstractEmailTemplate(SmartModel):
                 recipient,
                 self.render_subject(context_data),
                 self.render_body(context_data),
+                sender_name=self.sender_name,
                 related_objects=related_objects,
                 tag=tag,
                 template=self,

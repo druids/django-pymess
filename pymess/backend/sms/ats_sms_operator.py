@@ -115,7 +115,6 @@ class ATSSMSBackend(SMSBackend):
             'validity': self.config.VALIDITY,
             'kw': self.config.PROJECT_KEYWORD,
             'textid': self.config.TEXTID,
-            'sender_state': None
         }
 
     def _get_extra_message_kwargs(self):
@@ -201,11 +200,11 @@ class ATSSMSBackend(SMSBackend):
             sms = messages_dict[uniq]
             state = self.ATS_STATES_MAPPING.get(ats_state)
             error = self.ATS_STATES.get_label(ats_state) if state == OutputSMSMessage.STATE.ERROR else None
-            sms.extra_sender_data['sender_state'] = ats_state
             self.update_message(
                 sms,
                 state=state,
                 error=error,
+                extra_sender_data={'sender_state': ats_state}
                 **change_sms_kwargs
             )
 

@@ -80,7 +80,6 @@ class SMSOperatorBackend(SMSBackend):
     def _get_extra_sender_data(self):
         return {
             'prefix': self.config.UNIQ_PREFIX,
-            'sender_state': None
         }
 
     def _serialize_messages(self, messages, request_type):
@@ -157,11 +156,11 @@ class SMSOperatorBackend(SMSBackend):
                 self.SMS_OPERATOR_STATES.get_label(sms_operator_state)
                 if state == OutputSMSMessage.STATE.ERROR else None
             )
-            sms.extra_sender_data['sender_state'] = sms_operator_state
             self.update_message(
                 sms,
                 state=state,
                 error=error,
+                extra_sender_data={'sender_state': sms_operator_state},
                 **change_sms_kwargs
             )
 
