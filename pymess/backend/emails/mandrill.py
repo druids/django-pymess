@@ -1,6 +1,8 @@
 import os
 import base64
 
+from json import JSONDecodeError
+
 from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
@@ -75,5 +77,5 @@ class MandrillEmailBackend(EmailBackend):
             extra_sender_data['result'] = result
             self.update_message(message, state=state, sent_at=timezone.now(),
                                 extra_sender_data=extra_sender_data, error=error)
-        except mandrill.Error as ex:
+        except (mandrill.Error, JSONDecodeError) as ex:
             self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
