@@ -69,10 +69,10 @@ class EmailMessage(SmartModel):
 
 class EmailRelatedObject(SmartModel):
 
-    email_message = models.ForeignKey(EmailMessage, verbose_name=_('e-mail message'), null=False,
-                                      blank=False, related_name='related_objects')
+    email_message = models.ForeignKey(EmailMessage, verbose_name=_('e-mail message'), null=False, blank=False,
+                                      on_delete=models.CASCADE, related_name='related_objects')
     content_type = models.ForeignKey(ContentType, verbose_name=_('content type of the related object'),
-                                     null=False, blank=False)
+                                     null=False, blank=False, on_delete=models.CASCADE)
     object_id = models.TextField(verbose_name=_('ID of the related object'), null=False, blank=False)
     object_id_int = models.PositiveIntegerField(verbose_name=_('ID of the related object in int format'), null=True,
                                                 blank=True, db_index=True)
@@ -104,7 +104,8 @@ class AttachmentManager(models.Manager):
 
 class Attachment(SmartModel):
 
-    email_message = models.ForeignKey(EmailMessage, verbose_name=_('e-mail message'), related_name='attachments')
+    email_message = models.ForeignKey(EmailMessage, verbose_name=_('e-mail message'), on_delete=models.CASCADE,
+                                      related_name='attachments')
     content_type = models.CharField(verbose_name=_('content type'), blank=False, null=False, max_length=100)
     file = models.FileField(verbose_name=_('file'), null=False, blank=False, upload_to='pymess/emails')
 
