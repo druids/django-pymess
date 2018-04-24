@@ -61,6 +61,9 @@ class EmailMessage(SmartModel):
     def failed(self):
         return self.state == self.STATE.ERROR
 
+    def __str__(self):
+        return str(self.recipient)
+
     class Meta:
         verbose_name = _('e-mail message')
         verbose_name_plural = _('e-mail messages')
