@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.template import Template, Context
@@ -62,7 +63,7 @@ class EmailMessage(SmartModel):
         return self.state == self.STATE.ERROR
 
     def __str__(self):
-        return str(self.recipient)
+        return '{}: {}'.format(self.recipient, self.subject)
 
     class Meta:
         verbose_name = _('e-mail message')
@@ -79,6 +80,7 @@ class EmailRelatedObject(SmartModel):
     object_id = models.TextField(verbose_name=_('ID of the related object'), null=False, blank=False)
     object_id_int = models.PositiveIntegerField(verbose_name=_('ID of the related object in int format'), null=True,
                                                 blank=True, db_index=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     objects = RelatedObjectManager()
 
