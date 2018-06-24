@@ -6,18 +6,12 @@ Installation
 Using PIP
 ---------
 
-Django pymess is not currently inside *PyPI* but in the future you will be able to use:
+Django can use pip for installation:
 
 .. code-block:: console
 
     $ pip install django-pymess
 
-
-Because *django-pymess* is rapidly evolving framework the best way how to install it is use source from github
-
-.. code-block:: console
-
-    $ pip install https://github.com/druids/django-pymess/tarball/{{ version }}#egg=django-pymess-{{ version }}
 
 Configuration
 =============

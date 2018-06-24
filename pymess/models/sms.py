@@ -98,7 +98,7 @@ class OutputSMSRelatedObject(SmartModel):
 class AbstractSMSTemplate(SmartModel):
 
     slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False,
-                            db_index=True)
+                            primary_key=True)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
 
     def clean_body(self, context_data=None):

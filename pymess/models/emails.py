@@ -127,7 +127,7 @@ class Attachment(SmartModel):
 class AbstractEmailTemplate(SmartModel):
 
     slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False,
-                            db_index=True)
+                            primary_key=True)
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
     sender = models.EmailField(verbose_name=_('sender'), null=True, blank=True, max_length=200)
