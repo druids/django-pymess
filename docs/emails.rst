@@ -263,4 +263,17 @@ If you want to write your own Pymess e-mail backend, you must create class that 
 Commands
 --------
 
+``send_emails_batch``
+^^^^^^^^^^^^^^^^^^^^^
+
 As mentioned e-mails can be sent in a batch with Django command ``send_emails_batch``.
+
+``sync_emails``
+^^^^^^^^^^^^^^^
+
+Store e-mail body in a HTML file is better from code readability. Therefore this command updates e-mails body from HTML files store in directory. You can select the directory with command property ``directory`` or you can set directory with setting ``PYMESS_EMAIL_HTML_DATA_DIRECTORY``. E-mails body in the directory is stored like HTML file named with e-mail slug and html as a suffix.
+
+``dump_emails``
+^^^^^^^^^^^^^^^
+
+E-mail body can be changed in the database therefore reverse operation to ``sync_emails`` can be done with this command. You must select directory where e-mails body in HTML format will be stored.
