@@ -15,13 +15,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         verbosity = int(options.get('verbosity'))
-        relative_directory = args[0] if args else settings.EMAIL_HTML_DATA_DIRECTORY
-        directory = os.path.join(settings.PROJECT_DIR, relative_directory)
         if verbosity > 0:
             self.stdout.write('Syncing e-mails')
 
         files_with_email_html_body = [
-            filename for filename in os.listdir(os.path.join(directory)) if filename.endswith('.html')
+            filename for filename in os.listdir(
+                os.path.join(settings.EMAIL_HTML_DATA_DIRECTORY)
+            ) if filename.endswith('.html')
         ]
         for filename in files_with_email_html_body:
             try:
@@ -33,5 +33,5 @@ class Command(BaseCommand):
                     self.stderr.write('Template model with slug "{}" does not exists'.format(filename[:-5]))
         if verbosity > 0:
             self.stdout.write(
-                self.style.SUCCESS('Synced "{}" e-mail templates'.format(len(files_with_email_html_body))), 4
+                self.style.SUCCESS('Synced "{}" e-mail templates'.format(len(files_with_email_html_body)))
             )

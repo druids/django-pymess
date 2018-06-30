@@ -14,11 +14,12 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser):
-        parser.add_argument('directory', nargs='?')
+        parser.add_argument('--directory', dest='directory', type=str, required=True)
         parser.add_argument('--indent', default=0, dest='indent', type=int,
                             help='Specifies the indent level to use when pretty-printing output')
 
     def dump_template_model(self, directory, indent):
+        print(directory)
         EmailTemplate = get_email_template_model()
         if EmailTemplate.objects.exists():
             emails_directory = os.path.join(directory)
@@ -26,7 +27,7 @@ class Command(BaseCommand):
                 os.makedirs(emails_directory)
             data = serializers.serialize('python', EmailTemplate.objects.all())
             for obj in data:
-                with codecs.open(os.path.join(emails_directory, '{}.html'.format(obj['slug'])), 'w',
+                with codecs.open(os.path.join(emails_directory, '{}.html'.format(obj['pk'])), 'w',
                                  encoding='utf-8-sig') as file:
                     file.write(obj['fields']['body'])
                     del obj['fields']['body']
