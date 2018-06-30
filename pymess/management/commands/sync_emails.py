@@ -18,10 +18,9 @@ class Command(BaseCommand):
         if verbosity > 0:
             self.stdout.write('Syncing e-mails')
 
+        directory = os.path.join(settings.EMAIL_HTML_DATA_DIRECTORY)
         files_with_email_html_body = [
-            filename for filename in os.listdir(
-                os.path.join(settings.EMAIL_HTML_DATA_DIRECTORY)
-            ) if filename.endswith('.html')
+            filename for filename in os.listdir(directory) if filename.endswith('.html')
         ]
         for filename in files_with_email_html_body:
             try:
