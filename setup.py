@@ -26,6 +26,7 @@ setup(
     install_requires=[
         'django>=1.8',
         'django-chamber>=0.3.7',
+        'attrdict>=2.0.0',
     ],
     dependency_links=[
         'https://github.com/druids/django-chamber/tarball/0.3.7#egg=django-chamber-0.3.7'
