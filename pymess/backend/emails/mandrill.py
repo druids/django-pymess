@@ -12,6 +12,7 @@ import mandrill
 from pymess.backend.emails import EmailBackend
 from pymess.models import EmailMessage
 from pymess.config import settings
+from pymess.utils.logged_requests import generate_session
 
 
 class MandrillEmailBackend(EmailBackend):
@@ -45,7 +46,8 @@ class MandrillEmailBackend(EmailBackend):
         ]
 
     def publish_message(self, message):
-        mandrill_client = mandrill.Mandrill(settings.EMAIL_MANDRILL.KEY)
+        mandrill_client = mandrill.Mandrill(settings.EMAIL_MANDRILL.KEY + 'ddd')
+        mandrill_client.session = generate_session(slug='pymess - Mandrill', related_objects=(message,))
         try:
             result = mandrill_client.messages.send(
                 message={
