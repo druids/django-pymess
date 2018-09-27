@@ -155,8 +155,8 @@ class EmailBackend(object):
                 Q(state=EmailMessage.STATE.WAITING) |
                 Q(
                     state=EmailMessage.STATE.ERROR,
-                    send_attempts_count__lte=settings.EMAIL_SEND_ATTEMPTS_COUNT,
-                    created_at__gte=now() - timedelta(seconds=settings.EMAIL_MAX_SECONDS_TO_SEND)
+                    number_of_send_attempts__lte=settings.EMAIL_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS,
+                    created_at__gte=now() - timedelta(seconds=settings.EMAIL_BATCH_MAX_SECONDS_TO_SEND)
                 )
             ).order_by('created_at')[:settings.EMAIL_BATCH_SIZE]
             for message in messages_to_send:

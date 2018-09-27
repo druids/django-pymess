@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='emailmessage',
-            name='send_attempts_count',
-            field=models.PositiveIntegerField(default=0, verbose_name='number send attempts'),
+            name='number_of_send_attempts',
+            field=models.PositiveIntegerField(default=0, verbose_name='number of send attempts'),
         ),
     ]

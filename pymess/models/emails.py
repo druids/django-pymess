@@ -50,8 +50,8 @@ class EmailMessage(SmartModel):
     extra_data = JSONField(verbose_name=_('extra data'), null=True, blank=True, editable=False)
     extra_sender_data = JSONField(verbose_name=_('extra sender data'), null=True, blank=True, editable=False)
     tag = models.SlugField(verbose_name=_('tag'), null=True, blank=True, editable=False)
-    send_attempts_count = models.PositiveIntegerField(verbose_name=_('number send attempts'), null=False, blank=False,
-                                                      default=0)
+    number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
+                                                          blank=False, default=0)
 
     @property
     def friendly_sender(self):
