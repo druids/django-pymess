@@ -1,6 +1,10 @@
 import os
 import base64
 
+import requests
+
+from json.decoder import JSONDecodeError
+
 from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
@@ -12,6 +16,7 @@ import mandrill
 from pymess.backend.emails import EmailBackend
 from pymess.models import EmailMessage
 from pymess.config import settings
+from pymess.utils.logged_requests import generate_session
 
 
 class MandrillEmailBackend(EmailBackend):
@@ -46,6 +51,7 @@ class MandrillEmailBackend(EmailBackend):
 
     def publish_message(self, message):
         mandrill_client = mandrill.Mandrill(settings.EMAIL_MANDRILL.KEY)
+        mandrill_client.session = generate_session(slug='pymess - Mandrill', related_objects=(message,))
         try:
             result = mandrill_client.messages.send(
                 message={
@@ -74,6 +80,8 @@ class MandrillEmailBackend(EmailBackend):
             extra_sender_data = message.extra_sender_data or {}
             extra_sender_data['result'] = result
             self.update_message(message, state=state, sent_at=timezone.now(),
-                                extra_sender_data=extra_sender_data, error=error)
-        except mandrill.Error as ex:
-            self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
+                                extra_sender_data=extra_sender_data, error=error,
+                                send_attempts_count=message.send_attempts_count + 1)
+        except (mandrill.Error, JSONDecodeError, requests.exceptions.RequestException) as ex:
+            self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex),
+                                send_attempts_count=message.send_attempts_count + 1)

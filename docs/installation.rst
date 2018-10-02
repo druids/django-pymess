@@ -96,6 +96,14 @@ E-MAIL
 
   Defines maximum number of e-mails that are sent with command ``send_emails_batch``.
 
+.. attribute:: PYMESS_EMAIL_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
+
+  Defines maximum number of attempts for sending one e-mail message. Default value is ``3``.
+
+.. attribute:: PYMESS_EMAIL_BATCH_MAX_SECONDS_TO_SEND
+
+  Defines maximum number of seconds to try to send an e-mail message that ended in an ``ERROR`` state. Default value is ``60 * 60`` (1 hour).
+
 .. attribute:: PYMESS_EMAIL_MANDRILL
 
   Configuration of ``pymess.backend.email.mandrill.MandrillEmailBackend``.

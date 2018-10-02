@@ -1,6 +1,10 @@
 import logging
 
+from datetime import timedelta
+
+from django.db.models import Q
 from django.utils.encoding import force_text
+from django.utils.timezone import now
 
 from chamber.exceptions import PersistenceException
 
@@ -147,10 +151,15 @@ class EmailBackend(object):
         sent = 0
 
         try:
-            waiting_emails_qs = EmailMessage.objects.filter(
-                state=EmailMessage.STATE.WAITING
+            messages_to_send = EmailMessage.objects.filter(
+                Q(state=EmailMessage.STATE.WAITING) |
+                Q(
+                    state=EmailMessage.STATE.ERROR,
+                    number_of_send_attempts__lte=settings.EMAIL_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS,
+                    created_at__gte=now() - timedelta(seconds=settings.EMAIL_BATCH_MAX_SECONDS_TO_SEND)
+                )
             ).order_by('created_at')[:settings.EMAIL_BATCH_SIZE]
-            for message in waiting_emails_qs:
+            for message in messages_to_send:
                 self.publish_message(message)
                 sent += 1
         finally:

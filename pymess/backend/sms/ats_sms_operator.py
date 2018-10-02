@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
 
+import requests
+
 from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
@@ -10,7 +12,7 @@ from chamber.utils.datastructures import ChoicesNumEnum, Enum
 
 from pymess.backend.sms import SMSBackend
 from pymess.models import OutputSMSMessage
-from pymess.utils import logged_requests as requests
+from pymess.utils.logged_requests import generate_session
 from pymess.config import settings
 
 
@@ -156,12 +158,10 @@ class ATSSMSBackend(SMSBackend):
         """
         requests_xml = self._serialize_messages(messages, request_type)
         try:
-            resp = requests.post(
+            resp = generate_session(slug='pymess - ATS SMS', related_objects=list(messages)).post(
                 self.config.URL,
                 data=requests_xml,
-                headers={'Content-Type': 'text/xml'},
-                slug='ATS SMS',
-                related_objects=list(messages)
+                headers={'Content-Type': 'text/xml'}
             )
             if resp.status_code != 200:
                 raise self.ATSSendingError(
