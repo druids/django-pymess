@@ -1,20 +1,10 @@
-import logging
-
-from datetime import timedelta
-
-from django.db.models import Q
 from django.utils.encoding import force_text
-from django.utils.timezone import now
 
 from chamber.exceptions import PersistenceException
 
 from pymess.config import get_email_template_model, get_email_sender, settings
 from pymess.models import EmailMessage
 from pymess.utils import fullname
-from pymess.lockfile import FileLock, AlreadyLocked, LockTimeout
-
-
-LOGGER = logging.getLogger(__name__)
 
 
 class EmailBackend(object):
@@ -53,6 +43,7 @@ class EmailBackend(object):
         message.change_and_save(
             backend=fullname(self),
             extra_sender_data=extra_sender_data,
+            number_of_send_attempts=message.number_of_send_attempts + 1
             **kwargs
         )
 
@@ -130,44 +121,6 @@ class EmailBackend(object):
         :param recipient: e-mail address of the recipient
         """
         return EmailMessage.STATE.WAITING
-
-    def send_batch(self):
-        """
-        Method for sending e-mails in a batch mode.
-        """
-        if not settings.EMAIL_BATCH_SENDING:
-            raise self.EmailSendingError('Batch sending is turned off')
-
-        lock = FileLock(settings.EMAIL_BATCH_LOCK_FILE)
-        try:
-            lock.acquire(settings.EMAIL_BATCH_LOCK_WAIT_TIMEOUT)
-        except AlreadyLocked:
-            logging.debug("lock already in place. quitting.")
-            return
-        except LockTimeout:
-            logging.debug("waiting for the lock timed out. quitting.")
-            return
-
-        sent = 0
-
-        try:
-            messages_to_send = EmailMessage.objects.filter(
-                Q(state=EmailMessage.STATE.WAITING) |
-                Q(
-                    state=EmailMessage.STATE.ERROR,
-                    number_of_send_attempts__lte=settings.EMAIL_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS,
-                    created_at__gte=now() - timedelta(seconds=settings.EMAIL_BATCH_MAX_SECONDS_TO_SEND)
-                )
-            ).order_by('created_at')[:settings.EMAIL_BATCH_SIZE]
-            for message in messages_to_send:
-                self.publish_message(message)
-                sent += 1
-        finally:
-            logging.debug("releasing lock...")
-            lock.release()
-            logging.debug("released.")
-
-        logging.info("{} e-mail sent".format(sent))
 
 
 def send_template(recipient, slug, context_data, related_objects=None, attachments=None, tag=None):
