@@ -29,8 +29,6 @@ class SMTPEmailBackend(EmailBackend):
             )
         try:
             email_message.send()
-            self.update_message(message, state=EmailMessage.STATE.SENT, sent_at=timezone.now(),
-                                send_attempts_count=message.send_attempts_count + 1)
+            self.update_message(message, state=EmailMessage.STATE.SENT, sent_at=timezone.now())
         except Exception as ex:
-            self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex),
-                                send_attempts_count=message.send_attempts_count + 1)
+            self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
