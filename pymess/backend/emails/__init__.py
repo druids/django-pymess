@@ -43,7 +43,7 @@ class EmailBackend(object):
         message.change_and_save(
             backend=fullname(self),
             extra_sender_data=extra_sender_data,
-            number_of_send_attempts=message.number_of_send_attempts + 1
+            number_of_send_attempts=message.number_of_send_attempts + 1,
             **kwargs
         )
 
