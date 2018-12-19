@@ -50,6 +50,13 @@ DEFAULTS = {
     'EMAIL_BATCH_MAX_SECONDS_TO_SEND': 60 * 60,
     'EMAIL_SENDERS': (),
     'EMAIL_HTML_DATA_DIRECTORY': None,
+
+    # Dialer configuration
+    'DIALER_TEMPLATE_MODEL': 'pymess.DialerTemplate',
+    'DIALER_SENDER_BACKEND': 'pymess.backend.dialer.dummy.DummyDialerBackend',
+    'DIALER_API_ACCESS_TOKEN':  None,
+    'DIALER_API_QUEUE': None,
+    'DIALER_API_URL': None,
 }
 
 
@@ -110,3 +117,17 @@ def get_email_sender():
     Function returns e-mail sender backend from string defined in Pymess settings
     """
     return import_string(settings.EMAIL_SENDER_BACKEND)()
+
+
+def get_dialer_template_model():
+    """
+    Function returns dialer template model defined in Pymess settings
+    """
+    return get_model(settings.DIALER_TEMPLATE_MODEL)
+
+
+def get_dialer_sender():
+    """
+    Function returns dialer sender backend from string defined in Pymess settings
+    """
+    return import_string(settings.DIALER_SENDER_BACKEND)()

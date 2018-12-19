@@ -167,7 +167,7 @@ class AbstractEmailTemplate(SmartModel):
     def _update_context_data(self, context_data):
         return context_data
 
-    def send(self, recipient, context_data, related_objects=None, tag=None, attachments=None):
+    def send(self, recipient, context_data, related_objects=None, tag=None, attachments=None, **kwargs):
         if self.can_send(recipient, context_data):
             return get_email_sender().send(
                 self.sender,

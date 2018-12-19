@@ -17,6 +17,61 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+#: backend/__init__.py:11
+msgid "self.model cannot be None"
+msgstr "self.model nesmí být None"
+
+#: backend/__init__.py:128
+msgid "template_model cannot be None"
+msgstr "template_model nesmí být None"
+
+#: backend/dialer/daktela.py:18 models/dialer.py:30
+msgid "not assigned"
+msgstr "nepřiřazeno"
+
+#: backend/dialer/daktela.py:19 models/dialer.py:31
+msgid "ready"
+msgstr "připraveno"
+
+#: backend/dialer/daktela.py:20 models/dialer.py:32
+msgid "rescheduled by dialer"
+msgstr "naplánováno volajícím"
+
+#: backend/dialer/daktela.py:21 models/dialer.py:33
+msgid "call in progress"
+msgstr "probíhající hovor"
+
+#: backend/dialer/daktela.py:22 models/dialer.py:34
+msgid "hangup"
+msgstr "zavěšeno"
+
+#: backend/dialer/daktela.py:23 models/dialer.py:35
+msgid "done"
+msgstr "dokončen"
+
+#: backend/dialer/daktela.py:24 models/dialer.py:36
+msgid "rescheduled"
+msgstr "naplánováno"
+
+#: backend/dialer/daktela.py:25 models/dialer.py:37
+msgid "listened up complete message"
+msgstr "vyslechnuta celá zpráva"
+
+#: backend/dialer/daktela.py:26 models/dialer.py:38
+msgid "listened up partial message"
+msgstr "nevyslechnuta celá zpráva"
+
+#: backend/dialer/daktela.py:27 models/dialer.py:39
+msgid "unreachable"
+msgstr "nedostupné číslo"
+
+#: backend/dialer/daktela.py:28 models/dialer.py:40
+msgid "declined"
+msgstr "odmítnuto"
+
+#: backend/dialer/daktela.py:29 models/dialer.py:41
+msgid "unanswered"
+msgstr "volaný nezvedá"
 
 #: backend/emails/mandrill.py:28 backend/sms/ats_sms_operator.py:43
 #: models/emails.py:33 models/sms.py:39
@@ -233,6 +288,13 @@ msgid "sending"
 msgstr "odesílá se"
 
 #: models/emails.py:34 models/emails.py:49 models/sms.py:40 models/sms.py:54
+#: models/dialer.py:28
+msgid "in progress"
+msgstr "probíhá"
+
+#: models/dialer.py:31
+msgid "closed"
+msgstr "zavřeno"
 msgid "error"
 msgstr "chyba"
 
@@ -291,6 +353,30 @@ msgstr "extra data odesílatele"
 #: models/emails.py:52 models/sms.py:57
 msgid "tag"
 msgstr "tag"
+
+#: models/dialer.py:64
+msgid "dialer message"
+msgstr "navolávání"
+
+#: models/dialer.py:65
+msgid "dialer messages"
+msgstr "navolávání"
+
+#: models/dialer.py:97
+msgid "related object of a dialer message"
+msgstr "vztažený objekt zprávy dialeru"
+
+#: models/dialer.py:98
+msgid "related objects of dialer messages"
+msgstr "vztažené typy zpráv dialeru"
+
+#: models/dialer.py:144
+msgid "dialer template"
+msgstr "šablona navolávání"
+
+#: models/dialer.py:145
+msgid "dialer templates"
+msgstr "šablony navolávání"
 
 #: models/emails.py:53
 msgid "number of send attempts"
