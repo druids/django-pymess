@@ -68,3 +68,4 @@ class TwilioSMSBackend(SMSBackend):
             )
         except Exception as ex:
             self.update_message(message, state=OutputSMSMessage.STATE.ERROR, error=force_text(ex))
+            raise ex

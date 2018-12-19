@@ -32,3 +32,4 @@ class SMTPEmailBackend(EmailBackend):
             self.update_message(message, state=EmailMessage.STATE.SENT, sent_at=timezone.now())
         except Exception as ex:
             self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
+            raise ex
