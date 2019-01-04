@@ -2,31 +2,21 @@ from django.utils.encoding import force_text
 
 from chamber.exceptions import PersistenceException
 
+from pymess.backend import BaseBackend, send_template as _send_template, send as _send
 from pymess.config import get_email_template_model, get_email_sender, settings
 from pymess.models import EmailMessage
-from pymess.utils import fullname
 
 
-class EmailBackend(object):
+class EmailBackend(BaseBackend):
     """
     Base class for E-mail backend containing implementation of e-mail service that
     is used for sending messages.
     """
 
+    model = EmailMessage
+
     class EmailSendingError(Exception):
         pass
-
-    def _get_extra_sender_data(self):
-        """
-        Gets arguments that will be saved with the message in the extra_sender_data field.
-        """
-        return {}
-
-    def _get_extra_message_kwargs(self):
-        """
-        Gets model message kwargs that will be saved with the message.
-        """
-        return {}
 
     def update_message(self, message, extra_sender_data=None, **kwargs):
         """
@@ -36,19 +26,15 @@ class EmailBackend(object):
         :param kwargs: changed object kwargs
         :return:
         """
-        extra_sender_data = {
-            **self._get_extra_sender_data(),
-            **({} if extra_sender_data is None else extra_sender_data)
-        }
-        message.change_and_save(
-            backend=fullname(self),
+        super().update_message(
+            message,
             extra_sender_data=extra_sender_data,
             number_of_send_attempts=message.number_of_send_attempts + 1,
             **kwargs
         )
 
     def create_message(self, sender, sender_name, recipient, subject, content, related_objects, tag, template,
-                       attachments, **email_kwargs):
+                       attachments, **kwargs):
         """
         Create e-mail which will be logged in the database.
         :param sender: e-mail address of the sender
@@ -61,39 +47,30 @@ class EmailBackend(object):
         :param tag: string mark that will be saved with the message
         :param template: template object from which content, subject and sender of the message was created
         :param attachments: list of files that will be sent with the message as attachments
-        :param email_kwargs: extra data that will be saved in JSON format in the extra_data model field
+        :param kwargs: extra data that will be saved in JSON format in the extra_data model field
         """
         try:
-            message = EmailMessage.objects.create(
-                sender=sender,
-                sender_name=sender_name,
+            message = super().create_message(
                 recipient=recipient,
                 content=content,
-                subject=subject,
-                state=self.get_initial_email_state(recipient),
-                extra_data=email_kwargs,
+                related_objects=related_objects,
                 tag=tag,
                 template=template,
-                template_slug=template.slug if template else None,
+                sender=sender,
+                sender_name=sender_name,
+                subject=subject,
+                state=self.get_initial_email_state(recipient),
+                extra_data=kwargs,
                 **self._get_extra_message_kwargs()
             )
-            if related_objects:
-                message.related_objects.create_from_related_objects(*related_objects)
             if attachments:
                 message.attachments.create_from_tripples(*attachments)
             return message
         except PersistenceException as ex:
             raise self.EmailSendingError(force_text(ex))
 
-    def publish_message(self, message):
-        """
-        Place for implementation logic of sending e-mail message.
-        :param message: SMS message instance
-        """
-        raise NotImplementedError
-
     def send(self, sender, recipient, subject, content, sender_name=None, related_objects=None, tag=None,
-             template=None, attachments=None, **email_kwargs):
+             template=None, attachments=None, **kwargs):
         """
         Send e-mail with defined values
         :param sender: e-mail address of the sender
@@ -106,10 +83,10 @@ class EmailBackend(object):
         :param tag: string mark that will be saved with the message
         :param template: template object from which content, subject and sender was created
         :param attachments: list of files that will be sent with the message as attachments
-        :param email_kwargs: extra data that will be saved in JSON format in the extra_data model field
+        :param kwargs: extra data that will be saved in JSON format in the extra_data model field
         """
         message = self.create_message(
-            sender, sender_name, recipient, subject, content, related_objects, tag, template, attachments, **email_kwargs
+            sender, sender_name, recipient, subject, content, related_objects, tag, template, attachments, **kwargs
         )
         if not settings.EMAIL_BATCH_SENDING:
             self.publish_message(message)
@@ -120,7 +97,7 @@ class EmailBackend(object):
         returns initial state for logged e-mail message.
         :param recipient: e-mail address of the recipient
         """
-        return EmailMessage.STATE.WAITING
+        return self.model.STATE.WAITING
 
 
 def send_template(recipient, slug, context_data, related_objects=None, attachments=None, tag=None):
@@ -132,15 +109,17 @@ def send_template(recipient, slug, context_data, related_objects=None, attachmen
     :param related_objects: list of related objects that will be linked with the e-mail message with generic
         relation
     :param attachments: list of files that will be sent with the message as attachments
-    :param tag: string mark that will be saved with the message 
+    :param tag: string mark that will be saved with the message
     :return: e-mail message object or None if template cannot be sent
     """
-    return get_email_template_model().objects.get(slug=slug).send(
-        recipient,
-        context_data,
+    return _send_template(
+        recipient=recipient,
+        slug=slug,
+        context_data=context_data,
         related_objects=related_objects,
+        tag=tag,
+        template_model=get_email_template_model(),
         attachments=attachments,
-        tag=tag
     )
 
 
@@ -161,10 +140,10 @@ def send(sender, recipient, subject, content, sender_name=None, related_objects=
     :return: True if e-mail was successfully sent or False if e-mail is in error state
     """
     return get_email_sender().send(
-        sender,
-        recipient,
-        subject,
-        content,
+        sender=sender,
+        recipient=recipient,
+        subject=subject,
+        content=content,
         sender_name=sender_name,
         related_objects=related_objects,
         tag=tag,

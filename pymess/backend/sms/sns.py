@@ -54,3 +54,4 @@ class SNSSMSBackend(SMSBackend):
             self.update_message(message, state=OutputSMSMessage.STATE.SENT, sent_at=timezone.now())
         except Exception as ex:
             self.update_message(message, state=OutputSMSMessage.STATE.ERROR, error=force_text(ex))
+            raise ex
