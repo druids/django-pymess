@@ -83,4 +83,5 @@ class MandrillEmailBackend(EmailBackend):
                                 extra_sender_data=extra_sender_data, error=error)
         except (mandrill.Error, JSONDecodeError, requests.exceptions.RequestException) as ex:
             self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
-            raise ex
+            # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
+            # about exception).

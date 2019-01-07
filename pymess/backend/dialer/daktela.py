@@ -84,7 +84,9 @@ class DaktelaDialerBackend(DialerBackend):
                 )
             except Exception as ex:
                 self.update_message(message, state=DialerMessage.STATE.ERROR, error=force_text(ex))
-                raise ex
+                # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
+                # and log them into database. Re-raise exception causes transaction rollback (lost of information about
+                # exception).
 
     def publish_message(self, message):
         """
@@ -128,4 +130,6 @@ class DaktelaDialerBackend(DialerBackend):
             )
         except Exception as ex:
             self.update_message(message, state=DialerMessage.STATE.ERROR, error=force_text(ex))
-            raise ex
+            # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
+            # and log them into database. Re-raise exception causes transaction rollback (lost of information about
+            # exception).
