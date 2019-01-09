@@ -1,8 +1,13 @@
+<<<<<<< a7789e978d0a2ea6aa679a1ab5b66e73d62d3ecb
 from datetime import timedelta
 
 from django.utils import timezone as tz
 from django.utils.encoding import force_text
 from django.utils.timezone import now
+=======
+from django.utils import timezone as tz
+from django.utils.encoding import force_text
+>>>>>>> Fixed dialer daktela backend, idle messages and state mapping
 
 from pymess.backend.dialer import DialerBackend
 from pymess.config import settings
