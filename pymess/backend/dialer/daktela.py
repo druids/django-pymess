@@ -1,7 +1,5 @@
-from chamber.utils.datastructures import ChoicesEnum
 from django.utils import timezone as tz
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _l
 
 from pymess.backend.dialer import DialerBackend
 from pymess.config import settings
@@ -14,36 +12,6 @@ class DaktelaDialerBackend(DialerBackend):
     Dialer backend implementing Daktela service https://www.daktela.com/api/v6/models/campaignsrecords
     """
 
-    STATE = ChoicesEnum(
-        ('NOT_ASSIGNED', _l('not assigned'), '0'),
-        ('READY', _l('ready'), '1'),
-        ('RESCHEDULED_BY_DIALER', _l('rescheduled by dialer'), '2'),
-        ('CALL_IN_PROGRESS', _l('call in progress'), '3'),
-        ('HANGUP', _l('hangup'), '4'),
-        ('DONE', _l('done'), '5'),
-        ('RESCHEDULED', _l('rescheduled'), '6'),
-        ('ANSWERED_COMPLETE', _l('listened up complete message'), 'statuses_5c1394ec6ea23488631693'),
-        ('ANSWERED_PARTIAL', _l('listened up partial message'), 'statuses_5c1394fa3ea76819966092'),
-        ('UNREACHABLE', _l('unreachable'), 'statuses_5c13955d2a375138015786'),
-        ('DECLINED', _l('declined'), 'statuses_5c13957c3cfcf286401391'),
-        ('UNANSWERED', _l('unanswered'), 'statuses_5c13959a7e018235857206'),
-    )
-
-    STATES_MAPPING = {
-        STATE.NOT_ASSIGNED: DialerMessage.STATE.NOT_ASSIGNED,
-        STATE.READY: DialerMessage.STATE.READY,
-        STATE.RESCHEDULED_BY_DIALER: DialerMessage.STATE.RESCHEDULED_BY_DIALER,
-        STATE.CALL_IN_PROGRESS: DialerMessage.STATE.CALL_IN_PROGRESS,
-        STATE.HANGUP: DialerMessage.STATE.HANGUP,
-        STATE.DONE: DialerMessage.STATE.DONE,
-        STATE.RESCHEDULED: DialerMessage.STATE.RESCHEDULED,
-        STATE.ANSWERED_COMPLETE: DialerMessage.STATE.ANSWERED_COMPLETE,
-        STATE.ANSWERED_PARTIAL: DialerMessage.STATE.ANSWERED_PARTIAL,
-        STATE.UNREACHABLE: DialerMessage.STATE.UNREACHABLE,
-        STATE.DECLINED: DialerMessage.STATE.DECLINED,
-        STATE.UNANSWERED: DialerMessage.STATE.UNANSWERED,
-    }
-
     SESSION_SLUG = 'pymess-daktela_autodialer'
 
     @staticmethod
@@ -51,7 +19,7 @@ class DaktelaDialerBackend(DialerBackend):
         name = '/{name}'.format(name=name) if name else ''
 
         return '{base_url}{name}.json?accessToken={access_token}'.format(
-            base_url=settings.DIALER_API_URL, name=name, access_token=settings.DIALER_API_ACCESS_TOKEN,
+            base_url=settings.DIALER_DAKTELA.URL, name=name, access_token=settings.DIALER_DAKTELA.ACCESS_TOKEN,
         )
 
     def _update_dialer_states(self, messages):
@@ -72,7 +40,7 @@ class DaktelaDialerBackend(DialerBackend):
             })
             resp_message_state = resp_json['result']['statuses'][0]['name'] if len(
                 resp_json['result']['statuses']) else resp_json['result']['action']
-            message_state = self.STATES_MAPPING[resp_message_state]
+            message_state = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
             message_error = resp_json['error'] if len(resp_json['error']) else None
 
             try:
@@ -96,7 +64,7 @@ class DaktelaDialerBackend(DialerBackend):
         client_url = self._get_dialer_api_url()
         try:
             payload = {
-                'queue': settings.DIALER_API_QUEUE,
+                'queue': settings.DIALER_DAKTELA.QUEUE,
                 'number': message.recipient,
                 'customFields': {
                     'mall_pay_text': [

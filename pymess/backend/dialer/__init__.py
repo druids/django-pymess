@@ -1,11 +1,15 @@
 import logging
+from datetime import timedelta
+
+from django.utils.encoding import force_text
+from django.utils.timezone import now
 
 from chamber.exceptions import PersistenceException
-from django.utils.encoding import force_text
 
 from pymess.backend import BaseBackend, send_template as _send_template, send as _send
-from pymess.config import get_dialer_template_model, get_dialer_sender
+from pymess.config import settings, get_dialer_template_model, get_dialer_sender
 from pymess.models import DialerMessage
+from pymess.utils import fullname
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +69,10 @@ class DialerBackend(BaseBackend):
         """
         Method that find messages that are not in the final state and updates their states.
         """
-        messages_to_check = self.model.objects.exclude(state=self.model.STATE.DONE)
+        messages_to_check = self.model.objects.exclude(state=self.model.STATE.DONE).filter(
+            backend=fullname(self),
+            created_at__gte=now() - timedelta(minutes=settings.DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES),
+        )
         if messages_to_check.exists():
             self._update_dialer_states(messages_to_check)
 

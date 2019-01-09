@@ -54,9 +54,21 @@ DEFAULTS = {
     # Dialer configuration
     'DIALER_TEMPLATE_MODEL': 'pymess.DialerTemplate',
     'DIALER_SENDER_BACKEND': 'pymess.backend.dialer.dummy.DummyDialerBackend',
-    'DIALER_API_ACCESS_TOKEN':  None,
-    'DIALER_API_QUEUE': None,
-    'DIALER_API_URL': None,
+    'DIALER_DAKTELA': {
+        'ACCESS_TOKEN':  None,
+        'QUEUE': None,
+        'URL': None,
+        'STATES_MAPPING': {
+            '0': 0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+        },
+    },
+    'DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES': 60 * 24,
 }
 
 
