@@ -87,6 +87,10 @@ Models
 
     String tag that you can define during sending dialer message.
 
+  .. attribute:: is_final_state
+
+    Helper field. If it cannot be resolved from message states clearly whether message is in its final state this field indicates it (based on further logic).
+
   .. attribute:: failed
 
     Returns ``True`` if message ended in ``ERROR`` state.

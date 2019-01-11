@@ -1,9 +1,13 @@
+from datetime import timedelta
+
 from django.utils import timezone as tz
 from django.utils.encoding import force_text
+from django.utils.timezone import now
 
 from pymess.backend.dialer import DialerBackend
 from pymess.config import settings
 from pymess.models import DialerMessage
+from pymess.utils import fullname
 from pymess.utils.logged_requests import generate_session
 
 
@@ -42,6 +46,7 @@ class DaktelaDialerBackend(DialerBackend):
                 resp_json['result']['statuses']) else resp_json['result']['action']
             message_state = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
             message_error = resp_json['error'] if len(resp_json['error']) else None
+            tts_processed = resp_json['result']['customFields']['ttsprocessed'][0]
 
             try:
                 self.update_message(
@@ -49,6 +54,7 @@ class DaktelaDialerBackend(DialerBackend):
                     state=message_state,
                     error=message_error,
                     extra_data=message.extra_data,
+                    is_final_state=resp_json['result']['action'] == '5' and tts_processed == '1',
                 )
             except Exception as ex:
                 self.update_message(message, state=DialerMessage.STATE.ERROR, error=force_text(ex))

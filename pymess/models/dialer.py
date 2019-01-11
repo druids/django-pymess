@@ -77,8 +77,13 @@ class AbstractDialerMessage(SmartModel):
 
 
 class DialerMessage(AbstractDialerMessage):
+
+    is_final_state = models.BooleanField(verbose_name=_('is final state'), null=False, default=False)
+
     def __str__(self):
-        return '{recipient}, {template_slug}, {state}'.format(recipient=self.recipient, template_slug=self.template_slug, state=self.get_state_display())
+        return '{recipient}, {template_slug}, {state}'.format(
+            recipient=self.recipient, template_slug=self.template_slug, state=self.get_state_display(),
+        )
 
 
 class DialerMessageRelatedObject(SmartModel):
