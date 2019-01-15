@@ -40,6 +40,10 @@ class DaktelaDialerBackend(DialerBackend):
             })
             resp_message_state = resp_json['result']['statuses'][0]['name'] if len(
                 resp_json['result']['statuses']) else resp_json['result']['action']
+            whole_message_heard = resp_json['result']['customFields']['whole_message_heard'][0] == 'Yes'
+            state_mapped = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
+            if state_mapped == DialerMessage.STATE.ANSWERED_PARTIAL and whole_message_heard:
+                resp_message_state = str(DialerMessage.STATE.ANSWERED_COMPLETE)
             message_state = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
             message_error = resp_json['error'] if len(resp_json['error']) else None
 
