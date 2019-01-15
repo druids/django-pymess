@@ -11,6 +11,7 @@ from chamber.exceptions import PersistenceException
 from pymess.backend import BaseBackend, send_template as _send_template, send as _send
 from pymess.config import settings, get_sms_template_model, get_sms_sender
 from pymess.models import OutputSMSMessage
+from pymess.utils import fullname
 
 
 LOGGER = logging.getLogger(__name__)
@@ -76,7 +77,8 @@ class SMSBackend(BaseBackend):
 
         idle_output_sms = self.model.objects.filter(
             state=self.model.STATE.SENDING,
-            created_at__lt=timezone.now() - timedelta(minutes=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES)
+            created_at__lt=timezone.now() - timedelta(minutes=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES),
+            backend=fullname(self)
         )
         if settings.SMS_LOG_IDLE_MESSAGES and idle_output_sms.exists():
             LOGGER.warning('{count_sms} Output SMS is more than {timeout} minutes in state "SENDING"'.format(
