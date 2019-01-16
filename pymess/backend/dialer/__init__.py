@@ -67,9 +67,10 @@ class DialerBackend(BaseBackend):
 
     def bulk_check_dialer_status(self):
         """
-        Method that find messages that are not in the final state and updates their states.
+        Method that finds messages that are not in the final state and updates their states.
         """
-        messages_to_check = self.model.objects.exclude(state=self.model.STATE.DONE).filter(
+        messages_to_check = self.model.objects.filter(
+            is_final_state=False,
             backend=fullname(self),
             created_at__gte=now() - timedelta(minutes=settings.DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES),
         )

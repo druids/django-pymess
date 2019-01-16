@@ -25,6 +25,10 @@ msgstr "self.model nesmí být None"
 msgid "template_model cannot be None"
 msgstr "template_model nesmí být None"
 
+#: models/dialer.py:81
+msgid "is final state"
+msgstr "ukončeno"
+
 #: backend/dialer/daktela.py:18 models/dialer.py:30
 msgid "not assigned"
 msgstr "nepřiřazeno"
