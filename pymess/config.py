@@ -69,6 +69,10 @@ DEFAULTS = {
         },
     },
     'DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES': 60 * 24,
+
+    # Push notification settings
+    'PUSH_NOTIFICATION_TEMPLATE_MODEL': 'pymess.PushNotificationTemplate',
+    'PUSH_NOTIFICATION_SENDER_BACKEND': 'pymess.backend.push.dummy.DummyPushNotificationBackend',
 }
 
 
@@ -143,3 +147,17 @@ def get_dialer_sender():
     Function returns dialer sender backend from string defined in Pymess settings
     """
     return import_string(settings.DIALER_SENDER_BACKEND)()
+
+
+def get_push_notification_template_model():
+    """
+    Function returns push notification template model defined in Pymess settings
+    """
+    return get_model(settings.PUSH_NOTIFICATION_TEMPLATE_MODEL)()
+
+
+def get_push_notification_sender():
+    """
+    Function returns push notification sender backend from string defined in Pymess settings
+    """
+    return import_string(settings.PUSH_NOTIFICATION_SENDER_BACKEND)()
