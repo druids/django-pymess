@@ -1,7 +1,7 @@
 from chamber.exceptions import PersistenceException
 from django.utils.encoding import force_text
+
 from pymess.backend import BaseBackend
-from pymess.config import settings
 from pymess.models import PushNotificationMessage
 
 
