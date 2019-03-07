@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('tag', models.SlugField(blank=True, editable=False, null=True, verbose_name='tag')),
                 ('state', models.PositiveIntegerField(choices=[(1, 'waiting'), (2, 'sent'), (3, 'error'), (4, 'debug')],
                                                       editable=False, verbose_name='state')),
-                ('heading', models.TextField(null=True, blank=True, verbose_name='heading')),
+                ('heading', models.TextField(verbose_name='heading')),
                 ('url', models.URLField(null=True, blank=True, verbose_name='url')),
             ],
             options={
@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
                 ('slug', models.SlugField(editable=False, max_length=100, primary_key=True, serialize=False,
                                           verbose_name='slug')),
                 ('body', models.TextField(null=True, verbose_name='message body')),
-                ('heading', models.TextField(null=True, blank=True, verbose_name='heading')),
+                ('heading', models.TextField(verbose_name='heading')),
                 ('is_active', models.BooleanField(default=True, verbose_name='heading')),
             ],
             options={
