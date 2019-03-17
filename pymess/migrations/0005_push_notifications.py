@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('state', models.PositiveIntegerField(choices=[(1, 'waiting'), (2, 'sent'), (3, 'error'), (4, 'debug')],
                                                       editable=False, verbose_name='state')),
                 ('heading', models.TextField(verbose_name='heading')),
-                ('url', models.URLField(null=True, blank=True, verbose_name='url')),
+                ('url', models.URLField(null=True, blank=True, verbose_name='URL')),
             ],
             options={
                 'verbose_name': 'push notification',
@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
                                           verbose_name='slug')),
                 ('body', models.TextField(null=True, verbose_name='message body')),
                 ('heading', models.TextField(verbose_name='heading')),
-                ('is_active', models.BooleanField(default=True, verbose_name='heading')),
+                ('is_active', models.BooleanField(default=True, verbose_name='is_active')),
             ],
             options={
                 'verbose_name': 'push notification template',

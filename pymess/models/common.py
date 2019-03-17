@@ -78,9 +78,12 @@ class BaseAbstractTemplate(SmartModel):
     def _update_context_data(self, context_data):
         return context_data
 
-    def render_body(self, context_data):
+    def render_text_template(self, text, context_data):
         context_data = self._update_context_data(context_data)
-        return Template(self.get_body()).render(Context(context_data))
+        return Template(text).render(Context(context_data))
+
+    def render_body(self, context_data):
+        return self.render_text_template(self.get_body(), context_data)
 
     def clean_body(self, context_data=None):
         try:

@@ -73,6 +73,9 @@ DEFAULTS = {
     # Push notification settings
     'PUSH_NOTIFICATION_TEMPLATE_MODEL': 'pymess.PushNotificationTemplate',
     'PUSH_NOTIFICATION_SENDER_BACKEND': 'pymess.backend.push.dummy.DummyPushNotificationBackend',
+    'PUSH_NOTIFICATION_ONESIGNAL_APP_ID': None,
+    'PUSH_NOTIFICATION_ONESIGNAL_API_KEY': None,
+    'PUSH_NOTIFICATION_ONESIGNAL_LANGUAGE': None,
 }
 
 

@@ -1,8 +1,8 @@
-from jsonfield.fields import JSONField
-
 from chamber.utils.datastructures import ChoicesNumEnum
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from jsonfield.fields import JSONField
+
 from pymess.config import get_push_notification_sender, settings
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
@@ -30,7 +30,7 @@ class AbstractPushNotificationMessage(BaseMessage):
     state = models.PositiveIntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices,
                                         editable=False)
     heading = models.TextField(verbose_name=_('heading'))
-    url = models.URLField(verbose_name=_('url'), null=True, blank=True)
+    url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
 
     class Meta(BaseMessage.Meta):
         abstract = True
@@ -65,7 +65,9 @@ class AbstractPushNotificationTemplate(BaseAbstractTemplate):
         return get_push_notification_sender()
 
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
-        return super().send(recipient, context_data, related_objects, tag, **kwargs)
+        return super().send(recipient, context_data, related_objects, tag,
+                            state=AbstractPushNotificationMessage.STATE.WAITING,
+                            heading=self.render_text_template(self.heading, context_data), **kwargs)
 
     class Meta(BaseAbstractTemplate.Meta):
         abstract = True
