@@ -145,6 +145,10 @@ Models
 
     Body of the SMS message. Final SMS content is rendered with Django template system by default.
 
+  .. attribute:: is_active
+
+    Sets whether the template is active and should be sent or not.
+
   .. method:: get_body()
 
     Returns body of the model message. You can use it to update SMS body before rendering.
@@ -155,7 +159,7 @@ Models
 
   .. method:: can_send(recipient, context_data)
 
-    Returns by default ``True`` value. If you need to restrict sending SMS template for some reasons, you can override this method.
+    Returns by default the value of ``is_active``. If you need to restrict sending SMS template for some reasons, you can override this method.
 
   .. method:: send(recipient, context_data, related_objects=None, tag=None)
 

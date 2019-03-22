@@ -59,7 +59,6 @@ class PushNotificationMessageRelatedObject(BaseRelatedObject):
 class AbstractPushNotificationTemplate(BaseAbstractTemplate):
 
     heading = models.TextField(verbose_name=_('heading'))
-    is_active = models.BooleanField(verbose_name=_('is active'), default=True)
 
     def get_backend_sender(self):
         return get_push_notification_sender()
