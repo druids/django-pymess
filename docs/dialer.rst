@@ -131,7 +131,7 @@ Models
 
 .. class:: pymess.models.dialer.AbstractDialerTemplate
 
-  Abstract class for dialer essage template which you can use to define your own dialer message template model. Your model that extends this class is set inside setting ``PYMESS_DIALER_TEMPLATE_MODEL``::
+  Abstract class for dialer message template which you can use to define your own dialer message template model. Your model that extends this class is set inside setting ``PYMESS_DIALER_TEMPLATE_MODEL``::
 
       PYMESS_DIALER_TEMPLATE_MODEL = 'your_application.YourDialerTemplateModel'
 
@@ -151,6 +151,10 @@ Models
 
     Body of the dialer message. Final message content is rendered with Django template system by default.
 
+  .. attribute:: is_active
+
+    Sets whether the template is active and should be sent or not.
+
   .. method:: get_body()
 
     Returns body of the model message. You can use it to update message body before rendering.
@@ -161,7 +165,7 @@ Models
 
   .. method:: can_send(recipient, context_data)
 
-    Returns by default ``True`` value. If you need to restrict sending dialer message template for some reasons, you can override this method.
+    Returns by default the value of ``is_active``. If you need to restrict sending dialer message template for some reasons, you can override this method.
 
   .. method:: send(recipient, context_data, related_objects=None, tag=None, **kwargs)
 

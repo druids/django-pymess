@@ -74,6 +74,7 @@ class BaseAbstractTemplate(SmartModel):
     slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=False, blank=False, editable=False,
                             primary_key=True)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
+    is_active = models.BooleanField(null=False, blank=False, default=True, verbose_name=_('is active'))
 
     def _update_context_data(self, context_data):
         return context_data
@@ -95,7 +96,7 @@ class BaseAbstractTemplate(SmartModel):
         return self.body
 
     def can_send(self, recipient, context_data):
-        return True
+        return self.is_active
 
     def get_backend_sender(self):
         raise NotImplementedError
