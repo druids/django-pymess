@@ -21,13 +21,13 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
         return result.is_error or self._is_result_partial_error(result)
 
     def publish_message(self, message):
-        onesignal_client = OneSignalClient(settings.PUSH_NOTIFICATION_ONESIGNAL_APP_ID,
-                                           settings.PUSH_NOTIFICATION_ONESIGNAL_API_KEY)
+        onesignal_client = OneSignalClient(settings.PUSH_NOTIFICATION_ONESIGNAL.APP_ID,
+                                           settings.PUSH_NOTIFICATION_ONESIGNAL.API_KEY)
         onesignal_client.session = generate_session(slug='pymess - OneSignal', related_objects=(message,))
 
         languages = {'en'}
-        if settings.PUSH_NOTIFICATION_ONESIGNAL_LANGUAGE is not None:
-            languages.add(settings.PUSH_NOTIFICATION_ONESIGNAL_LANGUAGE)
+        if settings.PUSH_NOTIFICATION_ONESIGNAL.LANGUAGE is not None:
+            languages.add(settings.PUSH_NOTIFICATION_ONESIGNAL.LANGUAGE)
         notification = DeviceNotification(
             include_external_user_ids=(message.recipient,),
             contents={language: message.content for language in languages},
