@@ -73,9 +73,11 @@ DEFAULTS = {
     # Push notification settings
     'PUSH_NOTIFICATION_TEMPLATE_MODEL': 'pymess.PushNotificationTemplate',
     'PUSH_NOTIFICATION_SENDER_BACKEND': 'pymess.backend.push.dummy.DummyPushNotificationBackend',
-    'PUSH_NOTIFICATION_ONESIGNAL_APP_ID': None,
-    'PUSH_NOTIFICATION_ONESIGNAL_API_KEY': None,
-    'PUSH_NOTIFICATION_ONESIGNAL_LANGUAGE': None,
+    'PUSH_NOTIFICATION_ONESIGNAL': {
+        'APP_ID': None,
+        'API_KEY': None,
+        'LANGUAGE': None,
+    },
 }
 
 
@@ -156,7 +158,7 @@ def get_push_notification_template_model():
     """
     Function returns push notification template model defined in Pymess settings
     """
-    return get_model(settings.PUSH_NOTIFICATION_TEMPLATE_MODEL)()
+    return get_model(settings.PUSH_NOTIFICATION_TEMPLATE_MODEL)
 
 
 def get_push_notification_sender():
