@@ -1,10 +1,15 @@
+from functools import reduce
+
+from operator import or_ as OR
+
 from chamber.models import SmartModel
 from chamber.utils.datastructures import ChoicesNumEnum
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Manager
+from django.db.models import Manager, Q
 from django.template import Template, Context
 from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
 from django.utils.translation import ugettext_lazy as _
@@ -28,6 +33,49 @@ class RelatedObjectManager(Manager):
             self.create_from_related_object(related_object)
             for related_object in related_objects
         ]
+
+    def _get_related_object_pks(self, *related_objects):
+        return [related_object.pk for related_object in related_objects]
+
+    def _get_related_objects_qs_kwargs(self, *related_objects):
+        return reduce(OR, (
+            Q(**{
+                'object_id': obj.pk,
+                'content_type': ContentType.objects.get_for_model(obj)
+            }) for obj in related_objects
+        ))
+
+    def update_related_objects(self, *related_objects, limit_to_model=None):
+        delete_qs = self.all()
+        if limit_to_model is not None:
+            delete_qs = delete_qs.filter(content_type=ContentType.objects.get_for_model(limit_to_model))
+        if related_objects:
+            delete_qs = delete_qs.exclude(self._get_related_objects_qs_kwargs(*related_objects))
+        delete_qs.delete()
+        return self.get_or_create_from_related_objects(*related_objects)
+
+    def get_or_create_from_related_object(self, related_object):
+        return self.get_or_create(
+            object_id_int=related_object.pk if has_int_pk(related_object) else None,
+            object_id=related_object.pk,
+            content_type=ContentType.objects.get_for_model(related_object)
+        )
+
+    def get_or_create_from_related_objects(self, *related_objects):
+        return [
+            self.get_or_create_from_related_object(related_object)
+            for related_object in related_objects
+        ]
+
+    def get_related_objects_by_model(self, model):
+        values_list_pk = 'object_id_int' if has_int_pk(model) else 'object_id'
+        pks = self.filter(content_type=ContentType.objects.get_for_model(model)).values_list(values_list_pk)
+        return model.objects.filter(pk__in=pks)
+
+    def filter_from_related_objects(self, *related_objects):
+        return self.model.objects.filter(
+            Q(template=self.instance) | Q(template__isnull=True)
+        ).filter(self._get_related_objects_qs_kwargs(*related_objects))
 
 
 class BaseMessage(SmartModel):
@@ -95,14 +143,21 @@ class BaseAbstractTemplate(SmartModel):
     def get_body(self):
         return self.body
 
-    def can_send(self, recipient, context_data):
-        return self.is_active
+    def can_send_for_object(self, related_objects):
+        return (
+            not hasattr(self, 'disallowed_objects')
+            or related_objects is None
+            or not self.disallowed_objects.filter_from_related_objects(*related_objects).exists()
+        )
+
+    def can_send(self, recipient, related_objects):
+        return self.is_active and self.can_send_for_object(related_objects)
 
     def get_backend_sender(self):
         raise NotImplementedError
 
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
-        if self.can_send(recipient, context_data):
+        if self.can_send(recipient, related_objects):
             return self.get_backend_sender().send(
                 recipient=recipient,
                 content=self.render_body(context_data),

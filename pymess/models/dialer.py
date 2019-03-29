@@ -89,3 +89,19 @@ class AbstractDialerTemplate(BaseAbstractTemplate):
 
 class DialerTemplate(AbstractDialerTemplate):
     pass
+
+
+class DialerTemplateDisallowedObject(BaseRelatedObject):
+
+    template = models.ForeignKey(
+        verbose_name=_('template'),
+        to=DialerTemplate,
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+        related_name='disallowed_objects',
+        db_index=True
+    )
+
+    class Meta(BaseRelatedObject.Meta):
+        verbose_name = _('disallowed object of a dialer template')
+        verbose_name_plural = _('disallowed objects of dialer templates')

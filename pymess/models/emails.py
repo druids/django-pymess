@@ -1,3 +1,5 @@
+import import_string
+
 from chamber.models import SmartModel
 from chamber.utils.datastructures import ChoicesNumEnum
 from django.core.exceptions import ValidationError
@@ -7,6 +9,7 @@ from django.template import Template, Context
 from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
 
 from pymess.config import settings, get_email_sender
+from pymess.utils.html import raise_error_if_contains_banned_tags
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
 
@@ -14,9 +17,9 @@ from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
 __all__ = (
     'EmailMessage',
     'EmailRelatedObject',
+    'EmailTemplate',
     'Attachment',
     'AbstractEmailTemplate',
-    'EmailTemplate',
 )
 
 
@@ -109,6 +112,11 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
     sender = models.EmailField(verbose_name=_('sender'), null=True, blank=True, max_length=200)
     sender_name = models.CharField(verbose_name=_('sender name'), blank=True, null=True, max_length=250)
 
+    def _update_context_data(self, context_data):
+        for context_processor_fun_name in settings.EMAIL_TEMPLATE_CONTEXT_PROCESSORS:
+            context_data.update(import_string(context_processor_fun_name)(context_data, self))
+        return context_data
+
     def clean_subject(self, context_data=None):
         try:
             self.render_subject(context_data or {})
@@ -144,4 +152,48 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
 
 
 class EmailTemplate(AbstractEmailTemplate):
-    pass
+
+    def clean_body(self, context_data=None):
+        super().clean_body(context_data={'EMAIL_DISABLE_VARIABLE_VALIDATOR': True})
+        raise_error_if_contains_banned_tags(self.body)
+
+    def clean_subject(self, context_data=None):
+        super().clean_subject(context_data={'EMAIL_DISABLE_VARIABLE_VALIDATOR': True})
+        raise_error_if_contains_banned_tags(self.subject)
+
+    def _extend_body(self, template_body):
+        base_template = settings.EMAIL_TEMPLATE_BASE_TEMPLATE
+        templatetags = settings.EMAIL_TEMPLATE_TEMPLATETAGS
+
+        template_content = '{{% block {} %}}{}{{% endblock %}}'.format(
+            settings.EMAIL_TEMPLATE_CONTENT_BLOCK,
+            template_body
+        )
+
+        out = []
+        if base_template is not None:
+            out.append('{{% extends \'{}\' %}}'.format(base_template))
+        if templatetags:
+            out.append('{{% load {} %}}'.format(' '.join(templatetags)))
+        out.append(template_content)
+
+        return ''.join(out)
+
+    def get_body(self):
+        return self._extend_body(self.body) if settings.EMAIL_TEMPLATE_EXTEND_BODY else self.body
+
+
+class EmailTemplateDisallowedObject(BaseRelatedObject):
+
+    template = models.ForeignKey(
+        verbose_name=_('template'),
+        to=EmailTemplate,
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+        related_name='disallowed_objects',
+        db_index=True
+    )
+
+    class Meta(BaseRelatedObject.Meta):
+        verbose_name = _('disallowed object of an e-mail template')
+        verbose_name_plural = _('disallowed objects of e-mail templates')
