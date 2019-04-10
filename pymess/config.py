@@ -30,6 +30,21 @@ DEFAULTS = {
 
     # E-mail configuration
     'EMAIL_TEMPLATE_MODEL': 'pymess.EmailTemplate',
+    'EMAIL_TEMPLATE_BASE_TEMPLATE': None,
+    'EMAIL_TEMPLATE_TEMPLATETAGS': ['pymess'],
+    'EMAIL_TEMPLATE_CONTENT_BLOCK': 'email_content',
+    'EMAIL_TEMPLATE_CONTEXT_PROCESSORS': None,
+    'EMAIL_TEMPLATE_EXTEND_BODY': True,
+    'EMAIL_TEMPLATE_BANNED_TAGS': (
+        'applet',
+        'amp-iframe',
+        'canvas',
+        'embed',
+        'noscript',
+        'object',
+        'script',
+        'video',
+    ),
     'EMAIL_SENDER_BACKEND': 'pymess.backend.emails.dummy.DummyEmailBackend',
     'EMAIL_MANDRILL': {
         'HEADERS': None,

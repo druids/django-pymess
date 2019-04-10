@@ -15,6 +15,7 @@ __all__ = (
     'OutputSMSRelatedObject',
     'AbstractSMSTemplate',
     'SMSTemplate',
+    'SMSTemplateDisallowedObject',
 )
 
 
@@ -75,3 +76,19 @@ class AbstractSMSTemplate(BaseAbstractTemplate):
 
 class SMSTemplate(AbstractSMSTemplate):
     pass
+
+
+class SMSTemplateDisallowedObject(BaseRelatedObject):
+
+    template = models.ForeignKey(
+        verbose_name=_('template'),
+        to=SMSTemplate,
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+        related_name='disallowed_objects',
+        db_index=True
+    )
+
+    class Meta(BaseRelatedObject.Meta):
+        verbose_name = _('disallowed object of an SMS template')
+        verbose_name_plural = _('disallowed objects of SMS templates')
