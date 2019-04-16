@@ -116,6 +116,9 @@ class BaseRelatedObject(SmartModel):
         abstract = True
         ordering = ('-created_at',)
 
+    def __str__(self):
+        return str(self.content_object)
+
 
 class BaseAbstractTemplate(SmartModel):
 
