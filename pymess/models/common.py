@@ -73,9 +73,12 @@ class RelatedObjectManager(Manager):
         return model.objects.filter(pk__in=pks)
 
     def filter_from_related_objects(self, *related_objects):
-        return self.model.objects.filter(
-            Q(template=self.instance) | Q(template__isnull=True)
-        ).filter(self._get_related_objects_qs_kwargs(*related_objects))
+        if hasattr(self, 'instance'):
+            template_filter = (Q(template=self.instance) | Q(template__isnull=True))
+        else:
+            template_filter = Q(template__isnull=True)
+
+        return self.model.objects.filter(template_filter).filter(self._get_related_objects_qs_kwargs(*related_objects))
 
 
 class BaseMessage(SmartModel):

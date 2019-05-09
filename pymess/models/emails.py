@@ -20,6 +20,7 @@ __all__ = (
     'EmailTemplate',
     'Attachment',
     'AbstractEmailTemplate',
+    'EmailTemplateDisallowedObject',
 )
 
 
