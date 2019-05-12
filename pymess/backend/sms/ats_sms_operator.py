@@ -161,7 +161,8 @@ class ATSSMSBackend(SMSBackend):
             resp = generate_session(slug='pymess - ATS SMS', related_objects=list(messages)).post(
                 self.config.URL,
                 data=requests_xml,
-                headers={'Content-Type': 'text/xml'}
+                headers={'Content-Type': 'text/xml'},
+                timeout=self.config.TIMEOUT
             )
             if resp.status_code != 200:
                 raise self.ATSSendingError(

@@ -14,10 +14,12 @@ DEFAULTS = {
         'TEXTID': None,
         'URL': 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',
         'OPTID': '',
+        'TIMEOUT': 5,  # 5s
     },
     'SMS_OPERATOR_CONFIG': {
         'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',
         'UNIQ_PREFIX': '',
+        'TIMEOUT': 5,  # 5s
     },
     'SMS_SNS_CONFIG': {
     },
@@ -56,6 +58,7 @@ DEFAULTS = {
         'PRESERVE_RECIPIENTS': False,
         'VIEW_CONTENT_LINK': True,
         'ASYNC': False,
+        'TIMEOUT': 5,  # 5s
     },
     'EMAIL_BATCH_SENDING': False,
     'EMAIL_BATCH_LOCK_FILE': 'pymess_send_batch_emails',
@@ -82,6 +85,7 @@ DEFAULTS = {
             '5': 5,
             '6': 6,
         },
+        'TIMEOUT': 5,  # 5s
     },
     'DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES': 60 * 24,
 
@@ -92,6 +96,7 @@ DEFAULTS = {
         'APP_ID': None,
         'API_KEY': None,
         'LANGUAGE': None,
+        'TIMEOUT': 5,  # 5s
     },
 }
 

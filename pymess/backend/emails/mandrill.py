@@ -51,7 +51,11 @@ class MandrillEmailBackend(EmailBackend):
 
     def publish_message(self, message):
         mandrill_client = mandrill.Mandrill(settings.EMAIL_MANDRILL.KEY)
-        mandrill_client.session = generate_session(slug='pymess - Mandrill', related_objects=(message,))
+        mandrill_client.session = generate_session(
+            slug='pymess - Mandrill',
+            related_objects=(message,),
+            timeout=settings.EMAIL_MANDRILL.TIMEOUT
+        )
         try:
             result = mandrill_client.messages.send(
                 message={
