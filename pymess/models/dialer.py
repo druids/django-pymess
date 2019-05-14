@@ -15,6 +15,7 @@ __all__ = (
     'DialerMessage',
     'DialerMessageRelatedObject',
     'DialerTemplate',
+    'DialerTemplateDisallowedObject',
 )
 
 
