@@ -30,7 +30,11 @@ class DaktelaDialerBackend(DialerBackend):
         for message in messages:
             name = message.extra_data['name']
             client_url = self._get_dialer_api_url(name)
-            response = generate_session(slug=self.SESSION_SLUG, related_objects=(message,)).get(client_url)
+            response = generate_session(
+                slug=self.SESSION_SLUG,
+                related_objects=(message,),
+                timeout=self.DIALER_DAKTELA.TIMEOUT
+            ).get(client_url)
             resp_json = response.json()
 
             message.extra_data.update({
@@ -88,7 +92,11 @@ class DaktelaDialerBackend(DialerBackend):
                 'action': 5,
             }
 
-            response = generate_session(slug=self.SESSION_SLUG, related_objects=(message,)).post(
+            response = generate_session(
+                slug=self.SESSION_SLUG,
+                related_objects=(message,),
+                timeout=self.DIALER_DAKTELA.TIMEOUT
+            ).post(
                 client_url,
                 json=payload,
             )

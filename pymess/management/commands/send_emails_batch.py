@@ -1,3 +1,5 @@
+import logging
+
 from datetime import timedelta
 
 from django.db.models import Q
@@ -7,6 +9,9 @@ from django.utils.timezone import now
 from pymess.config import get_email_sender, settings
 from pymess.lockfile import FileLock, AlreadyLocked, LockTimeout
 from pymess.models import EmailMessage
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -23,8 +28,10 @@ class Command(BaseCommand):
             self.stdout.write('acquiring lock...')
             lock.acquire(settings.EMAIL_BATCH_LOCK_WAIT_TIMEOUT)
         except AlreadyLocked:
+            logger.error('Send emails batch: lock already in place.')
             raise CommandError('lock already in place. quitting.')
         except LockTimeout:
+            logger.error('Send emails batch: waiting for the lock timed out.')
             raise CommandError('waiting for the lock timed out. quitting.')
 
         email_sender = get_email_sender()

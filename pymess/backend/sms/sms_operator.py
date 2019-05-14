@@ -114,7 +114,8 @@ class SMSOperatorBackend(SMSBackend):
             resp = generate_session(slug='pymess - SMS operator', related_objects=list(messages)).post(
                 self.config.URL,
                 data=requests_xml,
-                headers={'Content-Type': 'text/xml'}
+                headers={'Content-Type': 'text/xml'},
+                timeout=self.config.TIMEOUT
             )
             if resp.status_code != 200:
                 raise self.SMSOperatorSendingError(

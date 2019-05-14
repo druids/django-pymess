@@ -23,7 +23,11 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
     def publish_message(self, message):
         onesignal_client = OneSignalClient(settings.PUSH_NOTIFICATION_ONESIGNAL.APP_ID,
                                            settings.PUSH_NOTIFICATION_ONESIGNAL.API_KEY)
-        onesignal_client.session = generate_session(slug='pymess - OneSignal', related_objects=(message,))
+        onesignal_client.session = generate_session(
+            slug='pymess - OneSignal',
+            related_objects=(message,),
+            timeout=settings.PUSH_NOTIFICATION_ONESIGNAL.TIMEOUT
+        )
 
         languages = {'en'}
         if settings.PUSH_NOTIFICATION_ONESIGNAL.LANGUAGE is not None:
