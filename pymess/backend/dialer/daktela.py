@@ -33,7 +33,7 @@ class DaktelaDialerBackend(DialerBackend):
             response = generate_session(
                 slug=self.SESSION_SLUG,
                 related_objects=(message,),
-                timeout=self.DIALER_DAKTELA.TIMEOUT
+                timeout=settings.DIALER_DAKTELA.TIMEOUT
             ).get(client_url)
             resp_json = response.json()
 
@@ -66,7 +66,7 @@ class DaktelaDialerBackend(DialerBackend):
                     is_final_state=resp_json['result']['action'] == '5' and tts_processed == '1',
                 )
             except Exception as ex:
-                self.update_message(message, state=DialerMessage.STATE.ERROR, error=force_text(ex))
+                self.update_message(message, state=DialerMessage.STATE.ERROR, error=force_text(ex), is_final_state=True)
                 # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
                 # and log them into database. Re-raise exception causes transaction rollback (lost of information about
                 # exception).
@@ -95,7 +95,7 @@ class DaktelaDialerBackend(DialerBackend):
             response = generate_session(
                 slug=self.SESSION_SLUG,
                 related_objects=(message,),
-                timeout=self.DIALER_DAKTELA.TIMEOUT
+                timeout=settings.DIALER_DAKTELA.TIMEOUT
             ).post(
                 client_url,
                 json=payload,
