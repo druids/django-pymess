@@ -3,6 +3,7 @@ import import_string
 from chamber.models import SmartModel
 from chamber.utils.datastructures import ChoicesNumEnum
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.template import Template, Context
@@ -77,10 +78,21 @@ class AttachmentManager(models.Manager):
 
     def create_from_tripple(self, tripple):
         filename, file, content_type = tripple
+
         attachment = self.model(
             email_message=self.instance,
-            content_type=content_type
+            content_type=content_type,
         )
+
+        if settings.EMAIL_ATTACHMENT_USE_BOTO3:
+            content = file.read()
+            if not isinstance(content, bytes):
+                content = bytes(
+                    content,
+                    'utf-8' if not hasattr(file, 'encoding') or file.encoding is None else file.encoding,
+                )
+            file = ContentFile(content)
+
         attachment.file.save(filename, file, save=True)
         return attachment
 

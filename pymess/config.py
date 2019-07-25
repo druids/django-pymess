@@ -68,6 +68,7 @@ DEFAULTS = {
     'EMAIL_BATCH_MAX_SECONDS_TO_SEND': 60 * 60,
     'EMAIL_SENDERS': (),
     'EMAIL_HTML_DATA_DIRECTORY': None,
+    'EMAIL_ATTACHMENT_USE_BOTO3': False,
 
     # Dialer configuration
     'DIALER_TEMPLATE_MODEL': 'pymess.DialerTemplate',
