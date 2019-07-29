@@ -129,6 +129,8 @@ class BaseAbstractTemplate(SmartModel):
                             primary_key=True)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
     is_active = models.BooleanField(null=False, blank=False, default=True, verbose_name=_('is active'))
+    is_allowed_duplicate_messages = models.BooleanField(null=False, blank=False, default=True,
+                                                        verbose_name=_('Duplicate messages are allowed'))
 
     def _update_context_data(self, context_data):
         return context_data
@@ -151,10 +153,28 @@ class BaseAbstractTemplate(SmartModel):
 
     def can_send_for_object(self, related_objects):
         return (
-            not hasattr(self, 'disallowed_objects')
-            or related_objects is None
-            or not self.disallowed_objects.filter_from_related_objects(*related_objects).exists()
+            (
+                self.is_allowed_duplicate_messages
+                or not self.exist_duplicate_messages(related_objects)
+            )
+            and (
+                not hasattr(self, 'disallowed_objects')
+                or related_objects is None
+                or not self.disallowed_objects.filter_from_related_objects(*related_objects).exists()
+            )
         )
+
+    def exist_duplicate_messages(self, related_objects):
+        if related_objects:
+            qs = self.get_backend_sender().model.objects.filter(template=self)
+            for obj in related_objects:
+                qs = qs.filter(
+                    related_objects__object_id=obj.pk,
+                    related_objects__content_type=ContentType.objects.get_for_model(obj)
+                )
+            return qs.exists()
+        else:
+            return False
 
     def can_send(self, recipient, related_objects):
         return self.is_active and self.can_send_for_object(related_objects)
