@@ -1,12 +1,14 @@
 import import_string
 
-from chamber.models import SmartModel
-from chamber.utils.datastructures import ChoicesNumEnum
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.template import Template, Context
 from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
+
+from chamber.models import SmartModel
+from chamber.utils.datastructures import ChoicesNumEnum
 
 from pymess.config import settings, get_email_sender
 from pymess.utils.html import raise_error_if_contains_banned_tags
@@ -81,7 +83,12 @@ class AttachmentManager(models.Manager):
             email_message=self.instance,
             content_type=content_type
         )
-        attachment.file.save(filename, file, save=True)
+        content = file.read()
+        if not isinstance(content, bytes):
+            content = content.encode(
+                'utf-8' if not hasattr(file, 'encoding') or file.encoding is None else file.encoding
+            )
+        attachment.file.save(filename, ContentFile(content), save=True)
         return attachment
 
     def create_from_tripples(self, *tripples):
