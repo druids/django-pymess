@@ -43,6 +43,11 @@ class EmailMessage(BaseMessage):
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
     number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
                                                           blank=False, default=0)
+    require_pull_info = models.BooleanField(
+        verbose_name=_('require to pull message info from email service'),
+        null=False,
+        default=False
+    )
 
     @property
     def friendly_sender(self):

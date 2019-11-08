@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-29 15:00+0200\n"
+"POT-Creation-Date: 2019-11-13 11:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -308,6 +308,9 @@ msgstr "předmět"
 
 msgid "number of send attempts"
 msgstr "počet pokusů odeslání"
+
+msgid "require to pull message info from email service"
+msgstr "vyžaduje stažení informací z emailové služby"
 
 msgid "e-mail message"
 msgstr "e-mail"

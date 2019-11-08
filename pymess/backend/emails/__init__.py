@@ -99,6 +99,13 @@ class EmailBackend(BaseBackend):
         """
         return self.model.STATE.WAITING
 
+    def pull_message_info(self, message):
+        """
+        Pull message info from email service and store into extra_sender_data
+        :param message: Email message
+        """
+        raise NotImplementedError
+
 
 def send_template(recipient, slug, context_data, related_objects=None, attachments=None, tag=None):
     """
