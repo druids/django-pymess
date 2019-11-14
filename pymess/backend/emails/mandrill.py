@@ -49,13 +49,17 @@ class MandrillEmailBackend(EmailBackend):
             } for attachment in message.attachments.all()
         ]
 
-    def publish_message(self, message):
+    def _create_client(self, message):
         mandrill_client = mandrill.Mandrill(settings.EMAIL_MANDRILL.KEY)
         mandrill_client.session = generate_session(
             slug='pymess - Mandrill',
             related_objects=(message,),
             timeout=settings.EMAIL_MANDRILL.TIMEOUT
         )
+        return mandrill_client
+
+    def publish_message(self, message):
+        mandrill_client = self._create_client(message)
         try:
             result = mandrill_client.messages.send(
                 message={
@@ -89,3 +93,15 @@ class MandrillEmailBackend(EmailBackend):
             self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).
+
+    def pull_message_info(self, message):
+        message_id = message.extra_sender_data.get('result', {}).get('_id') if message.extra_sender_data else None
+        if message_id:
+            mandrill_client = self._create_client(message)
+            info = mandrill_client.messages.info(message_id)
+            message.change_and_save(
+                extra_sender_data={**message.extra_sender_data, 'info': info},
+                require_pull_info=False
+            )
+        else:
+            message.change_and_save(require_pull_info=False)
