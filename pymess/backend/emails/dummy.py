@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from pymess.backend.emails import EmailBackend
 from pymess.models import EmailMessage
 
@@ -13,5 +15,6 @@ class DummyEmailBackend(EmailBackend):
     def pull_message_info(self, message):
         message.change_and_save(
             extra_sender_data={**message.extra_sender_data, 'info': {'debug': True}},
-            require_pull_info=False
+            info_changed_at=timezone.now(),
+            update_only_changed_fields=True,
         )

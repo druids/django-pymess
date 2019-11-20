@@ -98,10 +98,14 @@ class MandrillEmailBackend(EmailBackend):
         message_id = message.extra_sender_data.get('result', {}).get('_id') if message.extra_sender_data else None
         if message_id:
             mandrill_client = self._create_client(message)
-            info = mandrill_client.messages.info(message_id)
-            message.change_and_save(
-                extra_sender_data={**message.extra_sender_data, 'info': info},
-                require_pull_info=False
-            )
+            try:
+                info = mandrill_client.messages.info(message_id)
+                message.change_and_save(
+                    extra_sender_data={**message.extra_sender_data, 'info': info},
+                    info_changed_at=timezone.now(),
+                    update_only_changed_fields=True,
+                )
+            except mandrill.UnknownMessageError:
+                message.change_and_save(info_changed_at=timezone.now(), update_only_changed_fields=True)
         else:
-            message.change_and_save(require_pull_info=False)
+            message.change_and_save(info_changed_at=timezone.now(), update_only_changed_fields=True)

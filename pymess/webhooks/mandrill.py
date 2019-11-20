@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from django.utils.decorators import method_decorator
+from django.utils.timezone import now
 
 from is_core.auth.permissions import AllowAny
 
@@ -43,4 +44,4 @@ class MandrillWebhookView(View):
         if message_id:
             message = get_object_or_none(EmailMessage, extra_sender_data__contains='"_id":"{}"'.format(message_id))
             if message:
-                message.change_and_save(require_pull_info=True)
+                message.change_and_save(last_webhook_received_at=now())
