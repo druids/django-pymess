@@ -43,10 +43,17 @@ class EmailMessage(BaseMessage):
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
     number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
                                                           blank=False, default=0)
-    require_pull_info = models.BooleanField(
-        verbose_name=_('require to pull message info from email service'),
-        null=False,
-        default=False
+    last_webhook_received_at = models.DateTimeField(
+        verbose_name=_('last webhook received at'),
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    info_changed_at = models.DateTimeField(
+        verbose_name=_('info changed at'),
+        null=True,
+        blank=True,
+        editable=False,
     )
 
     @property

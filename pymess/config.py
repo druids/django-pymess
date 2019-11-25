@@ -69,6 +69,8 @@ DEFAULTS = {
     'EMAIL_SENDERS': (),
     'EMAIL_HTML_DATA_DIRECTORY': None,
     'EMAIL_PULL_INFO_BATCH_SIZE': 100,
+    'EMAIL_PULL_INFO_DELAY_SECONDS': 60 * 60,  # 1 hour
+    'EMAIL_PULL_INFO_MAX_TIMEOUT_FROM_SENT_SECONDS': 60 * 60 * 24 * 30,  # 30 days
 
     # Dialer configuration
     'DIALER_TEMPLATE_MODEL': 'pymess.DialerTemplate',
