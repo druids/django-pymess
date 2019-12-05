@@ -1,13 +1,13 @@
 from chamber.utils.datastructures import ChoicesNumEnum
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
-from pymess.config import settings, get_dialer_sender
+from pymess.config import get_dialer_sender, settings
 from pymess.utils import normalize_phone_number
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
-
 
 __all__ = (
     'AbstractDialerMessage',
@@ -22,6 +22,7 @@ __all__ = (
 class AbstractDialerMessage(BaseMessage):
 
     STATE = ChoicesNumEnum(
+        # numbers are matching predefined state values in Daktela
         ('NOT_ASSIGNED', _('not assigned'), 0),
         ('READY', _('ready'), 1),
         ('RESCHEDULED_BY_DIALER', _('rescheduled by dialer'), 2),
@@ -34,6 +35,8 @@ class AbstractDialerMessage(BaseMessage):
         ('UNREACHABLE', _('unreachable'), 9),
         ('DECLINED', _('declined'), 10),
         ('UNANSWERED', _('unanswered'), 11),
+        ('HANGUP_BY_DIALER', _('answered - hangup by dialer'), 12),
+        ('HANGUP_BY_CUSTOMER', _('answered - hangup by customer'), 13),
         ('ERROR', _('error'), 66),
         ('DEBUG', _('debug'), 77),
     )
@@ -41,6 +44,13 @@ class AbstractDialerMessage(BaseMessage):
     template = models.ForeignKey(settings.DIALER_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='dialer_messages')
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
+    is_autodialer = models.BooleanField(verbose_name=_('is autodialer'), null=False, default=True)
+    content = models.TextField(verbose_name=_('content'), null=True, blank=True)
+
+    def clean(self):
+        if self.is_autodialer and not self.content:
+            raise ValidationError(_('Autodialer message must contain content.'))
+        super().clean()
 
     def clean_recipient(self):
         self.recipient = normalize_phone_number(force_text(self.recipient))

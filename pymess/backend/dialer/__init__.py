@@ -1,13 +1,15 @@
 import logging
 from datetime import timedelta
 
+from chamber.exceptions import PersistenceException
 from django.utils.encoding import force_text
 from django.utils.timezone import now
 
-from chamber.exceptions import PersistenceException
-
-from pymess.backend import BaseBackend, send_template as _send_template, send as _send
-from pymess.config import settings, get_dialer_template_model, get_dialer_sender
+from pymess.backend import BaseBackend
+from pymess.backend import send as _send
+from pymess.backend import send_template as _send_template
+from pymess.config import (get_dialer_sender, get_dialer_template_model,
+                           settings)
 from pymess.models import DialerMessage
 from pymess.utils import fullname
 
@@ -26,7 +28,7 @@ class DialerBackend(BaseBackend):
 
     model = DialerMessage
 
-    def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
+    def create_message(self, recipient, content, related_objects, tag, template, is_autodialer=True, **kwargs):
         """
         Create dialer message which will be logged in the database.
         :param recipient: phone number of the recipient
@@ -35,6 +37,7 @@ class DialerBackend(BaseBackend):
         relation
         :param tag: string mark that will be saved with the message
         :param template: template object from which content of the message was created
+        :param is_autodialer: True if it's a autodialer call otherwise False
         :param kwargs: extra attributes that will be saved with the message
         """
         try:
@@ -45,6 +48,7 @@ class DialerBackend(BaseBackend):
                 tag,
                 template,
                 state=self.get_initial_dialer_state(recipient),
+                is_autodialer=is_autodialer,
                 extra_data=kwargs,
                 **self._get_extra_message_kwargs()
             )
@@ -67,10 +71,11 @@ class DialerBackend(BaseBackend):
 
     def bulk_check_dialer_status(self):
         """
-        Method that finds messages that are not in the final state and updates their states.
+        Method that finds messages that are not in the final state which were not sent and updates their states.
         """
         messages_to_check = self.model.objects.filter(
             is_final_state=False,
+            sent_at__isnull=False,
             backend=fullname(self),
             created_at__gte=now() - timedelta(minutes=settings.DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES),
         )
