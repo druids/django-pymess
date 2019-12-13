@@ -273,6 +273,12 @@ msgstr "navolávání"
 msgid "is final state"
 msgstr "ukončeno"
 
+msgid "answered - hangup by dialer"
+msgstr "odpovězeno - zavěsil vytáčející"
+
+msgid "answered - hangup by customer"
+msgstr "odpovězeno - zavěsil zákazník"
+
 msgid "related object of a dialer message"
 msgstr "vztažený objekt zprávy dialeru"
 
@@ -407,3 +413,9 @@ msgstr "zakázané objekty SMS zpráv"
 
 msgid "HTML body contains one of banned tag: {}"
 msgstr "Tělo HTML obsahuje jeden ze zakázaných tagů: {}"
+
+msgid "Autodialer message must contain content."
+msgstr "Zpráva Autodialeru musí obsahovat obsah."
+
+msgid "Not allowed number to dial. Allowed numbers are: {}"
+msgstr "Nepovolené číslo k navolávání. Pouze tyto čísla jsou povolena: {}"

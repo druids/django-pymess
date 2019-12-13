@@ -77,7 +77,8 @@ DEFAULTS = {
     'DIALER_SENDER_BACKEND': 'pymess.backend.dialer.dummy.DummyDialerBackend',
     'DIALER_DAKTELA': {
         'ACCESS_TOKEN':  None,
-        'QUEUE': None,
+        'AUTODIALER_QUEUE': None,
+        'PREDICTIVE_QUEUE': None,
         'URL': None,
         'STATES_MAPPING': {
             '0': 0,
@@ -88,6 +89,7 @@ DEFAULTS = {
             '5': 5,
             '6': 6,
         },
+        'TESTING_PHONES': [],
         'TIMEOUT': 5,  # 5s
     },
     'DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES': 60 * 24,

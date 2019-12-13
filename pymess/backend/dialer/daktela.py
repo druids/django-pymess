@@ -1,7 +1,10 @@
+from chamber.exceptions import PersistenceException
+from django.core.exceptions import ValidationError
 from django.utils import timezone as tz
 from django.utils.encoding import force_text
+from django.utils.translation import ugettext as _
 
-from pymess.backend.dialer import DialerBackend
+from pymess.backend.dialer import DialerBackend, DialerSendingError
 from pymess.config import settings
 from pymess.models import DialerMessage
 from pymess.utils.logged_requests import generate_session
@@ -21,6 +24,20 @@ class DaktelaDialerBackend(DialerBackend):
         return '{base_url}{name}.json?accessToken={access_token}'.format(
             base_url=settings.DIALER_DAKTELA.URL, name=name, access_token=settings.DIALER_DAKTELA.ACCESS_TOKEN,
         )
+
+    def _get_autodialer_message_states(self, resp_json, state_mapped, resp_message_state):
+        custom_fields = resp_json['result']['customFields']
+        tts_processed = custom_fields['ttsprocessed'][0]
+        whole_message_heard = ('whole_message_heard' in custom_fields and custom_fields['whole_message_heard']
+                               and custom_fields['whole_message_heard'][0] == 'Yes')
+        if state_mapped == DialerMessage.STATE.ANSWERED_PARTIAL and whole_message_heard:
+            resp_message_state = str(DialerMessage.STATE.ANSWERED_COMPLETE)
+        if state_mapped == DialerMessage.STATE.DONE and tts_processed == '0':
+            resp_message_state = str(DialerMessage.STATE.NOT_ASSIGNED)
+        tts_processed = resp_json['result']['customFields']['ttsprocessed'][0]
+        is_final_state = resp_json['result']['action'] == '5' and tts_processed == '1'
+        message_state = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
+        return is_final_state, message_state
 
     def _update_dialer_states(self, messages):
         """
@@ -44,18 +61,15 @@ class DaktelaDialerBackend(DialerBackend):
             })
             resp_message_state = resp_json['result']['statuses'][0]['name'] if len(
                 resp_json['result']['statuses']) else resp_json['result']['action']
-            custom_fields = resp_json['result']['customFields']
-            tts_processed = custom_fields['ttsprocessed'][0]
-            whole_message_heard = ('whole_message_heard' in custom_fields and custom_fields['whole_message_heard']
-                                   and custom_fields['whole_message_heard'][0] == 'Yes')
             state_mapped = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
-            if state_mapped == DialerMessage.STATE.ANSWERED_PARTIAL and whole_message_heard:
-                resp_message_state = str(DialerMessage.STATE.ANSWERED_COMPLETE)
-            if state_mapped == DialerMessage.STATE.DONE and tts_processed == '0':
-                resp_message_state = str(DialerMessage.STATE.NOT_ASSIGNED)
-            message_state = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
             message_error = resp_json['error'] if len(resp_json['error']) else None
-            tts_processed = resp_json['result']['customFields']['ttsprocessed'][0]
+
+            if message.is_autodialer:
+                is_final_state, message_state = self._get_autodialer_message_states(resp_json, state_mapped,
+                                                                                    resp_message_state)
+            else:
+                message_state = state_mapped
+                is_final_state = resp_json['result']['action'] == '5'
 
             try:
                 self.update_message(
@@ -63,7 +77,7 @@ class DaktelaDialerBackend(DialerBackend):
                     state=message_state,
                     error=message_error,
                     extra_data=message.extra_data,
-                    is_final_state=resp_json['result']['action'] == '5' and tts_processed == '1',
+                    is_final_state=is_final_state,
                 )
             except Exception as ex:
                 self.update_message(message, state=DialerMessage.STATE.ERROR, error=force_text(ex), is_final_state=True)
@@ -71,15 +85,29 @@ class DaktelaDialerBackend(DialerBackend):
                 # and log them into database. Re-raise exception causes transaction rollback (lost of information about
                 # exception).
 
+    def _update_message_with_error(self, message, error_message):
+        self.update_message(
+            message,
+            state=DialerMessage.STATE.ERROR,
+            error=error_message,
+            is_final_state=True
+        )
+
     def publish_message(self, message):
         """
         Method uses Daktela API for sending dialer message
         :param message: dialer message
         """
         client_url = self._get_dialer_api_url()
+        testing_phones = settings.DIALER_DAKTELA.TESTING_PHONES
+        if testing_phones and message.recipient not in testing_phones:
+            error_message = _('Not allowed number to dial. Allowed numbers are: {}').format(', '.join(testing_phones))
+            self._update_message_with_error(message, error_message)
+            return
         try:
             payload = {
-                'queue': settings.DIALER_DAKTELA.QUEUE,
+                'queue': (settings.DIALER_DAKTELA.AUTODIALER_QUEUE if message.is_autodialer
+                          else settings.DIALER_DAKTELA.PREDICTIVE_QUEUE),
                 'number': message.recipient,
                 'customFields': {
                     'mall_pay_text': [
@@ -91,6 +119,9 @@ class DaktelaDialerBackend(DialerBackend):
                 },
                 'action': 5,
             }
+            custom_fields = message.extra_data.get('custom_fields')
+            if custom_fields:
+                payload['customFields'].update(**custom_fields)
 
             response = generate_session(
                 slug=self.SESSION_SLUG,
@@ -116,12 +147,32 @@ class DaktelaDialerBackend(DialerBackend):
                 extra_data=message.extra_data,
             )
         except Exception as ex:
-            self.update_message(
-                message,
-                state=DialerMessage.STATE.ERROR,
-                error=force_text(ex),
-                is_final_state=True
-            )
+            self._update_message_with_error(message, force_text(ex))
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).
+
+    def create_message(self, recipient, content=None, related_objects=None, tag=None, template=None,
+                       is_autodialer=True, **kwargs):
+        """
+        Create dialer message which will be logged in the database (content is not needed for this .
+        :param recipient: phone number of the recipient
+        :param related_objects: list of related objects that will be linked with the dialer message using generic
+        relation
+        :param tag: string mark that will be saved with the message
+        :param kwargs: extra attributes that will be saved with the message
+        """
+        try:
+            return super().create_message(
+                recipient=recipient,
+                content=content,
+                related_objects=related_objects,
+                tag=tag,
+                template=template,
+                state=self.get_initial_dialer_state(recipient),
+                is_autodialer=is_autodialer,
+                **kwargs,
+                **self._get_extra_message_kwargs()
+            )
+        except PersistenceException as ex:
+            raise DialerSendingError(force_text(ex))
