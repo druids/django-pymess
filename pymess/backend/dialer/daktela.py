@@ -1,3 +1,5 @@
+from collections import Sequence
+
 from chamber.exceptions import PersistenceException
 from django.core.exceptions import ValidationError
 from django.utils import timezone as tz
@@ -53,6 +55,9 @@ class DaktelaDialerBackend(DialerBackend):
                 timeout=settings.DIALER_DAKTELA.TIMEOUT
             ).get(client_url)
             resp_json = response.json()
+            if response.status_code != 200 and resp_json.get('error'):
+                self._update_message_with_error(message, error_message=resp_json.get('error'), is_final_state=False)
+                continue
 
             message.extra_data.update({
                 'name': name,
@@ -80,17 +85,17 @@ class DaktelaDialerBackend(DialerBackend):
                     is_final_state=is_final_state,
                 )
             except Exception as ex:
-                self.update_message(message, state=DialerMessage.STATE.ERROR, error=force_text(ex), is_final_state=True)
+                self._update_message_with_error(message, error_message=ex)
                 # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
                 # and log them into database. Re-raise exception causes transaction rollback (lost of information about
                 # exception).
 
-    def _update_message_with_error(self, message, error_message):
+    def _update_message_with_error(self, message, error_message, is_final_state=True):
         self.update_message(
             message,
             state=DialerMessage.STATE.ERROR,
-            error=error_message,
-            is_final_state=True
+            error=', '.join(error_message) if isinstance(error_message, Sequence) else str(error_message),
+            is_final_state=is_final_state,
         )
 
     def publish_message(self, message):
@@ -139,15 +144,18 @@ class DaktelaDialerBackend(DialerBackend):
                 'daktela_statuses': resp_json['result']['statuses'],
             })
 
-            self.update_message(
-                message,
-                state=DialerMessage.STATE.READY,
-                error=resp_json['error'] if len(resp_json['error']) else None,
-                sent_at=tz.now(),
-                extra_data=message.extra_data,
-            )
+            error_message = resp_json.get('error')
+            if error_message:
+                self._update_message_with_error(message, error_message)
+            else:
+                self.update_message(
+                    message,
+                    state=DialerMessage.STATE.READY,
+                    sent_at=tz.now(),
+                    extra_data=message.extra_data,
+                )
         except Exception as ex:
-            self._update_message_with_error(message, force_text(ex))
+            self._update_message_with_error(message, ex)
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).
