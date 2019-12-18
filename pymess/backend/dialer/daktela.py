@@ -1,3 +1,4 @@
+import re
 from collections import Sequence
 
 from chamber.exceptions import PersistenceException
@@ -85,17 +86,26 @@ class DaktelaDialerBackend(DialerBackend):
                     is_final_state=is_final_state,
                 )
             except Exception as ex:
-                self._update_message_with_error(message, error_message=ex)
+                self._update_message_with_error(message, error_message=ex, is_final_state=False)
                 # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
                 # and log them into database. Re-raise exception causes transaction rollback (lost of information about
                 # exception).
 
     def _update_message_with_error(self, message, error_message, is_final_state=True):
+        status_check_attempt_remaining_exceeded = (
+            True if message.number_of_status_check_attempts >= settings.DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS
+            else is_final_state
+        )
+        message_kwargs = {
+            'state': DialerMessage.STATE.ERROR,
+            'error': ', '.join(error_message) if isinstance(error_message, Sequence) else str(error_message),
+            'is_final_state': status_check_attempt_remaining_exceeded,
+        }
+        if not status_check_attempt_remaining_exceeded:
+            message_kwargs['number_of_status_check_attempts'] = message.number_of_status_check_attempts + 1
         self.update_message(
             message,
-            state=DialerMessage.STATE.ERROR,
-            error=', '.join(error_message) if isinstance(error_message, Sequence) else str(error_message),
-            is_final_state=is_final_state,
+            **message_kwargs
         )
 
     def publish_message(self, message):
@@ -113,7 +123,7 @@ class DaktelaDialerBackend(DialerBackend):
             payload = {
                 'queue': (settings.DIALER_DAKTELA.AUTODIALER_QUEUE if message.is_autodialer
                           else settings.DIALER_DAKTELA.PREDICTIVE_QUEUE),
-                'number': message.recipient,
+                'number': re.sub(r'^\+', '00', message.recipient),
                 'customFields': {
                     'mall_pay_text': [
                         message.content,
@@ -122,8 +132,9 @@ class DaktelaDialerBackend(DialerBackend):
                         0,
                     ],
                 },
-                'action': 5,
             }
+            if message.is_autodialer:
+                payload['action'] = 5
             custom_fields = message.extra_data.get('custom_fields')
             if custom_fields:
                 payload['customFields'].update(**custom_fields)

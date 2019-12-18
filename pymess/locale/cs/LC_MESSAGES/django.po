@@ -315,6 +315,9 @@ msgstr "předmět"
 msgid "number of send attempts"
 msgstr "počet pokusů odeslání"
 
+msgid "number of status check attempts"
+msgstr "počet pokusů kontroly statusu"
+
 msgid "last webhook received at"
 msgstr "Poslední webhhok přijat"
 

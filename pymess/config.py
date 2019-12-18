@@ -93,6 +93,7 @@ DEFAULTS = {
         'TIMEOUT': 5,  # 5s
     },
     'DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES': 60 * 24,
+    'DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS': 5,
 
     # Push notification settings
     'PUSH_NOTIFICATION_TEMPLATE_MODEL': 'pymess.PushNotificationTemplate',

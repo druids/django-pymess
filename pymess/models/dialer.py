@@ -45,6 +45,8 @@ class AbstractDialerMessage(BaseMessage):
                                  on_delete=models.SET_NULL, related_name='dialer_messages')
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
     is_autodialer = models.BooleanField(verbose_name=_('is autodialer'), null=False, default=True)
+    number_of_status_check_attempts = models.PositiveIntegerField(verbose_name=_('number of status check attempts'),
+                                                                  null=False, blank=False, default=0)
     content = models.TextField(verbose_name=_('content'), null=True, blank=True)
 
     def clean(self):
