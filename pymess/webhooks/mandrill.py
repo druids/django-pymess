@@ -9,8 +9,6 @@ from django.utils.timezone import now
 
 from is_core.auth.permissions import AllowAny
 
-from chamber.shortcuts import get_object_or_none
-
 from pymess.models import EmailMessage
 
 
@@ -42,6 +40,6 @@ class MandrillWebhookView(View):
     def process_event(self, event_dict):
         message_id = event_dict.get('_id', None)
         if message_id:
-            message = get_object_or_none(EmailMessage, extra_sender_data__contains='"_id":"{}"'.format(message_id))
+            message = EmailMessage.objects.filter(external_id=message_id).first()
             if message:
                 message.change_and_save(last_webhook_received_at=now())
