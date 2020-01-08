@@ -35,7 +35,7 @@ class AbstractDialerMessage(BaseMessage):
         ('UNREACHABLE', _('unreachable'), 9),
         ('DECLINED', _('declined'), 10),
         ('UNANSWERED', _('unanswered'), 11),
-        ('HANGUP_BY_DIALER', _('answered - hangup by dialer'), 12),
+        ('HANGUP_BY_DIALER', _('unanswered - hangup by dialer'), 12),
         ('HANGUP_BY_CUSTOMER', _('answered - hangup by customer'), 13),
         ('ERROR', _('error'), 66),
         ('DEBUG', _('debug'), 77),
