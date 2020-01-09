@@ -88,18 +88,18 @@ class MandrillEmailBackend(EmailBackend):
             extra_sender_data = message.extra_sender_data or {}
             extra_sender_data['result'] = result
             self.update_message(message, state=state, sent_at=timezone.now(),
-                                extra_sender_data=extra_sender_data, error=error)
+                                extra_sender_data=extra_sender_data, error=error,
+                                external_id=result.get('_id'))
         except (mandrill.Error, JSONDecodeError, requests.exceptions.RequestException) as ex:
             self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).
 
     def pull_message_info(self, message):
-        message_id = message.extra_sender_data.get('result', {}).get('_id') if message.extra_sender_data else None
-        if message_id:
+        if message.external_id:
             mandrill_client = self._create_client(message)
             try:
-                info = mandrill_client.messages.info(message_id)
+                info = mandrill_client.messages.info(message.external_id)
                 message.change_and_save(
                     extra_sender_data={**message.extra_sender_data, 'info': info},
                     info_changed_at=timezone.now(),

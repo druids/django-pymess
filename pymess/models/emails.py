@@ -43,6 +43,7 @@ class EmailMessage(BaseMessage):
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
     number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
                                                           blank=False, default=0)
+    external_id = models.CharField(verbose_name=_('external ID'), blank=True, null=True, db_index=True, max_length=250)
     last_webhook_received_at = models.DateTimeField(
         verbose_name=_('last webhook received at'),
         null=True,
