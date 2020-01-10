@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-01-09 00:52+0100\n"
+"POT-Creation-Date: 2020-01-10 16:08+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -347,8 +347,8 @@ msgid "unanswered"
 msgstr "volaný nezvedá"
 
 #: models/dialer.py:38
-msgid "answered - hangup by dialer"
-msgstr "odpovězeno - zavěsil vytáčející"
+msgid "unanswered - hangup by dialer"
+msgstr "volaný nezvedá - zavěsil vytáčející"
 
 #: models/dialer.py:39
 msgid "answered - hangup by customer"
@@ -441,7 +441,7 @@ msgstr "externí ID"
 
 #: models/emails.py:48
 msgid "last webhook received at"
-msgstr "Poslední webhhok přijat"
+msgstr "Poslední webhook přijat"
 
 #: models/emails.py:54
 msgid "info changed at"
