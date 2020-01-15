@@ -365,7 +365,7 @@ msgstr "šablona"
 
 #: models/dialer.py:47
 msgid "is autodialer"
-msgstr "je autidialer"
+msgstr "je autodialer"
 
 #: models/dialer.py:48
 msgid "number of status check attempts"
