@@ -1,8 +1,6 @@
 import re
-from collections import Sequence
 
 from chamber.exceptions import PersistenceException
-from django.core.exceptions import ValidationError
 from django.utils import timezone as tz
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext as _
@@ -98,7 +96,7 @@ class DaktelaDialerBackend(DialerBackend):
         )
         message_kwargs = {
             'state': DialerMessage.STATE.ERROR,
-            'error': ', '.join(error_message) if isinstance(error_message, Sequence) else str(error_message),
+            'error': ', '.join(error_message) if isinstance(error_message, list) else str(error_message),
             'is_final_state': status_check_attempt_remaining_exceeded,
         }
         if not status_check_attempt_remaining_exceeded:
