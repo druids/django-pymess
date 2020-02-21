@@ -31,7 +31,7 @@ class SMTPEmailBackend(EmailBackend):
             email_message.send()
             self.update_message(message, state=EmailMessage.STATE.SENT, sent_at=timezone.now())
         except Exception as ex:
-            self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
+            self.update_message(message, state=EmailMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).

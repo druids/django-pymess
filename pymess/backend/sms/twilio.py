@@ -36,8 +36,8 @@ class TwilioSMSBackend(SMSBackend):
         STATE.SENT: OutputSMSMessage.STATE.SENT,
         STATE.DELIVERED: OutputSMSMessage.STATE.DELIVERED,
         STATE.RECEIVED: OutputSMSMessage.STATE.DELIVERED,
-        STATE.FAILED: OutputSMSMessage.STATE.ERROR,
-        STATE.UNDELIVERED: OutputSMSMessage.STATE.ERROR,
+        STATE.FAILED: OutputSMSMessage.STATE.ERROR_UPDATE,
+        STATE.UNDELIVERED: OutputSMSMessage.STATE.ERROR_UPDATE,
     }
 
     def _get_twilio_client(self):
@@ -67,7 +67,7 @@ class TwilioSMSBackend(SMSBackend):
                 sent_at=timezone.now()
             )
         except Exception as ex:
-            self.update_message(message, state=OutputSMSMessage.STATE.ERROR, error=force_text(ex))
+            self.update_message(message, state=OutputSMSMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).

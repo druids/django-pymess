@@ -46,10 +46,10 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
             extra_sender_data = message.extra_sender_data or {}
             extra_sender_data['result'] = result.body
 
-            error_state, sent_state = PushNotificationMessage.STATE.ERROR, PushNotificationMessage.STATE.SENT
+            error_state, sent_state = PushNotificationMessage.STATE.ERROR_NOT_SENT, PushNotificationMessage.STATE.SENT
             self.update_message(message, state=error_state if self._is_invalid_result(result) else sent_state,
                                 error=result.errors, sent_at=timezone.now(), extra_sender_data=extra_sender_data)
         except (JSONDecodeError, requests.exceptions.RequestException) as ex:
-            self.update_message(message, state=PushNotificationMessage.STATE.ERROR, error=force_text(ex))
+            self.update_message(message, state=PushNotificationMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (loss of information
             # about exception).

@@ -52,20 +52,22 @@ Models
 
     Field contains the current state of the message. Allowed states are:
 
-      * NOT_ASSIGNED - state of the message was not assigned yet
-      * READY - the message is ready to be dialed to the recipient
-      * RESCHEDULED_BY_DIALER - the call rescheduled by dialer service from any reason
-      * CALL_IN_PROGRESS - recipient answered the call and message is being read
-      * HANGUP - recipient hang up
-      * DONE - message has been processed
-      * RESCHEDULED - the call rescheduled by dialer service due to recipient action or state (hang up, not answering, unreachable, etc.)
       * ANSWERED_COMPLETE - recipient answered the call and listened up complete message
       * ANSWERED_PARTIAL - recipient answered the call and NOT listened up complete message
-      * UNREACHABLE - recipient is unreachable
+      * CALL_IN_PROGRESS - recipient answered the call and message is being read
       * DECLINED - recipient declined to answer the call
-      * UNANSWERED - recipient did not take any action
-      * ERROR - error was raised during sending of the message
       * DEBUG - dialer message was not sent because system is in debug mode
+      * DONE - message has been processed
+      * ERROR_NOT_SENT - error was raised during sending of the message
+      * ERROR_UPDATE - error was raised during checking message state
+      * HANGUP - recipient hang up
+      * NOT_ASSIGNED - state of the message was not assigned yet
+      * READY - the message is ready to be dialed to the recipient
+      * RESCHEDULED - the call rescheduled by dialer service due to recipient action or state (hang up, not answering, unreachable, etc.)
+      * RESCHEDULED_BY_DIALER - the call rescheduled by dialer service from any reason
+      * UNANSWERED - recipient did not take any action
+      * UNREACHABLE - recipient is unreachable
+      * WAITING - message was not sent to the external service
 
   .. attribute:: backend
 
@@ -87,13 +89,13 @@ Models
 
     String tag that you can define during sending dialer message.
 
+  .. attribute:: number_of_send_attempts
+
+    Number of sending attempts. Value is set only when batch sending is used.
+
   .. attribute:: is_final_state
 
     Helper field. If it cannot be resolved from message states clearly whether message is in its final state this field indicates it (based on further logic).
-
-  .. attribute:: failed
-
-    Returns ``True`` if message ended in ``ERROR`` state.
 
   .. attribute:: related_objects
 
@@ -119,10 +121,6 @@ Models
   .. attribute:: content_type
 
     Content type of the stored model (generic relation)
-
-  .. attribute:: object_id_int
-
-    If a related objects has primary key in integer format the key is stored here. This field uses db index therefore filtering is much faster.
 
   .. attribute:: object_id
 
@@ -212,5 +210,13 @@ If you want to write your own Pymess dialer backend you must create class that i
 
 Commands
 --------
+
+``send_messages_batch``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned dialer messages can be sent in a batch with Django command ``send_messages_batch --type=dialer``.
+
+``bulk_check_dialer_status``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Because some services provide checking whether dialer messages were delivered Pymess provides a command that calls backend method ``bulk_check_dialer_status``. You can use this command inside cron and periodically call it. But dialer backend and service must provide it (must have implemented method ``bulk_check_dialer_status``).

@@ -21,7 +21,7 @@ class AbstractPushNotificationMessage(BaseMessage):
     STATE = ChoicesNumEnum(
         ('WAITING', _('waiting'), 1),
         ('SENT', _('sent'), 2),
-        ('ERROR', _('error'), 3),
+        ('ERROR_NOT_SENT', _('error message was not sent'), 3),
         ('DEBUG', _('debug'), 4),
     )
 
@@ -36,6 +36,10 @@ class AbstractPushNotificationMessage(BaseMessage):
         abstract = True
         verbose_name = _('push notification')
         verbose_name_plural = _('push notifications')
+
+    @property
+    def failed(self):
+        return self.state == self.STATE.ERROR_NOT_SENT
 
 
 class PushNotificationMessage(AbstractPushNotificationMessage):

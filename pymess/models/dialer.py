@@ -23,6 +23,7 @@ class AbstractDialerMessage(BaseMessage):
 
     STATE = ChoicesNumEnum(
         # numbers are matching predefined state values in Daktela
+        ('WAITING', _('waiting'), -1),
         ('NOT_ASSIGNED', _('not assigned'), 0),
         ('READY', _('ready'), 1),
         ('RESCHEDULED_BY_DIALER', _('rescheduled by dialer'), 2),
@@ -37,8 +38,9 @@ class AbstractDialerMessage(BaseMessage):
         ('UNANSWERED', _('unanswered'), 11),
         ('HANGUP_BY_DIALER', _('unanswered - hangup by dialer'), 12),
         ('HANGUP_BY_CUSTOMER', _('answered - hangup by customer'), 13),
-        ('ERROR', _('error'), 66),
+        ('ERROR_UPDATE', _('error message update'), 66),
         ('DEBUG', _('debug'), 77),
+        ('ERROR_NOT_SENT', _('error message was not sent'), 88),
     )
 
     template = models.ForeignKey(settings.DIALER_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
@@ -48,6 +50,11 @@ class AbstractDialerMessage(BaseMessage):
     number_of_status_check_attempts = models.PositiveIntegerField(verbose_name=_('number of status check attempts'),
                                                                   null=False, blank=False, default=0)
     content = models.TextField(verbose_name=_('content'), null=True, blank=True)
+
+    class Meta(BaseMessage.Meta):
+        abstract = True
+        verbose_name = _('dialer message')
+        verbose_name_plural = _('dialer messages')
 
     def clean(self):
         if self.is_autodialer and not self.content:
@@ -59,12 +66,7 @@ class AbstractDialerMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state == self.STATE.ERROR
-
-    class Meta(BaseMessage.Meta):
-        abstract = True
-        verbose_name = _('dialer message')
-        verbose_name_plural = _('dialer messages')
+        return self.state == self.STATE.ERROR_NOT_SENT
 
 
 class DialerMessage(AbstractDialerMessage):

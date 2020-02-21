@@ -30,19 +30,17 @@ class EmailMessage(BaseMessage):
         ('WAITING', _('waiting'), 1),
         ('SENDING', _('sending'), 2),
         ('SENT', _('sent'), 3),
-        ('ERROR', _('error'), 4),
+        ('ERROR_NOT_SENT', _('error message was not sent'), 4),
         ('DEBUG', _('debug'), 5),
     )
 
-    recipient = models.EmailField(verbose_name=_('recipient'), blank=False, null=False)
+    recipient = models.EmailField(verbose_name=_('recipient'), blank=False, null=False, db_index=True)
     template = models.ForeignKey(settings.EMAIL_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='email_messages')
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
     sender = models.EmailField(verbose_name=_('sender'), blank=False, null=False)
     sender_name = models.CharField(verbose_name=_('sender name'), blank=True, null=True, max_length=250)
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
-    number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
-                                                          blank=False, default=0)
     external_id = models.CharField(verbose_name=_('external ID'), blank=True, null=True, db_index=True, max_length=250)
     last_webhook_received_at = models.DateTimeField(
         verbose_name=_('last webhook received at'),
@@ -57,6 +55,13 @@ class EmailMessage(BaseMessage):
         editable=False,
     )
 
+    class Meta(BaseMessage.Meta):
+        verbose_name = _('e-mail message')
+        verbose_name_plural = _('e-mail messages')
+
+    def __str__(self):
+        return '{}: {}'.format(self.recipient, self.subject)
+
     @property
     def friendly_sender(self):
         """
@@ -66,14 +71,7 @@ class EmailMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state == self.STATE.ERROR
-
-    def __str__(self):
-        return '{}: {}'.format(self.recipient, self.subject)
-
-    class Meta(BaseMessage.Meta):
-        verbose_name = _('e-mail message')
-        verbose_name_plural = _('e-mail messages')
+        return self.state == self.STATE.ERROR_NOT_SENT
 
 
 class EmailRelatedObject(BaseRelatedObject):

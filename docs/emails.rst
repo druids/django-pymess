@@ -54,7 +54,7 @@ Models
 
   .. attribute:: template_slug
 
-    If e-mail was sent from the template, this attribute cointains key of the template.
+    If e-mail was sent from the template, this attribute contains key of the template.
 
   .. attribute:: template
 
@@ -64,11 +64,11 @@ Models
 
     Contains the current state of the message. Allowed states are:
 
-      * WAITING - e-mail was not sent to the external service
+      * DEBUG - e-mail was not sent because system is in debug mode
+      * ERROR_NOT_SENT - error was raised during sending of the e-mail message
       * SENDING - e-mail was sent to the external service
       * SENT - e-mail was sent to the receiver
-      * ERROR - error was raised during sending of the e-mail message
-      * DEBUG - e-mail was not sent because system is in debug mode
+      * WAITING - e-mail was not sent to the external service
 
   .. attribute:: backend
 
@@ -90,9 +90,21 @@ Models
 
     String tag that you can define during sending SMS message.
 
-  .. attribute:: failed
+  .. attribute:: number_of_send_attempts
 
-    Returns ``True`` if SMS ended in ``ERROR`` state.
+    Number of sending attempts. Value is set only when batch sending is used.
+
+  .. attribute:: external_id
+
+    Message identifier on the provider side, can be ``None`` if backend doesn't support it.
+
+  .. attribute:: info_changed_at
+
+    Date and time of last message status update.
+
+  .. attribute:: last_webhook_received_at
+
+    Date and time of last status change received from provider via webhook.
 
   .. attribute:: related_objects
 
@@ -118,10 +130,6 @@ Models
   .. attribute:: content_type
 
     Content type of the stored model (generic relation)
-
-  .. attribute:: object_id_int
-
-    If a related objects have primary key in integer format the key is stored here. This field uses db index, therefore filtering is much faster.
 
   .. attribute:: object_id
 
@@ -267,10 +275,10 @@ If you want to write your own Pymess e-mail backend, you must create class that 
 Commands
 --------
 
-``send_emails_batch``
-^^^^^^^^^^^^^^^^^^^^^
+``send_messages_batch``
+^^^^^^^^^^^^^^^^^^^^^^^
 
-As mentioned e-mails can be sent in a batch with Django command ``send_emails_batch``.
+As mentioned e-mails can be sent in a batch with Django command ``send_messages_batch --type=email``.
 
 ``sync_emails``
 ^^^^^^^^^^^^^^^
@@ -281,3 +289,14 @@ Store e-mail body in a HTML file is better from code readability. Therefore this
 ^^^^^^^^^^^^^^^
 
 E-mail body can be changed in the database therefore reverse operation to ``sync_emails`` can be done with this command. You must select directory where e-mails body in HTML format will be stored.
+
+
+``pull_emails_info``
+^^^^^^^^^^^^^^^^^^^^
+
+Synchronize e-mail message status from the provider.
+
+Webhooks
+--------
+
+Mandrill provides notification system which notifies your URL endpoint that some message status was changed. For this purpose pymess provides view ``pymess.webhooks.mandrill.MandrillWebhookView`` which you simply add to your ``django urls``. Every notification will mark message to be updated with the ``pull_emails_info`` command.

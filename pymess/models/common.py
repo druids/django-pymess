@@ -2,28 +2,40 @@ from functools import reduce
 
 from operator import or_ as OR
 
-from chamber.models import SmartModel
-from chamber.utils.datastructures import ChoicesNumEnum
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Manager, Q
+from django.db.models import Q
+from django.db.models.functions import Cast
 from django.template import Template, Context
 from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
+from chamber.models import SmartModel
+from chamber.utils.datastructures import ChoicesNumEnum
+
 from jsonfield.fields import JSONField
 
-from pymess.utils import has_int_pk
+
+class RelatedObjectQueryset(models.QuerySet):
+
+    def annotate_object_pks(self, model_class):
+        pk_field = model_class._meta.pk
+        if isinstance(pk_field, models.AutoField):
+            pk_field = models.IntegerField()
+        return self.filter(
+            content_type=ContentType.objects.get_for_model(model_class)
+        ).annotate(
+            object_pk=Cast('object_id', output_field=pk_field)
+        )
 
 
-class RelatedObjectManager(Manager):
+class RelatedObjectManager(models.Manager):
 
     def create_from_related_object(self, related_object):
         return self.create(
-            object_id_int=related_object.pk if has_int_pk(related_object) else None,
             object_id=related_object.pk,
             content_type=ContentType.objects.get_for_model(related_object)
         )
@@ -56,7 +68,6 @@ class RelatedObjectManager(Manager):
 
     def get_or_create_from_related_object(self, related_object):
         return self.get_or_create(
-            object_id_int=related_object.pk if has_int_pk(related_object) else None,
             object_id=related_object.pk,
             content_type=ContentType.objects.get_for_model(related_object)
         )
@@ -67,10 +78,8 @@ class RelatedObjectManager(Manager):
             for related_object in related_objects
         ]
 
-    def get_related_objects_by_model(self, model):
-        values_list_pk = 'object_id_int' if has_int_pk(model) else 'object_id'
-        pks = self.filter(content_type=ContentType.objects.get_for_model(model)).values_list(values_list_pk)
-        return model.objects.filter(pk__in=pks)
+    def get_related_objects_by_model(self, model_class):
+        return model_class.objects.filter(pk__in=self.annotate_object_pks(model_class).values('object_pk'))
 
     def filter_from_related_objects(self, *related_objects):
         if hasattr(self, 'instance'):
@@ -81,20 +90,50 @@ class RelatedObjectManager(Manager):
         return self.model.objects.filter(template_filter).filter(self._get_related_objects_qs_kwargs(*related_objects))
 
 
+class MessageQueryset(models.QuerySet):
+
+    def filter_related_object(self, related_object):
+        return self.filter(
+            related_objects__object_id=str(related_object.pk),
+            related_objects__content_type=ContentType.objects.get_for_model(related_object)
+        )
+
+    def filter_related_objects(self, related_objects_queryset):
+        return self.filter(
+            related_objects__object_id=related_objects_queryset.annotate(
+                object_str_pk=Cast('pk', output_field=models.TextField())
+            ).values('object_str_pk'),
+            related_objects__content_type=ContentType.objects.get_for_model(related_objects_queryset.model)
+        )
+
+
+class MessageManager(models.Manager):
+
+    def was_sent(self, template_slug, related_object):
+        return self.filter(
+            template_slug=template_slug,
+        ).filter_related_object(related_object).exists()
+
+
 class BaseMessage(SmartModel):
 
     STATE = ChoicesNumEnum()
 
     sent_at = models.DateTimeField(verbose_name=_('sent at'), null=True, blank=True, editable=False)
-    recipient = models.CharField(verbose_name=_('recipient'), null=False, blank=False, max_length=20)
+    recipient = models.CharField(verbose_name=_('recipient'), null=False, blank=False, max_length=20, db_index=True)
     content = models.TextField(verbose_name=_('content'), null=False, blank=False)
-    template_slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=True, blank=True, editable=False)
+    template_slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=True, blank=True, editable=False,
+                                     db_index=True)
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
     backend = models.CharField(verbose_name=_('backend'), null=True, blank=True, editable=False, max_length=250)
     error = models.TextField(verbose_name=_('error'), null=True, blank=True, editable=False)
     extra_data = JSONField(verbose_name=_('extra data'), null=True, blank=True, editable=False)
     extra_sender_data = JSONField(verbose_name=_('extra sender data'), null=True, blank=True, editable=False)
     tag = models.SlugField(verbose_name=_('tag'), null=True, blank=True, editable=False)
+    number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
+                                                          blank=False, default=0)
+
+    objects = MessageManager.from_queryset(MessageQueryset)()
 
     def __str__(self):
         return self.recipient
@@ -108,12 +147,10 @@ class BaseRelatedObject(SmartModel):
 
     content_type = models.ForeignKey(ContentType, verbose_name=_('content type of the related object'),
                                      null=False, blank=False, on_delete=models.CASCADE)
-    object_id = models.TextField(verbose_name=_('ID of the related object'), null=False, blank=False)
-    object_id_int = models.PositiveIntegerField(verbose_name=_('ID of the related object in int format'), null=True,
-                                                blank=True, db_index=True)
+    object_id = models.TextField(verbose_name=_('ID of the related object'), null=False, blank=False, db_index=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    objects = RelatedObjectManager()
+    objects = RelatedObjectManager.from_queryset(RelatedObjectQueryset)()
 
     class Meta:
         abstract = True

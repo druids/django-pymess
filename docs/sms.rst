@@ -57,13 +57,14 @@ Models
 
     Field contains the current state of the message. Allowed states are:
 
-      * WAITING - SMS was not sent to the external service
-      * UNKNOWN - SMS was sent to the external service but its state is unknown
-      * SENDING - SMS was sent to the external service
-      * SENT - SMS was sent to the receiver
-      * ERROR - error was raised during sending of the SMS message
       * DEBUG - SMS was not sent because system is in debug mode
       * DELIVERED - SMS was delivered to the receiver
+      * ERROR_NOT_SENT - SMS was raised during sending of the SMS message
+      * ERROR_UPDATE - error was raised during updating state of the SMS message
+      * SENDING - SMS was sent to the external service
+      * SENT - SMS was sent to the receiver
+      * UNKNOWN - SMS was sent to the external service but its state is unknown
+      * WAITING - SMS was not sent to the external service
 
   .. attribute:: backend
 
@@ -85,9 +86,9 @@ Models
 
     String tag that you can define during sending SMS message.
 
-  .. attribute:: failed
+  .. attribute:: number_of_send_attempts
 
-    Returns ``True`` if SMS ended in ``ERROR`` state.
+    Number of sending attempts. Value is set only when batch sending is used.
 
   .. attribute:: related_objects
 
@@ -113,10 +114,6 @@ Models
   .. attribute:: content_type
 
     Content type of the stored model (generic relation)
-
-  .. attribute:: object_id_int
-
-    If a related objects has primary key in integer format the key is stored here. This field uses db index therefore filtering is much faster.
 
   .. attribute:: object_id
 
@@ -241,4 +238,12 @@ If you want to write your own Pymess SMS backend, you must create class that inh
 Commands
 --------
 
-Because some services provide checking if SMS messages were delivered, Pymess provides a command that calls backend method ``bulk_check_sms_state``. You can use this command inside cron and periodically call it. But SMS backend and service must provide it (must have implemented method ``bulk_check_sms_states``).
+``send_messages_batch``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned SMS messages can be sent in a batch with Django command ``send_messages_batch --type=sms``.
+
+``bulk_check_sms_states``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Because some services provide checking if SMS messages were delivered, pymess provides a command that calls backend method ``bulk_check_sms_state``. You can use this command inside cron and periodically call it. But SMS backend and service must provide it (must have implemented method ``bulk_check_sms_states``).
