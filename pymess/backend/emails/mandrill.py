@@ -36,8 +36,8 @@ class MandrillEmailBackend(EmailBackend):
         MANDRILL_STATES.SENT: EmailMessage.STATE.SENT,
         MANDRILL_STATES.QUEUED: EmailMessage.STATE.SENT,
         MANDRILL_STATES.SCHEDULED: EmailMessage.STATE.SENT,
-        MANDRILL_STATES.REJECTED: EmailMessage.STATE.ERROR,
-        MANDRILL_STATES.INVALID: EmailMessage.STATE.ERROR,
+        MANDRILL_STATES.REJECTED: EmailMessage.STATE.ERROR_NOT_SENT,
+        MANDRILL_STATES.INVALID: EmailMessage.STATE.ERROR_NOT_SENT,
     }
 
     def _serialize_attachments(self, message):
@@ -81,7 +81,9 @@ class MandrillEmailBackend(EmailBackend):
             )[0]
             mandrill_state = result['status'].upper()
             state = self.MANDRILL_STATES_MAPPING.get(mandrill_state)
-            error = self.MANDRILL_STATES.get_label(mandrill_state) if state == EmailMessage.STATE.ERROR else None
+            error = (
+                self.MANDRILL_STATES.get_label(mandrill_state) if state == EmailMessage.STATE.ERROR_NOT_SENT else None
+            )
             if mandrill_state == self.MANDRILL_STATES.REJECTED:
                 error += ', mandrill message: "{}"'.format(result['reject_reason'])
 
@@ -91,7 +93,7 @@ class MandrillEmailBackend(EmailBackend):
                                 extra_sender_data=extra_sender_data, error=error,
                                 external_id=result.get('_id'))
         except (mandrill.Error, JSONDecodeError, requests.exceptions.RequestException) as ex:
-            self.update_message(message, state=EmailMessage.STATE.ERROR, error=force_text(ex))
+            self.update_message(message, state=EmailMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).
 

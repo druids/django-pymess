@@ -28,6 +28,18 @@ class SMSBackend(BaseBackend):
     class SMSSendingError(Exception):
         pass
 
+    def is_turned_on_batch_sending(self):
+        return settings.SMS_BATCH_SENDING
+
+    def get_batch_size(self):
+        return settings.SMS_BATCH_SIZE
+
+    def get_batch_max_number_of_send_attempts(self):
+        return settings.SMS_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
+
+    def get_batch_max_seconds_to_send(self):
+        return settings.SMS_BATCH_MAX_SECONDS_TO_SEND
+
     def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
         """
         Create SMS which will be logged in the database.
@@ -87,7 +99,7 @@ class SMSBackend(BaseBackend):
 
         if settings.SMS_SET_ERROR_TO_IDLE_MESSAGES:
             idle_output_sms.update(
-                state=self.model.STATE.ERROR, error=ugettext('timeouted')
+                state=self.model.STATE.ERROR_NOT_SENT, error=ugettext('timeouted')
             )
 
 

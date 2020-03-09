@@ -60,20 +60,20 @@ class SMSOperatorBackend(SMSBackend):
 
     SMS_OPERATOR_STATES_MAPPING = {
         SMS_OPERATOR_STATES.DELIVERED: OutputSMSMessage.STATE.DELIVERED,
-        SMS_OPERATOR_STATES.NOT_DELIVERED: OutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.PHONE_NUMBER_NOT_EXISTS: OutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.TIMEOUTED: OutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.INVALID_PHONE_NUMBER: OutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.ANOTHER_ERROR: OutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.EVENT_ERROR: OutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.SMS_TEXT_TOO_LONG: OutputSMSMessage.STATE.ERROR,
-        SMS_OPERATOR_STATES.PARTLY_DELIVERED: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.NOT_DELIVERED: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SMS_OPERATOR_STATES.PHONE_NUMBER_NOT_EXISTS: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SMS_OPERATOR_STATES.TIMEOUTED: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SMS_OPERATOR_STATES.INVALID_PHONE_NUMBER: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SMS_OPERATOR_STATES.ANOTHER_ERROR: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SMS_OPERATOR_STATES.EVENT_ERROR: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SMS_OPERATOR_STATES.SMS_TEXT_TOO_LONG: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SMS_OPERATOR_STATES.PARTLY_DELIVERED: OutputSMSMessage.STATE.ERROR_UPDATE,
         SMS_OPERATOR_STATES.UNKNOWN: OutputSMSMessage.STATE.SENDING,
         SMS_OPERATOR_STATES.PARLY_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessage.STATE.SENDING,
         SMS_OPERATOR_STATES.PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessage.STATE.SENDING,
         SMS_OPERATOR_STATES.PARTLY_DELIVERED_PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN:
             OutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.NOT_FOUND: OutputSMSMessage.STATE.ERROR,
+        SMS_OPERATOR_STATES.NOT_FOUND: OutputSMSMessage.STATE.ERROR_UPDATE,
     }
 
     def __init__(self):
@@ -155,7 +155,7 @@ class SMSOperatorBackend(SMSBackend):
             state = self.SMS_OPERATOR_STATES_MAPPING.get(sms_operator_state)
             error = (
                 self.SMS_OPERATOR_STATES.get_label(sms_operator_state)
-                if state == OutputSMSMessage.STATE.ERROR else None
+                if state == OutputSMSMessage.STATE.ERROR_UPDATE else None
             )
             self.update_message(
                 sms,
@@ -166,7 +166,12 @@ class SMSOperatorBackend(SMSBackend):
             )
 
     def publish_message(self, message):
-        self._send_requests([message], request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())
+        try:
+            self._send_requests([message], request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())
+        except (requests.exceptions.RequestException, SMSOperatorSendingError) as ex:
+            self.update_message(message, state=EmailMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
+            # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
+            # about exception).
 
     def publish_messages(self, messages):
         self._send_requests(messages, request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())

@@ -69,6 +69,18 @@ class EmailBackend(BaseBackend):
         except PersistenceException as ex:
             raise self.EmailSendingError(force_text(ex))
 
+    def is_turned_on_batch_sending(self):
+        return settings.EMAIL_BATCH_SENDING
+
+    def get_batch_max_number_of_send_attempts(self):
+        return settings.EMAIL_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
+
+    def get_batch_max_seconds_to_send(self):
+        raise settings.EMAIL_BATCH_MAX_SECONDS_TO_SEND
+
+    def get_batch_size(self):
+        return settings.EMAIL_BATCH_SIZE
+
     def send(self, sender, recipient, subject, content, sender_name=None, related_objects=None, tag=None,
              template=None, attachments=None, **kwargs):
         """
@@ -88,7 +100,7 @@ class EmailBackend(BaseBackend):
         message = self.create_message(
             sender, sender_name, recipient, subject, content, related_objects, tag, template, attachments, **kwargs
         )
-        if not settings.EMAIL_BATCH_SENDING:
+        if not self.is_turned_on_batch_sending():
             self.publish_message(message)
         return message
 

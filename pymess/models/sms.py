@@ -26,9 +26,10 @@ class OutputSMSMessage(BaseMessage):
         ('UNKNOWN', _('unknown'), 2),
         ('SENDING', _('sending'), 3),
         ('SENT', _('sent'), 4),
-        ('ERROR', _('error'), 5),
+        ('ERROR_UPDATE', _('error message update'), 5),
         ('DEBUG', _('debug'), 6),
         ('DELIVERED', _('delivered'), 7),
+        ('ERROR_NOT_SENT', _('error message was not sent'), 8),
     )
 
     content = models.TextField(verbose_name=_('content'), null=False, blank=False, max_length=700)
@@ -36,6 +37,10 @@ class OutputSMSMessage(BaseMessage):
                                  on_delete=models.SET_NULL, related_name='output_sms_messages')
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
     sender = models.CharField(verbose_name=_('sender'), null=True, blank=True, max_length=20)
+
+    class Meta(BaseMessage.Meta):
+        verbose_name = _('output SMS')
+        verbose_name_plural = _('output SMS')
 
     def clean_recipient(self):
         self.recipient = normalize_phone_number(force_text(self.recipient))
@@ -46,11 +51,7 @@ class OutputSMSMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state == self.STATE.ERROR
-
-    class Meta(BaseMessage.Meta):
-        verbose_name = _('output SMS')
-        verbose_name_plural = _('output SMS')
+        return self.state == self.STATE.ERROR_NOT_SENT
 
 
 class OutputSMSRelatedObject(BaseRelatedObject):

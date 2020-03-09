@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _l
 
 from pymess.utils import fullname
@@ -63,12 +64,46 @@ class BaseBackend:
             message.related_objects.create_from_related_objects(*related_objects)
         return message
 
+    def is_turned_on_batch_sending(self):
+        return False
+
     def publish_message(self, message):
         """
         Send the message
         :param message: SMS message
         """
         raise NotImplementedError
+
+    def get_batch_size(self):
+        """
+        Return number of messages sent in batch
+        """
+        raise NotImplementedError
+
+    def get_batch_max_number_of_send_attempts(self):
+        """
+        Return number attempts to send message
+        """
+        raise NotImplementedError
+
+    def get_batch_max_seconds_to_send(self):
+        """
+        Return max timeout in seconds to send message
+        """
+        raise NotImplementedError
+
+    def get_waiting_or_retry_messages(self):
+        """
+        Return queryset of waiting messages to send
+        """
+        return self.model.objects.filter(
+            Q(state=self.model.STATE.WAITING) |
+            Q(
+                state=self.model.STATE.ERROR_NOT_SENT,
+                number_of_send_attempts__lte=self.get_batch_max_number_of_send_attempts(),
+                created_at__gte=now() - timedelta(seconds=self.get_batch_max_seconds_to_send())
+            )
+        )
 
     def publish_messages(self, messages):
         """
@@ -78,6 +113,7 @@ class BaseBackend:
         """
         [self.publish_message(message) for message in messages]
 
+    @transaction.atomic
     def send(self, recipient, content, related_objects=None, tag=None, template=None, **kwargs):
         """
         Send message with the text content to the phone number (recipient)
@@ -90,9 +126,11 @@ class BaseBackend:
         :param kwargs: extra attributes that will be stored to the message
         """
         message = self.create_message(recipient, content, related_objects, tag, template, **kwargs)
-        self.publish_message(message)
+        if not self.is_turned_on_batch_sending():
+            self.publish_message(message)
         return message
 
+    @transaction.atomic
     def bulk_send(self, recipients, content, related_objects=None, tag=None, template=None, **kwargs):
         """
         Send more messages in one bulk

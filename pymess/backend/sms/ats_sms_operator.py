@@ -213,7 +213,12 @@ class ATSSMSBackend(SMSBackend):
         self._send_requests(messages, request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())
 
     def publish_message(self, message):
-        self._send_requests([message], request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())
+        try:
+            self._send_requests([message], request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())
+        except (requests.exceptions.RequestException, ATSSendingError) as ex:
+            self.update_message(message, state=EmailMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
+            # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
+            # about exception).
 
     def _parse_response_codes(self, xml):
         """

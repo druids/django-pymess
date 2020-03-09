@@ -26,3 +26,5 @@ Content
    installation
    sms
    emails
+   push
+   dialer

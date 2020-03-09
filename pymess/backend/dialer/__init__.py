@@ -8,8 +8,7 @@ from django.utils.timezone import now
 from pymess.backend import BaseBackend
 from pymess.backend import send as _send
 from pymess.backend import send_template as _send_template
-from pymess.config import (get_dialer_sender, get_dialer_template_model,
-                           settings)
+from pymess.config import get_dialer_sender, get_dialer_template_model, settings
 from pymess.models import DialerMessage
 from pymess.utils import fullname
 
@@ -27,6 +26,18 @@ class DialerBackend(BaseBackend):
     """
 
     model = DialerMessage
+
+    def is_turned_on_batch_sending(self):
+        return settings.DIALER_BATCH_SENDING
+
+    def get_batch_size(self):
+        return settings.DIALER_BATCH_SIZE
+
+    def get_batch_max_number_of_send_attempts(self):
+        return settings.DIALER_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
+
+    def get_batch_max_seconds_to_send(self):
+        return settings.DIALER_BATCH_MAX_SECONDS_TO_SEND
 
     def create_message(self, recipient, content, related_objects, tag, template, is_autodialer=True, **kwargs):
         """
@@ -60,7 +71,7 @@ class DialerBackend(BaseBackend):
         returns initial state for logged dialer instance.
         :param recipient: phone number of the recipient
         """
-        return self.model.STATE.READY
+        return self.model.STATE.WAITING
 
     def _update_dialer_states(self, messages):
         """

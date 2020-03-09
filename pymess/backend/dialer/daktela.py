@@ -89,13 +89,14 @@ class DaktelaDialerBackend(DialerBackend):
                 # and log them into database. Re-raise exception causes transaction rollback (lost of information about
                 # exception).
 
-    def _update_message_with_error(self, message, error_message, is_final_state=True):
+    def _update_message_with_error(self, message, error_message,
+                                   state=DialerMessage.STATE.ERROR_UPDATE, is_final_state=True):
         status_check_attempt_remaining_exceeded = (
             True if message.number_of_status_check_attempts >= settings.DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS
             else is_final_state
         )
         message_kwargs = {
-            'state': DialerMessage.STATE.ERROR,
+            'state': state,
             'error': ', '.join(error_message) if isinstance(error_message, list) else str(error_message),
             'is_final_state': status_check_attempt_remaining_exceeded,
         }
@@ -115,7 +116,7 @@ class DaktelaDialerBackend(DialerBackend):
         testing_phones = settings.DIALER_DAKTELA.TESTING_PHONES
         if testing_phones and message.recipient not in testing_phones:
             error_message = _('Not allowed number to dial. Allowed numbers are: {}').format(', '.join(testing_phones))
-            self._update_message_with_error(message, error_message)
+            self._update_message_with_error(message, error_message, state=DialerMessage.STATE.DEBUG)
             return
         try:
             payload = {
@@ -155,7 +156,9 @@ class DaktelaDialerBackend(DialerBackend):
 
             error_message = resp_json.get('error')
             if error_message:
-                self._update_message_with_error(message, error_message)
+                self._update_message_with_error(
+                    message, error_message, state=DialerMessage.STATE.ERROR_NOT_SENT, is_final_state=False
+                )
             else:
                 self.update_message(
                     message,
@@ -164,7 +167,7 @@ class DaktelaDialerBackend(DialerBackend):
                     extra_data=message.extra_data,
                 )
         except Exception as ex:
-            self._update_message_with_error(message, ex)
+            self._update_message_with_error(message, ex, state=DialerMessage.STATE.ERROR_NOT_SENT, is_final_state=False)
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).
