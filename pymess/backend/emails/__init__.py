@@ -76,7 +76,7 @@ class EmailBackend(BaseBackend):
         return settings.EMAIL_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
 
     def get_batch_max_seconds_to_send(self):
-        raise settings.EMAIL_BATCH_MAX_SECONDS_TO_SEND
+        return settings.EMAIL_BATCH_MAX_SECONDS_TO_SEND
 
     def get_batch_size(self):
         return settings.EMAIL_BATCH_SIZE
