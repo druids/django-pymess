@@ -18,21 +18,6 @@ class EmailBackend(BaseBackend):
     class EmailSendingError(Exception):
         pass
 
-    def update_message(self, message, extra_sender_data=None, **kwargs):
-        """
-        Method for updating state of the message after sending
-        :param message: e-mail message object
-        :param extra_sender_data: extra data that will be saved to the extra_sender_data field
-        :param kwargs: changed object kwargs
-        :return:
-        """
-        super().update_message(
-            message,
-            extra_sender_data=extra_sender_data,
-            number_of_send_attempts=message.number_of_send_attempts + 1,
-            **kwargs
-        )
-
     def create_message(self, sender, sender_name, recipient, subject, content, related_objects, tag, template,
                        attachments, **kwargs):
         """
@@ -80,6 +65,9 @@ class EmailBackend(BaseBackend):
 
     def get_batch_size(self):
         return settings.EMAIL_BATCH_SIZE
+
+    def get_retry_sending(self):
+        return settings.EMAIL_RETRY_SENDING and self.is_turned_on_batch_sending()
 
     def send(self, sender, recipient, subject, content, sender_name=None, related_objects=None, tag=None,
              template=None, attachments=None, **kwargs):

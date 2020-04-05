@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-27 21:27+0100\n"
+"POT-Creation-Date: 2020-04-05 17:21+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
-#: backend/dialer/daktela.py:118
+#: backend/dialer/daktela.py:124
 msgid "Not allowed number to dial. Allowed numbers are: {}"
 msgstr "Nepovolené číslo k navolávání. Pouze tyto čísla jsou povolena: {}"
 
@@ -43,7 +43,7 @@ msgstr "zamítnuto"
 msgid "invalid"
 msgstr "špatný formát"
 
-#: backend/sms/__init__.py:102 backend/sms/sms_operator.py:45
+#: backend/sms/__init__.py:105 backend/sms/sms_operator.py:45
 msgid "timeouted"
 msgstr "vypršel čas na zpracování dotazu"
 
@@ -240,7 +240,7 @@ msgstr "příjemce"
 msgid "content"
 msgstr "obsah"
 
-#: models/common.py:125 models/common.py:165
+#: models/common.py:125 models/common.py:166
 msgid "slug"
 msgstr "slug"
 
@@ -273,27 +273,31 @@ msgstr "tag"
 msgid "number of send attempts"
 msgstr "počet pokusů odeslání"
 
-#: models/common.py:148
+#: models/common.py:135
+msgid "retry sending"
+msgstr "opakovat odeslání"
+
+#: models/common.py:149
 msgid "content type of the related object"
 msgstr "typ vztaženého objektu"
 
-#: models/common.py:150
+#: models/common.py:151
 msgid "ID of the related object"
 msgstr "identifikátor vztaženého objektu"
 
-#: models/common.py:167
+#: models/common.py:168
 msgid "message body"
 msgstr "tělo zprávy"
 
-#: models/common.py:168
+#: models/common.py:169
 msgid "is active"
 msgstr "je aktivní"
 
-#: models/common.py:170
+#: models/common.py:171
 msgid "Duplicate messages are allowed"
 msgstr "Duplicitní zprávy jsou povolené"
 
-#: models/common.py:186
+#: models/common.py:187
 msgid "Error during template body rendering: \"{}\""
 msgstr "Chyba během vykreslování obsahu zprávy: \"{}\""
 

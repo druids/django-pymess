@@ -60,14 +60,16 @@ class TwilioSMSBackend(SMSBackend):
                 to=force_text(message.recipient),
                 body=message.content
             )
-            self.update_message(
+            self.update_message_after_sending(
                 message,
                 state=self.STATES_MAPPING[result.status],
                 error=result.error_message if result.error_message else None,
                 sent_at=timezone.now()
             )
         except Exception as ex:
-            self.update_message(message, state=OutputSMSMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
+            self.update_message_after_sending(
+                message, state=OutputSMSMessage.STATE.ERROR_NOT_SENT, error=force_text(ex)
+            )
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).
