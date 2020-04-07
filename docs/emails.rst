@@ -94,6 +94,10 @@ Models
 
     Number of sending attempts. Value is set only when batch sending is used.
 
+  .. attribute:: retry_sending
+
+    Defines if message should be resent if sending failed.
+
   .. attribute:: external_id
 
     Message identifier on the provider side, can be ``None`` if backend doesn't support it.

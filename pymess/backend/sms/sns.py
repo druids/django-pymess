@@ -51,9 +51,11 @@ class SNSSMSBackend(SMSBackend):
             })
         try:
             sns_client.publish(**publish_kwargs)
-            self.update_message(message, state=OutputSMSMessage.STATE.SENT, sent_at=timezone.now())
+            self.update_message_after_sending(message, state=OutputSMSMessage.STATE.SENT, sent_at=timezone.now())
         except Exception as ex:
-            self.update_message(message, state=OutputSMSMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
+            self.update_message_after_sending(
+                message, state=OutputSMSMessage.STATE.ERROR_NOT_SENT, error=force_text(ex)
+            )
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).

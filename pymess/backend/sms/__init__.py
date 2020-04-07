@@ -40,6 +40,9 @@ class SMSBackend(BaseBackend):
     def get_batch_max_seconds_to_send(self):
         return settings.SMS_BATCH_MAX_SECONDS_TO_SEND
 
+    def get_retry_sending(self):
+        return settings.SMS_RETRY_SENDING and self.is_turned_on_batch_sending()
+
     def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
         """
         Create SMS which will be logged in the database.

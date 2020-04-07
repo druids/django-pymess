@@ -149,11 +149,12 @@ class ATSSMSBackend(SMSBackend):
             }
         )
 
-    def _send_requests(self, messages, request_type, **change_sms_kwargs):
+    def _send_requests(self, messages, request_type, is_sending=False, **change_sms_kwargs):
         """
         Performs the actual POST request for input messages and request type.
         :param messages: list of SMS messages
         :param request_type: type of the request
+        :param is_sending: True if method is called after sending message
         :param change_sms_kwargs: extra kwargs that will be stored to the message object
         """
         requests_xml = self._serialize_messages(messages, request_type)
@@ -168,18 +169,21 @@ class ATSSMSBackend(SMSBackend):
                 raise self.ATSSendingError(
                     'ATS operator returned invalid response status code: {}'.format(resp.status_code)
                 )
-            self._update_sms_states_from_response(messages, self._parse_response_codes(resp.text), **change_sms_kwargs)
+            self._update_sms_states_from_response(
+                messages, self._parse_response_codes(resp.text), is_sending, **change_sms_kwargs
+            )
         except requests.exceptions.RequestException as ex:
             raise self.ATSSendingError(
                 'ATS operator returned returned exception: {}'.format(force_text(ex))
             )
 
-    def _update_sms_states_from_response(self, messages, parsed_response, **change_sms_kwargs):
+    def _update_sms_states_from_response(self, messages, parsed_response, is_sending=False, **change_sms_kwargs):
         """
         Higher-level function performing serialization of ATS requests, parsing ATS server response and updating
         SMS messages state according the received response.
         :param messages: list of SMS messages
         :param parsed_response: parsed HTTP response from the ATS service
+        :param is_sending: True if update is called after sending message
         :param change_sms_kwargs: extra kwargs that will be stored to the message object
         """
 
@@ -201,22 +205,48 @@ class ATSSMSBackend(SMSBackend):
             sms = messages_dict[uniq]
             state = self.ATS_STATES_MAPPING.get(ats_state)
             error = self.ATS_STATES.get_label(ats_state) if state == OutputSMSMessage.STATE.ERROR else None
-            self.update_message(
-                sms,
-                state=state,
-                error=error,
-                extra_sender_data={'sender_state': ats_state}
-                **change_sms_kwargs
-            )
+            if is_sending:
+                self.update_message_after_sending(
+                    sms,
+                    state=state,
+                    error=error,
+                    extra_sender_data={'sender_state': ats_state}
+                    **change_sms_kwargs
+                )
+            else:
+                self.update_message(
+                    sms,
+                    state=state,
+                    error=error,
+                    extra_sender_data={'sender_state': ats_state}
+                    **change_sms_kwargs
+                )
 
     def publish_messages(self, messages):
-        self._send_requests(messages, request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())
+        self._send_requests(messages, request_type=self.REQUEST_TYPES.SMS, is_sending=True, sent_at=timezone.now())
 
     def publish_message(self, message):
         try:
-            self._send_requests([message], request_type=self.REQUEST_TYPES.SMS, sent_at=timezone.now())
-        except (requests.exceptions.RequestException, ATSSendingError) as ex:
-            self.update_message(message, state=EmailMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
+            self._send_requests(
+                [message],
+                request_type=self.REQUEST_TYPES.SMS,
+                is_sending=True,
+                sent_at=timezone.now()
+            )
+        except ATSSendingError as ex:
+            self.update_message_after_sending(
+                message,
+                state=EmailMessage.STATE.ERROR_NOT_SENT,
+                error=force_text(ex),
+                retry_sending=False
+            )
+        except requests.exceptions.RequestException as ex:
+            # Service is probably unavailable sending will be retried
+            self.update_message_after_sending(
+                message,
+                state=EmailMessage.STATE.ERROR_NOT_SENT,
+                error=force_text(ex)
+            )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).
 

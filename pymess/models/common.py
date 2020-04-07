@@ -132,6 +132,7 @@ class BaseMessage(SmartModel):
     tag = models.SlugField(verbose_name=_('tag'), null=True, blank=True, editable=False)
     number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
                                                           blank=False, default=0)
+    retry_sending = models.BooleanField(verbose_name=_('retry sending'), default=False)
 
     objects = MessageManager.from_queryset(MessageQueryset)()
 

@@ -29,7 +29,7 @@ class BaseBackend:
 
     def update_message(self, message, extra_sender_data=None, **kwargs):
         """
-        Method for updating state of the message after sending
+        Method for updating state of the message
         :param message: message object
         :param extra_sender_data: extra data that will be saved to the extra_sender_data field
         :param kwargs: changed object kwargs
@@ -43,6 +43,18 @@ class BaseBackend:
             backend=fullname(self),
             extra_sender_data=extra_sender_data,
             **kwargs
+        )
+
+    def update_message_after_sending(self, message, extra_sender_data=None, **kwargs):
+        """
+        Method for updating state of the message after it was sent
+        :param message: message object
+        :param extra_sender_data: extra data that will be saved to the extra_sender_data field
+        :param kwargs: changed object kwargs
+        :return:
+        """
+        self.update_message(
+            message, extra_sender_data, number_of_send_attempts=message.number_of_send_attempts + 1, **kwargs
         )
 
     def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
@@ -62,6 +74,7 @@ class BaseBackend:
             tag=tag,
             template=template,
             template_slug=template.slug if template else None,
+            retry_sending=self.get_retry_sending(),
             **kwargs
         )
         if related_objects:
@@ -103,11 +116,18 @@ class BaseBackend:
         return self.model.objects.filter(
             Q(state=self.model.STATE.WAITING) |
             Q(
+                retry_sending=True,
                 state=self.model.STATE.ERROR_NOT_SENT,
                 number_of_send_attempts__lte=self.get_batch_max_number_of_send_attempts(),
                 created_at__gte=now() - timedelta(seconds=self.get_batch_max_seconds_to_send())
             )
         )
+
+    def get_retry_sending(self):
+        """
+        Return True if message should be retried if sending fails
+        """
+        raise NotImplementedError
 
     def publish_messages(self, messages):
         """

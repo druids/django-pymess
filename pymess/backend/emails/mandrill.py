@@ -89,11 +89,19 @@ class MandrillEmailBackend(EmailBackend):
 
             extra_sender_data = message.extra_sender_data or {}
             extra_sender_data['result'] = result
-            self.update_message(message, state=state, sent_at=timezone.now(),
-                                extra_sender_data=extra_sender_data, error=error,
-                                external_id=result.get('_id'))
+            self.update_message_after_sending(
+                message,
+                state=state,
+                sent_at=timezone.now(),
+                extra_sender_data=extra_sender_data, error=error,
+                external_id=result.get('_id')
+            )
         except (mandrill.Error, JSONDecodeError, requests.exceptions.RequestException) as ex:
-            self.update_message(message, state=EmailMessage.STATE.ERROR_NOT_SENT, error=force_text(ex))
+            self.update_message_after_sending(
+                message,
+                state=EmailMessage.STATE.ERROR_NOT_SENT,
+                error=force_text(ex)
+            )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).
 
@@ -102,12 +110,13 @@ class MandrillEmailBackend(EmailBackend):
             mandrill_client = self._create_client(message)
             try:
                 info = mandrill_client.messages.info(message.external_id)
-                message.change_and_save(
+                self.update_message(
+                    message,
                     extra_sender_data={**message.extra_sender_data, 'info': info},
                     info_changed_at=timezone.now(),
                     update_only_changed_fields=True,
                 )
             except mandrill.UnknownMessageError:
-                message.change_and_save(info_changed_at=timezone.now(), update_only_changed_fields=True)
+                self.update_message(message, info_changed_at=timezone.now(), update_only_changed_fields=True)
         else:
-            message.change_and_save(info_changed_at=timezone.now(), update_only_changed_fields=True)
+            self.update_message(message, info_changed_at=timezone.now(), update_only_changed_fields=True)

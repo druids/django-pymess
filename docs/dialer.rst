@@ -93,6 +93,10 @@ Models
 
     Number of sending attempts. Value is set only when batch sending is used.
 
+  .. attribute:: retry_sending
+
+    Defines if message should be resent if sending failed.
+
   .. attribute:: is_final_state
 
     Helper field. If it cannot be resolved from message states clearly whether message is in its final state this field indicates it (based on further logic).

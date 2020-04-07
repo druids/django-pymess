@@ -89,8 +89,8 @@ class DaktelaDialerBackend(DialerBackend):
                 # and log them into database. Re-raise exception causes transaction rollback (lost of information about
                 # exception).
 
-    def _update_message_with_error(self, message, error_message,
-                                   state=DialerMessage.STATE.ERROR_UPDATE, is_final_state=True):
+    def _update_message_with_error(self, message, error_message, state=DialerMessage.STATE.ERROR_UPDATE,
+                                   is_sending=False, is_final_state=True):
         status_check_attempt_remaining_exceeded = (
             True if message.number_of_status_check_attempts >= settings.DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS
             else is_final_state
@@ -102,10 +102,16 @@ class DaktelaDialerBackend(DialerBackend):
         }
         if not status_check_attempt_remaining_exceeded:
             message_kwargs['number_of_status_check_attempts'] = message.number_of_status_check_attempts + 1
-        self.update_message(
-            message,
-            **message_kwargs
-        )
+        if is_sending:
+            self.update_message_after_sending(
+                message,
+                **message_kwargs
+            )
+        else:
+            self.update_message(
+                message,
+                **message_kwargs
+            )
 
     def publish_message(self, message):
         """
@@ -157,17 +163,28 @@ class DaktelaDialerBackend(DialerBackend):
             error_message = resp_json.get('error')
             if error_message:
                 self._update_message_with_error(
-                    message, error_message, state=DialerMessage.STATE.ERROR_NOT_SENT, is_final_state=False
+                    message,
+                    error_message,
+                    state=DialerMessage.STATE.ERROR_NOT_SENT,
+                    is_sending=True,
+                    retry_sending=False,
+                    is_final_state=False,
                 )
             else:
-                self.update_message(
+                self.update_message_after_sending(
                     message,
                     state=DialerMessage.STATE.READY,
                     sent_at=tz.now(),
                     extra_data=message.extra_data,
                 )
         except Exception as ex:
-            self._update_message_with_error(message, ex, state=DialerMessage.STATE.ERROR_NOT_SENT, is_final_state=False)
+            self._update_message_with_error(
+                message,
+                ex,
+                state=DialerMessage.STATE.ERROR_NOT_SENT,
+                is_sending=True,
+                is_final_state=False
+            )
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).
@@ -191,6 +208,7 @@ class DaktelaDialerBackend(DialerBackend):
                 template=template,
                 state=self.get_initial_dialer_state(recipient),
                 is_autodialer=is_autodialer,
+                retry_sending=self.get_retry_sending(),
                 **kwargs,
                 **self._get_extra_message_kwargs()
             )

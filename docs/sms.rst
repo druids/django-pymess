@@ -90,6 +90,10 @@ Models
 
     Number of sending attempts. Value is set only when batch sending is used.
 
+  .. attribute:: retry_sending
+
+    Defines if message should be resent if sending failed.
+
   .. attribute:: related_objects
 
     Returns DB manager of ``pymess.models.sms.OutputSMSRelatedObject`` model that are related to the concrete SMS message.

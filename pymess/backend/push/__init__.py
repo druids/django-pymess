@@ -26,6 +26,9 @@ class PushNotificationBackend(BaseBackend):
     def get_batch_max_seconds_to_send(self):
         return settings.PUSH_NOTIFICATION_BATCH_MAX_SECONDS_TO_SEND
 
+    def get_retry_sending(self):
+        return settings.PUSH_NOTIFICATION_RETRY_SENDING and self.is_turned_on_batch_sending()
+
     def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
         try:
             notification = super().create_message(
