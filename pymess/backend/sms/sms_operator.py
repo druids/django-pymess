@@ -186,7 +186,7 @@ class SMSOperatorBackend(SMSBackend):
                 is_sending=True,
                 sent_at=timezone.now()
             )
-        except SMSOperatorSendingError as ex:
+        except self.SMSOperatorSendingError as ex:
             self.update_message_after_sending(
                 message,
                 state=EmailMessage.STATE.ERROR_NOT_SENT,
