@@ -233,7 +233,7 @@ class ATSSMSBackend(SMSBackend):
                 is_sending=True,
                 sent_at=timezone.now()
             )
-        except ATSSendingError as ex:
+        except self.ATSSendingError as ex:
             self.update_message_after_sending(
                 message,
                 state=EmailMessage.STATE.ERROR_NOT_SENT,
