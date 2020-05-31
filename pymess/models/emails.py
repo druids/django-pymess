@@ -37,7 +37,8 @@ class EmailMessage(BaseMessage):
     recipient = models.EmailField(verbose_name=_('recipient'), blank=False, null=False, db_index=True)
     template = models.ForeignKey(settings.EMAIL_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='email_messages')
-    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
+    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False,
+                                db_index=True)
     sender = models.EmailField(verbose_name=_('sender'), blank=False, null=False)
     sender_name = models.CharField(verbose_name=_('sender name'), blank=True, null=True, max_length=250)
     subject = models.TextField(verbose_name=_('subject'), blank=False, null=False)
