@@ -35,7 +35,8 @@ class OutputSMSMessage(BaseMessage):
     content = models.TextField(verbose_name=_('content'), null=False, blank=False, max_length=700)
     template = models.ForeignKey(settings.SMS_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='output_sms_messages')
-    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
+    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False,
+                                db_index=True)
     sender = models.CharField(verbose_name=_('sender'), null=True, blank=True, max_length=20)
 
     class Meta(BaseMessage.Meta):

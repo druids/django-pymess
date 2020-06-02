@@ -28,7 +28,7 @@ class AbstractPushNotificationMessage(BaseMessage):
     template = models.ForeignKey(settings.PUSH_NOTIFICATION_TEMPLATE_MODEL, verbose_name=_('template'), blank=True,
                                  null=True, on_delete=models.SET_NULL, related_name='push_notifications')
     state = models.PositiveIntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices,
-                                        editable=False)
+                                        editable=False, db_index=True)
     heading = models.TextField(verbose_name=_('heading'))
     url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
 
