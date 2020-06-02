@@ -28,3 +28,4 @@ Content
    emails
    push
    dialer
+   changelog
