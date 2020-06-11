@@ -189,14 +189,14 @@ class SMSOperatorBackend(SMSBackend):
         except self.SMSOperatorSendingError as ex:
             self.update_message_after_sending(
                 message,
-                state=EmailMessage.STATE.ERROR_NOT_SENT,
+                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
                 error=force_text(ex),
                 retry_sending=False
             )
-        except (requests.exceptions.RequestException, SMSOperatorSendingError) as ex:
+        except requests.exceptions.RequestException as ex:
             self.update_message_after_sending(
                 message,
-                state=EmailMessage.STATE.ERROR_NOT_SENT,
+                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
                 error=force_text(ex)
             )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
