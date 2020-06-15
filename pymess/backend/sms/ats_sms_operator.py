@@ -236,7 +236,7 @@ class ATSSMSBackend(SMSBackend):
         except self.ATSSendingError as ex:
             self.update_message_after_sending(
                 message,
-                state=EmailMessage.STATE.ERROR_NOT_SENT,
+                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
                 error=force_text(ex),
                 retry_sending=False
             )
@@ -244,7 +244,7 @@ class ATSSMSBackend(SMSBackend):
             # Service is probably unavailable sending will be retried
             self.update_message_after_sending(
                 message,
-                state=EmailMessage.STATE.ERROR_NOT_SENT,
+                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
                 error=force_text(ex)
             )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
