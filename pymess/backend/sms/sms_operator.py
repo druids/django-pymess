@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import requests
 
 from django.utils import timezone
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 
@@ -127,7 +126,7 @@ class SMSOperatorBackend(SMSBackend):
             )
         except requests.exceptions.RequestException as ex:
             raise self.SMSOperatorSendingError(
-                'SMS operator returned returned exception: {}'.format(force_text(ex))
+                'SMS operator returned returned exception: {}'.format(str(ex))
             )
 
     def _update_sms_states_from_response(self, messages, parsed_response, is_sending=False, **change_sms_kwargs):
@@ -162,15 +161,23 @@ class SMSOperatorBackend(SMSBackend):
                 if state == OutputSMSMessage.STATE.ERROR_UPDATE else None
             )
             if is_sending:
-                self.update_message_after_sending(
-                    sms,
-                    state=state,
-                    error=error,
-                    extra_sender_data={'sender_state': sms_operator_state},
-                    **change_sms_kwargs
-                )
+                if error:
+                    self._update_message_after_sending_error(
+                        sms,
+                        state=state,
+                        error=error,
+                        extra_sender_data={'sender_state': sms_operator_state},
+                        **change_sms_kwargs
+                    )
+                else:
+                    self._update_message_after_sending(
+                        sms,
+                        state=state,
+                        extra_sender_data={'sender_state': sms_operator_state},
+                        **change_sms_kwargs
+                    )
             else:
-                self.update_message(
+                self._update_message(
                     sms,
                     state=state,
                     error=error,
@@ -187,17 +194,15 @@ class SMSOperatorBackend(SMSBackend):
                 sent_at=timezone.now()
             )
         except self.SMSOperatorSendingError as ex:
-            self.update_message_after_sending(
+            self._update_message_after_sending_error(
                 message,
-                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
-                error=force_text(ex),
-                retry_sending=False
+                state=EmailMessage.STATE.ERROR,
+                error=str(ex)
             )
         except requests.exceptions.RequestException as ex:
-            self.update_message_after_sending(
+            self._update_message_after_sending_error(
                 message,
-                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
-                error=force_text(ex)
+                error=str(ex)
             )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).

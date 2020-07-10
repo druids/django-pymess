@@ -58,7 +58,8 @@ Models
       * DECLINED - recipient declined to answer the call
       * DEBUG - dialer message was not sent because system is in debug mode
       * DONE - message has been processed
-      * ERROR_NOT_SENT - error was raised during sending of the message
+      * ERROR - error was raised during sending of the message
+      * ERROR_RETRY - error was raised during sending of the message, message will be retried
       * ERROR_UPDATE - error was raised during checking message state
       * HANGUP - recipient hang up
       * NOT_ASSIGNED - state of the message was not assigned yet

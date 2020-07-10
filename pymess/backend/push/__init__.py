@@ -1,5 +1,4 @@
 from chamber.exceptions import PersistenceException
-from django.utils.encoding import force_text
 
 from pymess.backend import BaseBackend, send_template as _send_template, send as _send
 from pymess.config import settings, get_push_notification_template_model, get_push_notification_sender
@@ -41,7 +40,7 @@ class PushNotificationBackend(BaseBackend):
             )
             return notification
         except PersistenceException as ex:
-            raise self.PushNotificationSendingError(force_text(ex))
+            raise self.PushNotificationSendingError(str(ex))
 
 
 def send_template(recipient, slug, context_data, related_objects=None, tag=None):

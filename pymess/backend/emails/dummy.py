@@ -10,10 +10,10 @@ class DummyEmailBackend(EmailBackend):
     """
 
     def publish_message(self, message):
-        self.update_message_after_sending(message, state=EmailMessage.STATE.DEBUG)
+        self._update_message_after_sending(message, state=EmailMessage.STATE.DEBUG)
 
     def pull_message_info(self, message):
-        self.update_message(
+        self._update_message(
             message,
             extra_sender_data={**message.extra_sender_data, 'info': {'debug': True}},
             info_changed_at=timezone.now(),

@@ -2,7 +2,6 @@ import re
 
 from chamber.exceptions import PersistenceException
 from django.utils import timezone as tz
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext as _
 
 from pymess.backend.dialer import DialerBackend, DialerSendingError
@@ -55,7 +54,7 @@ class DaktelaDialerBackend(DialerBackend):
             ).get(client_url)
             resp_json = response.json()
             if response.status_code != 200 and resp_json.get('error'):
-                self._update_message_with_error(message, error_message=resp_json.get('error'), is_final_state=False)
+                self._update_message_state_with_error(message, error_message=resp_json.get('error'))
                 continue
 
             message.extra_data.update({
@@ -76,7 +75,7 @@ class DaktelaDialerBackend(DialerBackend):
                 is_final_state = resp_json['result']['action'] == '5'
 
             try:
-                self.update_message(
+                self._update_message(
                     message,
                     state=message_state,
                     error=message_error,
@@ -84,34 +83,24 @@ class DaktelaDialerBackend(DialerBackend):
                     is_final_state=is_final_state,
                 )
             except Exception as ex:
-                self._update_message_with_error(message, error_message=ex, is_final_state=False)
+                self._update_message_state_with_error(message, error_message=ex)
                 # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
                 # and log them into database. Re-raise exception causes transaction rollback (lost of information about
                 # exception).
 
-    def _update_message_with_error(self, message, error_message, state=DialerMessage.STATE.ERROR_UPDATE,
-                                   is_sending=False, is_final_state=True):
-        status_check_attempt_remaining_exceeded = (
-            True if message.number_of_status_check_attempts >= settings.DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS
-            else is_final_state
-        )
+    def _update_message_state_with_error(self, message, error_message):
+        is_final_state = message.number_of_status_check_attempts >= settings.DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS
         message_kwargs = {
-            'state': state,
+            'state': DialerMessage.STATE.ERROR_UPDATE,
             'error': ', '.join(error_message) if isinstance(error_message, list) else str(error_message),
-            'is_final_state': status_check_attempt_remaining_exceeded,
+            'is_final_state': is_final_state,
         }
-        if not status_check_attempt_remaining_exceeded:
+        if not is_final_state:
             message_kwargs['number_of_status_check_attempts'] = message.number_of_status_check_attempts + 1
-        if is_sending:
-            self.update_message_after_sending(
-                message,
-                **message_kwargs
-            )
-        else:
-            self.update_message(
-                message,
-                **message_kwargs
-            )
+        self._update_message(
+            message,
+            **message_kwargs
+        )
 
     def publish_message(self, message):
         """
@@ -121,8 +110,12 @@ class DaktelaDialerBackend(DialerBackend):
         client_url = self._get_dialer_api_url()
         testing_phones = settings.DIALER_DAKTELA.TESTING_PHONES
         if testing_phones and message.recipient not in testing_phones:
-            error_message = _('Not allowed number to dial. Allowed numbers are: {}').format(', '.join(testing_phones))
-            self._update_message_with_error(message, error_message, state=DialerMessage.STATE.DEBUG)
+            self._update_message(
+                message,
+                error=_('Not allowed number to dial. Allowed numbers are: {}').format(', '.join(testing_phones)),
+                state=DialerMessage.STATE.DEBUG,
+                is_final_state=True
+            )
             return
         try:
             payload = {
@@ -162,28 +155,22 @@ class DaktelaDialerBackend(DialerBackend):
 
             error_message = resp_json.get('error')
             if error_message:
-                self._update_message_with_error(
+                self._update_message_after_sending_error(
                     message,
-                    error_message,
-                    state=DialerMessage.STATE.ERROR_NOT_SENT,
-                    is_sending=True,
-                    retry_sending=False,
-                    is_final_state=False,
+                    error=', '.join(error_message) if isinstance(error_message, list) else str(error_message),
+                    state=DialerMessage.STATE.ERROR
                 )
             else:
-                self.update_message_after_sending(
+                self._update_message_after_sending(
                     message,
                     state=DialerMessage.STATE.READY,
                     sent_at=tz.now(),
                     extra_data=message.extra_data,
                 )
         except Exception as ex:
-            self._update_message_with_error(
+            self._update_message_after_sending_error(
                 message,
-                ex,
-                state=DialerMessage.STATE.ERROR_NOT_SENT,
-                is_sending=True,
-                is_final_state=False
+                error=str(ex)
             )
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
@@ -208,9 +195,8 @@ class DaktelaDialerBackend(DialerBackend):
                 template=template,
                 state=self.get_initial_dialer_state(recipient),
                 is_autodialer=is_autodialer,
-                retry_sending=self.get_retry_sending(),
                 **kwargs,
                 **self._get_extra_message_kwargs()
             )
         except PersistenceException as ex:
-            raise DialerSendingError(force_text(ex))
+            raise DialerSendingError(str(ex))

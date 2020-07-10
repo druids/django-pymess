@@ -21,8 +21,9 @@ class AbstractPushNotificationMessage(BaseMessage):
     STATE = ChoicesNumEnum(
         ('WAITING', _('waiting'), 1),
         ('SENT', _('sent'), 2),
-        ('ERROR_NOT_SENT', _('error message was not sent'), 3),
+        ('ERROR', _('error'), 3),
         ('DEBUG', _('debug'), 4),
+        ('ERROR_RETRY', _('error retry'), 5),
     )
 
     template = models.ForeignKey(settings.PUSH_NOTIFICATION_TEMPLATE_MODEL, verbose_name=_('template'), blank=True,
@@ -39,7 +40,7 @@ class AbstractPushNotificationMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state == self.STATE.ERROR_NOT_SENT
+        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
 
 
 class PushNotificationMessage(AbstractPushNotificationMessage):

@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import requests
 
 from django.utils import timezone
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
@@ -174,7 +173,7 @@ class ATSSMSBackend(SMSBackend):
             )
         except requests.exceptions.RequestException as ex:
             raise self.ATSSendingError(
-                'ATS operator returned returned exception: {}'.format(force_text(ex))
+                'ATS operator returned returned exception: {}'.format(str(ex))
             )
 
     def _update_sms_states_from_response(self, messages, parsed_response, is_sending=False, **change_sms_kwargs):
@@ -206,15 +205,23 @@ class ATSSMSBackend(SMSBackend):
             state = self.ATS_STATES_MAPPING.get(ats_state)
             error = self.ATS_STATES.get_label(ats_state) if state == OutputSMSMessage.STATE.ERROR else None
             if is_sending:
-                self.update_message_after_sending(
-                    sms,
-                    state=state,
-                    error=error,
-                    extra_sender_data={'sender_state': ats_state}
-                    **change_sms_kwargs
-                )
+                if error:
+                    self._update_message_after_sending_error(
+                        sms,
+                        state=state,
+                        error=error,
+                        extra_sender_data={'sender_state': ats_state}
+                        **change_sms_kwargs
+                    )
+                else:
+                    self._update_message_after_sending(
+                        sms,
+                        state=state,
+                        extra_sender_data={'sender_state': ats_state}
+                        **change_sms_kwargs
+                    )
             else:
-                self.update_message(
+                self._update_message(
                     sms,
                     state=state,
                     error=error,
@@ -234,18 +241,16 @@ class ATSSMSBackend(SMSBackend):
                 sent_at=timezone.now()
             )
         except self.ATSSendingError as ex:
-            self.update_message_after_sending(
+            self._update_message_after_sending_error(
                 message,
-                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
-                error=force_text(ex),
-                retry_sending=False
+                state=EmailMessage.STATE.ERROR,
+                error=str(ex),
             )
         except requests.exceptions.RequestException as ex:
             # Service is probably unavailable sending will be retried
-            self.update_message_after_sending(
+            self._update_message_after_sending_error(
                 message,
-                state=OutputSMSMessage.STATE.ERROR_NOT_SENT,
-                error=force_text(ex)
+                error=str(ex)
             )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).
@@ -262,7 +267,7 @@ class ATSSMSBackend(SMSBackend):
         code_tags = soup.find_all('code')
 
         error_message = ', '.join(
-            [(force_text(self.ATS_STATES.get_label(c))
+            [(str(self.ATS_STATES.get_label(c))
               if c in self.ATS_STATES.all
               else 'ATS returned an unknown state {}.'.format(c))
              for c in [int(error_code.string) for error_code in code_tags if not error_code.attrs.get('uniq')]],

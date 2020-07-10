@@ -6,7 +6,6 @@ import requests
 from json.decoder import JSONDecodeError
 
 from django.utils import timezone
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from chamber.utils.datastructures import ChoicesEnum
@@ -36,8 +35,8 @@ class MandrillEmailBackend(EmailBackend):
         MANDRILL_STATES.SENT: EmailMessage.STATE.SENT,
         MANDRILL_STATES.QUEUED: EmailMessage.STATE.SENT,
         MANDRILL_STATES.SCHEDULED: EmailMessage.STATE.SENT,
-        MANDRILL_STATES.REJECTED: EmailMessage.STATE.ERROR_NOT_SENT,
-        MANDRILL_STATES.INVALID: EmailMessage.STATE.ERROR_NOT_SENT,
+        MANDRILL_STATES.REJECTED: EmailMessage.STATE.ERROR,
+        MANDRILL_STATES.INVALID: EmailMessage.STATE.ERROR,
     }
 
     def _serialize_attachments(self, message):
@@ -82,25 +81,25 @@ class MandrillEmailBackend(EmailBackend):
             mandrill_state = result['status'].upper()
             state = self.MANDRILL_STATES_MAPPING.get(mandrill_state)
             error = (
-                self.MANDRILL_STATES.get_label(mandrill_state) if state == EmailMessage.STATE.ERROR_NOT_SENT else None
+                self.MANDRILL_STATES.get_label(mandrill_state) if state == EmailMessage.STATE.ERROR else None
             )
             if mandrill_state == self.MANDRILL_STATES.REJECTED:
                 error += ', mandrill message: "{}"'.format(result['reject_reason'])
 
             extra_sender_data = message.extra_sender_data or {}
             extra_sender_data['result'] = result
-            self.update_message_after_sending(
+            self._update_message_after_sending(
                 message,
                 state=state,
                 sent_at=timezone.now(),
-                extra_sender_data=extra_sender_data, error=error,
+                extra_sender_data=extra_sender_data,
+                error=error,
                 external_id=result.get('_id')
             )
         except (mandrill.Error, JSONDecodeError, requests.exceptions.RequestException) as ex:
-            self.update_message_after_sending(
+            self._update_message_after_sending_error(
                 message,
-                state=EmailMessage.STATE.ERROR_NOT_SENT,
-                error=force_text(ex)
+                error=str(ex)
             )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (lost of information
             # about exception).
@@ -110,13 +109,13 @@ class MandrillEmailBackend(EmailBackend):
             mandrill_client = self._create_client(message)
             try:
                 info = mandrill_client.messages.info(message.external_id)
-                self.update_message(
+                self._update_message(
                     message,
                     extra_sender_data={**message.extra_sender_data, 'info': info},
                     info_changed_at=timezone.now(),
                     update_only_changed_fields=True,
                 )
             except mandrill.UnknownMessageError:
-                self.update_message(message, info_changed_at=timezone.now(), update_only_changed_fields=True)
+                self._update_message(message, info_changed_at=timezone.now(), update_only_changed_fields=True)
         else:
-            self.update_message(message, info_changed_at=timezone.now(), update_only_changed_fields=True)
+            self._update_message(message, info_changed_at=timezone.now(), update_only_changed_fields=True)

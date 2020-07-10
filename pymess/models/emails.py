@@ -30,8 +30,9 @@ class EmailMessage(BaseMessage):
         ('WAITING', _('waiting'), 1),
         ('SENDING', _('sending'), 2),
         ('SENT', _('sent'), 3),
-        ('ERROR_NOT_SENT', _('error message was not sent'), 4),
+        ('ERROR', _('error'), 4),
         ('DEBUG', _('debug'), 5),
+        ('ERROR_RETRY', _('error retry'), 6),
     )
 
     recipient = models.EmailField(verbose_name=_('recipient'), blank=False, null=False, db_index=True)
@@ -72,7 +73,7 @@ class EmailMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state == self.STATE.ERROR_NOT_SENT
+        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
 
 
 class EmailRelatedObject(BaseRelatedObject):

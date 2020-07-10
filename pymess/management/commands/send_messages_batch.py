@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
-        parser.add_argument('--type', action='store', dest='type', default='input',
+        parser.add_argument('--type', action='store', dest='type', default='email',
                             help='Tells Django what type of messages should be send '
                                  '(email/push-notification/dialer/sms).')
 
@@ -46,18 +46,21 @@ class Command(BaseCommand):
             pk__in=self.touched_message_pks
         ).select_for_update(
             nowait=True
-        ).order_by('created_at').first()
+        ).first()
         if not message:
-            return
+            return False
 
         self.touched_message_pks.add(message.pk)
         try:
-            sender.publish_message(message)
-            self.send_message_pks.add(message.pk)
+            if sender.publish_or_retry_message(message):
+                self.send_message_pks.add(message.pk)
+            else:
+                self.failed_message_pks.add(message.pk)
         except Exception as ex:
             # Rollback should not be applied for already send e-mails
             logger.exception(ex)
             self.failed_message_pks.add(message.pk)
+        return True
 
     def _print_result(self, title, message_pks):
         if message_pks:
@@ -73,7 +76,8 @@ class Command(BaseCommand):
 
         try:
             for _ in range(sender.get_batch_size()):
-                self._send_message(sender)
+                if not self._send_message(sender):
+                    break
             self._print_result('sent messages', self.send_message_pks)
             self._print_result('failed messages', self.failed_message_pks)
         except DatabaseError:

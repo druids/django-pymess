@@ -79,7 +79,7 @@ SMS
 
 .. attribute:: PYMESS_SMS_BATCH_MAX_SECONDS_TO_SEND
 
-   Defines maximum number of seconds to try to send a SMS message that ended in an ``ERROR_NOT_SENT`` state. Default value is ``60 * 60`` (1 hour).
+   Defines maximum number of seconds to try to send a SMS message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
 
 .. attribute:: PYMESS_SMS_ATS_CONFIG
 
@@ -142,7 +142,7 @@ E-MAIL
 
 .. attribute:: PYMESS EMAIL_BATCH_MAX_SECONDS_TO_SEND
 
-   Defines maximum number of seconds to try to send an e-mail message that ended in an ``ERROR_NOT_SENT`` state. Default value is ``60 * 60`` (1 hour).
+   Defines maximum number of seconds to try to send an e-mail message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
 
 .. attribute:: PYMESS_EMAIL_PULL_INFO_MAX_TIMEOUT_FROM_SENT_SECONDS
 
@@ -182,7 +182,7 @@ DIALER
 
 .. attribute:: PYMESS_DIALER_BATCH_MAX_SECONDS_TO_SEND
 
-  Defines maximum number of seconds to try to send a dialer message that ended in an ``ERROR_NOT_SENT`` state. Default value is ``60 * 60`` (1 hour).
+  Defines maximum number of seconds to try to send a dialer message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
 
 .. attribute:: PYMESS_DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES
 
@@ -221,7 +221,7 @@ Push notifications
 
 .. attribute:: PYMESS_PUSH_NOTIFICATION_BATCH_MAX_SECONDS_TO_SEND
 
-  Defines maximum number of seconds to try to send an push notification message that ended in an ``ERROR_NOT_SENT`` state. Default value is ``60 * 60`` (1 hour).
+  Defines maximum number of seconds to try to send an push notification message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
 
 .. attribute:: PUSH_NOTIFICATION_ONESIGNAL
 

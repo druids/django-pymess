@@ -62,7 +62,8 @@ Models
     Field contains the current state of the message. Allowed states are:
 
       * DEBUG - Push notification was not sent because system is in debug mode
-      * ERROR_NOT_SENT - Push notification was raised during sending of the message
+      * ERROR - Push notification was raised during sending of the message
+      * ERROR_RETRY - error was raised during sending of the message, message will be retried
       * SENT - Push notification was sent to the receiver
       * WAITING - Push notification was not sent to the external service
 
