@@ -3,7 +3,6 @@ from json.decoder import JSONDecodeError
 
 import requests
 from django.utils import timezone
-from django.utils.encoding import force_text
 from onesignal import DeviceNotification, OneSignalClient
 
 from pymess.backend.push import PushNotificationBackend
@@ -46,26 +45,23 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
             extra_sender_data = message.extra_sender_data or {}
             extra_sender_data['result'] = result.body
 
-            error_state, sent_state = PushNotificationMessage.STATE.ERROR_NOT_SENT, PushNotificationMessage.STATE.SENT
             if self._is_invalid_result(result):
-                self.update_message_after_sending(
+                self._update_message_after_sending_error(
                     message,
-                    state=error_state,
-                    error=result.errors,
-                    sent_at=timezone.now(),
+                    state=PushNotificationMessage.STATE.ERROR,
+                    error=str(result.errors),
                     extra_sender_data=extra_sender_data,
-                    retry_sending=False
                 )
             else:
-                self.update_message_after_sending(
+                self._update_message_after_sending(
                     message,
-                    state=sent_state,
+                    state=PushNotificationMessage.STATE.SENT,
                     sent_at=timezone.now(),
                     extra_sender_data=extra_sender_data,
                 )
         except (JSONDecodeError, requests.exceptions.RequestException) as ex:
-            self.update_message_after_sending(
-                message, state=PushNotificationMessage.STATE.ERROR_NOT_SENT, error=force_text(ex)
+            self._update_message_after_sending_error(
+                message, error=str(ex)
             )
             # Do not re-raise caught exception. Re-raise exception causes transaction rollback (loss of information
             # about exception).

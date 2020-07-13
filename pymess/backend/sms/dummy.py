@@ -10,4 +10,4 @@ class DummySMSBackend(SMSBackend):
     """
 
     def publish_message(self, message):
-        self.update_message_after_sending(message, state=OutputSMSMessage.STATE.DEBUG)
+        self._update_message_after_sending(message, state=OutputSMSMessage.STATE.DEBUG)

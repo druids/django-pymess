@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.utils import timezone
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _l
 
 from chamber.utils.datastructures import ChoicesEnum
@@ -57,18 +56,18 @@ class TwilioSMSBackend(SMSBackend):
         try:
             result = client.messages.create(
                 from_=settings.TWILIO_SENDER,
-                to=force_text(message.recipient),
+                to=str(message.recipient),
                 body=message.content
             )
-            self.update_message_after_sending(
+            self._update_message_after_sending(
                 message,
                 state=self.STATES_MAPPING[result.status],
                 error=result.error_message if result.error_message else None,
                 sent_at=timezone.now()
             )
         except Exception as ex:
-            self.update_message_after_sending(
-                message, state=OutputSMSMessage.STATE.ERROR_NOT_SENT, error=force_text(ex)
+            self._update_message_after_sending_error(
+                message, error=str(ex)
             )
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about

@@ -40,7 +40,8 @@ class AbstractDialerMessage(BaseMessage):
         ('HANGUP_BY_CUSTOMER', _('answered - hangup by customer'), 13),
         ('ERROR_UPDATE', _('error message update'), 66),
         ('DEBUG', _('debug'), 77),
-        ('ERROR_NOT_SENT', _('error message was not sent'), 88),
+        ('ERROR', _('error'), 88),
+        ('ERROR_RETRY', _('error retry'), 99),
     )
 
     template = models.ForeignKey(settings.DIALER_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
@@ -67,7 +68,7 @@ class AbstractDialerMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state == self.STATE.ERROR_NOT_SENT
+        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
 
 
 class DialerMessage(AbstractDialerMessage):

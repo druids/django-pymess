@@ -1,5 +1,3 @@
-from django.utils.encoding import force_text
-
 from chamber.exceptions import PersistenceException
 
 from pymess.backend import BaseBackend, send_template as _send_template, send as _send
@@ -52,7 +50,7 @@ class EmailBackend(BaseBackend):
                 message.attachments.create_from_tripples(*attachments)
             return message
         except PersistenceException as ex:
-            raise self.EmailSendingError(force_text(ex))
+            raise self.EmailSendingError(str(ex))
 
     def is_turned_on_batch_sending(self):
         return settings.EMAIL_BATCH_SENDING

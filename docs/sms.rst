@@ -59,7 +59,8 @@ Models
 
       * DEBUG - SMS was not sent because system is in debug mode
       * DELIVERED - SMS was delivered to the receiver
-      * ERROR_NOT_SENT - SMS was raised during sending of the SMS message
+      * ERROR - SMS was raised during sending of the SMS message
+      * ERROR_RETRY - error was raised during sending of the message, message will be retried
       * ERROR_UPDATE - error was raised during updating state of the SMS message
       * SENDING - SMS was sent to the external service
       * SENT - SMS was sent to the receiver

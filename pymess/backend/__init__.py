@@ -27,13 +27,12 @@ class BaseBackend:
         """
         return {}
 
-    def update_message(self, message, extra_sender_data=None, **kwargs):
+    def _update_message(self, message, extra_sender_data=None, **kwargs):
         """
         Method for updating state of the message
         :param message: message object
         :param extra_sender_data: extra data that will be saved to the extra_sender_data field
         :param kwargs: changed object kwargs
-        :return:
         """
         extra_sender_data = {
             **self._get_extra_sender_data(),
@@ -45,16 +44,55 @@ class BaseBackend:
             **kwargs
         )
 
-    def update_message_after_sending(self, message, extra_sender_data=None, **kwargs):
+    def _update_message_after_sending(self, message, extra_sender_data=None, **kwargs):
         """
         Method for updating state of the message after it was sent
         :param message: message object
         :param extra_sender_data: extra data that will be saved to the extra_sender_data field
         :param kwargs: changed object kwargs
-        :return:
         """
-        self.update_message(
-            message, extra_sender_data, number_of_send_attempts=message.number_of_send_attempts + 1, **kwargs
+        self._update_message(
+            message,
+            extra_sender_data,
+            number_of_send_attempts=message.number_of_send_attempts + 1,
+            **kwargs
+        )
+
+    def _update_message_after_sending_error(self, message, extra_sender_data=None, state=None, **kwargs):
+        """
+        Method for updating state of the message after it was send with error result
+        :param message: message object
+        :param extra_sender_data: extra data that will be saved to the extra_sender_data field
+        :param state: error state of the message
+        :param kwargs: changed object kwargs
+        """
+
+        number_of_send_attempts = message.number_of_send_attempts + 1
+
+        if not state:
+            state = (
+                self.model.STATE.ERROR if (
+                        number_of_send_attempts > self.get_batch_max_number_of_send_attempts()
+                        or not self.get_retry_sending()
+                ) else self.model.STATE.ERROR_RETRY
+            )
+
+        self._update_message(
+            message,
+            extra_sender_data,
+            state=state,
+            number_of_send_attempts=number_of_send_attempts,
+            **kwargs
+        )
+
+    def _set_message_as_failed(self, message):
+        """
+        Method for updating state of the message to the final error state
+        :param message: message object
+        """
+        self._update_message(
+            message,
+            state=self.model.STATE.ERROR,
         )
 
     def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
@@ -74,7 +112,6 @@ class BaseBackend:
             tag=tag,
             template=template,
             template_slug=template.slug if template else None,
-            retry_sending=self.get_retry_sending(),
             **kwargs
         )
         if related_objects:
@@ -83,6 +120,15 @@ class BaseBackend:
 
     def is_turned_on_batch_sending(self):
         return False
+
+    def publish_or_retry_message(self, message):
+        if (message.number_of_send_attempts > self.get_batch_max_number_of_send_attempts()
+                or message.created_at < now() - timedelta(seconds=self.get_batch_max_seconds_to_send())):
+            self._set_message_as_failed(message)
+            return False
+        else:
+            self.publish_message(message)
+            return True
 
     def publish_message(self, message):
         """
@@ -113,15 +159,7 @@ class BaseBackend:
         """
         Return queryset of waiting messages to send
         """
-        return self.model.objects.filter(
-            Q(state=self.model.STATE.WAITING) |
-            Q(
-                retry_sending=True,
-                state=self.model.STATE.ERROR_NOT_SENT,
-                number_of_send_attempts__lte=self.get_batch_max_number_of_send_attempts(),
-                created_at__gte=now() - timedelta(seconds=self.get_batch_max_seconds_to_send())
-            )
-        )
+        return self.model.objects.filter(state__in={self.model.STATE.WAITING, self.model.STATE.ERROR_RETRY})
 
     def get_retry_sending(self):
         """

@@ -29,7 +29,8 @@ class OutputSMSMessage(BaseMessage):
         ('ERROR_UPDATE', _('error message update'), 5),
         ('DEBUG', _('debug'), 6),
         ('DELIVERED', _('delivered'), 7),
-        ('ERROR_NOT_SENT', _('error message was not sent'), 8),
+        ('ERROR', _('error'), 8),
+        ('ERROR_RETRY', _('error retry'), 9),
     )
 
     content = models.TextField(verbose_name=_('content'), null=False, blank=False, max_length=700)
@@ -52,7 +53,7 @@ class OutputSMSMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state == self.STATE.ERROR_NOT_SENT
+        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
 
 
 class OutputSMSRelatedObject(BaseRelatedObject):

@@ -65,7 +65,8 @@ Models
     Contains the current state of the message. Allowed states are:
 
       * DEBUG - e-mail was not sent because system is in debug mode
-      * ERROR_NOT_SENT - error was raised during sending of the e-mail message
+      * ERROR - error was raised during sending of the e-mail message
+      * ERROR_RETRY - error was raised during sending of the e-mail message, message will be retried
       * SENDING - e-mail was sent to the external service
       * SENT - e-mail was sent to the receiver
       * WAITING - e-mail was not sent to the external service

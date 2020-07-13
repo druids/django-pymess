@@ -2,7 +2,6 @@ import logging
 from datetime import timedelta
 
 from chamber.exceptions import PersistenceException
-from django.utils.encoding import force_text
 from django.utils.timezone import now
 
 from pymess.backend import BaseBackend
@@ -67,7 +66,7 @@ class DialerBackend(BaseBackend):
                 **self._get_extra_message_kwargs()
             )
         except PersistenceException as ex:
-            raise DialerSendingError(force_text(ex))
+            raise DialerSendingError(str(ex))
 
     def get_initial_dialer_state(self, recipient):
         """

@@ -3,7 +3,6 @@ import logging
 from datetime import timedelta
 
 from django.utils import timezone
-from django.utils.encoding import force_text
 from django.utils.translation import ugettext
 
 from chamber.exceptions import PersistenceException
@@ -66,7 +65,7 @@ class SMSBackend(BaseBackend):
                 **self._get_extra_message_kwargs()
             )
         except PersistenceException as ex:
-            raise self.SMSSendingError(force_text(ex))
+            raise self.SMSSendingError(str(ex))
 
     def get_initial_sms_state(self, recipient):
         """
@@ -102,7 +101,7 @@ class SMSBackend(BaseBackend):
 
         if settings.SMS_SET_ERROR_TO_IDLE_MESSAGES:
             idle_output_sms.update(
-                state=self.model.STATE.ERROR_NOT_SENT, error=ugettext('timeouted')
+                state=self.model.STATE.ERROR, error=ugettext('timeouted')
             )
 
 

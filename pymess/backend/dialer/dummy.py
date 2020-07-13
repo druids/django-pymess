@@ -8,4 +8,4 @@ class DummyDialerBackend(DialerBackend):
     """
 
     def publish_message(self, message):
-        self.update_message_after_sending(message, state=DialerMessage.STATE.DEBUG)
+        self._update_message_after_sending(message, state=DialerMessage.STATE.DEBUG)
