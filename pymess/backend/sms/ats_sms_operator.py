@@ -243,7 +243,7 @@ class ATSSMSBackend(SMSBackend):
         except self.ATSSendingError as ex:
             self._update_message_after_sending_error(
                 message,
-                state=EmailMessage.STATE.ERROR,
+                state=OutputSMSMessage.STATE.ERROR,
                 error=str(ex),
             )
         except requests.exceptions.RequestException as ex:
