@@ -86,7 +86,6 @@ class RelatedObjectManager(models.Manager):
             template_filter = (Q(template=self.instance) | Q(template__isnull=True))
         else:
             template_filter = Q(template__isnull=True)
-
         return self.model.objects.filter(template_filter).filter(self._get_related_objects_qs_kwargs(*related_objects))
 
 
@@ -100,7 +99,7 @@ class MessageQueryset(models.QuerySet):
 
     def filter_related_objects(self, related_objects_queryset):
         return self.filter(
-            related_objects__object_id=related_objects_queryset.annotate(
+            related_objects__object_id__in=related_objects_queryset.annotate(
                 object_str_pk=Cast('pk', output_field=models.TextField())
             ).values('object_str_pk'),
             related_objects__content_type=ContentType.objects.get_for_model(related_objects_queryset.model)
