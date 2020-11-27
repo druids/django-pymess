@@ -1,31 +1,34 @@
+from collections import OrderedDict
+import re
+
+from chamber.utils.datastructures import Enum
 from django.apps import apps
 from django.conf import settings as django_settings
 from django.utils.module_loading import import_string
 
 from attrdict import AttrDict
 
+DEFAULT_SENDER_BACKEND_NAME = 'default'
+
+CONTROLLER_TYPES = Enum(
+    'SMS',
+    'EMAIL',
+    'DIALER',
+    'PUSH_NOTIFICATION',
+)
 
 DEFAULTS = {
     # SMS configuration
+    'SMS_BACKENDS': {
+        DEFAULT_SENDER_BACKEND_NAME: {
+            'backend': 'pymess.backend.sms.dummy.DummySMSBackend'
+        }
+    },
+    'SMS_DEFAULT_SENDER_BACKEND_NAME': DEFAULT_SENDER_BACKEND_NAME,
+    'SMS_BACKEND_ROUTER': 'pymess.backend.routers.DefaultBackendRouter',
     'SMS_TEMPLATE_MODEL': 'pymess.SMSTemplate',
-    'SMS_ATS_CONFIG': {
-        'UNIQ_PREFIX': '',
-        'VALIDITY': 60,
-        'TEXTID': None,
-        'URL': 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',
-        'OPTID': '',
-        'TIMEOUT': 5,  # 5s
-    },
-    'SMS_OPERATOR_CONFIG': {
-        'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',
-        'UNIQ_PREFIX': '',
-        'TIMEOUT': 5,  # 5s
-    },
-    'SMS_SNS_CONFIG': {
-    },
     'SMS_USE_ACCENT': False,
     'SMS_DEFAULT_PHONE_CODE': None,
-    'SMS_SENDER_BACKEND': 'pymess.backend.sms.dummy.DummySMSBackend',
     'SMS_LOG_IDLE_MESSAGES': True,
     'SMS_SET_ERROR_TO_IDLE_MESSAGES': True,
     'SMS_IDLE_MESSAGES_TIMEOUT_MINUTES': 10,
@@ -36,6 +39,13 @@ DEFAULTS = {
     'SMS_RETRY_SENDING': True,
 
     # E-mail configuration
+    'EMAIL_BACKENDS': {
+        DEFAULT_SENDER_BACKEND_NAME: {
+            'backend': 'pymess.backend.emails.dummy.DummyEmailBackend'
+        }
+    },
+    'EMAIL_DEFAULT_SENDER_BACKEND_NAME': DEFAULT_SENDER_BACKEND_NAME,
+    'EMAIL_BACKEND_ROUTER': 'pymess.backend.routers.DefaultBackendRouter',
     'EMAIL_TEMPLATE_MODEL': 'pymess.EmailTemplate',
     'EMAIL_TEMPLATE_BASE_TEMPLATE': None,
     'EMAIL_TEMPLATE_TEMPLATETAGS': ['pymess'],
@@ -52,19 +62,6 @@ DEFAULTS = {
         'script',
         'video',
     ),
-    'EMAIL_SENDER_BACKEND': 'pymess.backend.emails.dummy.DummyEmailBackend',
-    'EMAIL_MANDRILL': {
-        'HEADERS': None,
-        'TRACK_OPENS': False,
-        'TRACK_CLICKS': False,
-        'AUTO_TEXT': False,
-        'INLINE_CSS': False,
-        'URL_STRIP_QS': False,
-        'PRESERVE_RECIPIENTS': False,
-        'VIEW_CONTENT_LINK': True,
-        'ASYNC': False,
-        'TIMEOUT': 5,  # 5s
-    },
     'EMAIL_BATCH_SENDING': False,
     'EMAIL_BATCH_SIZE': 20,
     'EMAIL_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS': 3,
@@ -77,25 +74,14 @@ DEFAULTS = {
     'EMAIL_RETRY_SENDING': True,
 
     # Dialer configuration
-    'DIALER_TEMPLATE_MODEL': 'pymess.DialerTemplate',
-    'DIALER_SENDER_BACKEND': 'pymess.backend.dialer.dummy.DummyDialerBackend',
-    'DIALER_DAKTELA': {
-        'ACCESS_TOKEN':  None,
-        'AUTODIALER_QUEUE': None,
-        'PREDICTIVE_QUEUE': None,
-        'URL': None,
-        'STATES_MAPPING': {
-            '0': 0,
-            '1': 1,
-            '2': 2,
-            '3': 3,
-            '4': 4,
-            '5': 5,
-            '6': 6,
-        },
-        'TESTING_PHONES': [],
-        'TIMEOUT': 5,  # 5s
+    'DIALER_BACKENDS': {
+        DEFAULT_SENDER_BACKEND_NAME: {
+            'backend': 'pymess.backend.dialer.dummy.DummyDialerBackend'
+        }
     },
+    'DIALER_DEFAULT_SENDER_BACKEND_NAME': DEFAULT_SENDER_BACKEND_NAME,
+    'DIALER_BACKEND_ROUTER': 'pymess.backend.routers.DefaultBackendRouter',
+    'DIALER_TEMPLATE_MODEL': 'pymess.DialerTemplate',
     'DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES': 60 * 24,
     'DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS': 5,
     'DIALER_BATCH_SENDING': False,
@@ -105,14 +91,14 @@ DEFAULTS = {
     'DIALER_RETRY_SENDING': True,
 
     # Push notification settings
-    'PUSH_NOTIFICATION_TEMPLATE_MODEL': 'pymess.PushNotificationTemplate',
-    'PUSH_NOTIFICATION_SENDER_BACKEND': 'pymess.backend.push.dummy.DummyPushNotificationBackend',
-    'PUSH_NOTIFICATION_ONESIGNAL': {
-        'APP_ID': None,
-        'API_KEY': None,
-        'LANGUAGE': None,
-        'TIMEOUT': 5,  # 5s
+    'PUSH_NOTIFICATION_BACKENDS': {
+        DEFAULT_SENDER_BACKEND_NAME: {
+            'backend': 'pymess.backend.push.dummy.DummyPushNotificationBackend'
+        }
     },
+    'PUSH_NOTIFICATION_DEFAULT_SENDER_BACKEND_NAME': DEFAULT_SENDER_BACKEND_NAME,
+    'PUSH_NOTIFICATION_BACKEND_ROUTER': 'pymess.backend.routers.DefaultBackendRouter',
+    'PUSH_NOTIFICATION_TEMPLATE_MODEL': 'pymess.PushNotificationTemplate',
     'PUSH_NOTIFICATION_BATCH_SENDING': False,
     'PUSH_NOTIFICATION_BATCH_SIZE': 20,
     'PUSH_NOTIFICATION_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS': 3,
@@ -122,6 +108,10 @@ DEFAULTS = {
     # General message settings
     'DEFAULT_MESSAGE_PRIORITY': 3,
 }
+
+
+class BackendNotFound(Exception):
+    pass
 
 
 class Settings(object):
@@ -168,19 +158,28 @@ def get_email_template_model():
     """
     return get_model(settings.EMAIL_TEMPLATE_MODEL)
 
-
-def get_sms_sender():
-    """
-    Function returns SMS sender backend from string defined in Pymess settings
-    """
-    return import_string(settings.SMS_SENDER_BACKEND)()
+def get_router(backend_type):
+    router_option_name = '{}_BACKEND_ROUTER'.format(backend_type)
+    return import_string(getattr(settings, router_option_name))()
 
 
-def get_email_sender():
-    """
-    Function returns e-mail sender backend from string defined in Pymess settings
-    """
-    return import_string(settings.EMAIL_SENDER_BACKEND)()
+def _get_backend_config_dict(backend_type):
+    backends_option_name = '{}_BACKENDS'.format(backend_type)
+    return getattr(settings, backends_option_name)
+
+
+def get_backend(backend_type, backend_name):
+    backend_from_config = _get_backend_config_dict(backend_type)[backend_name]
+    return import_string(backend_from_config['backend'])(config=backend_from_config.get('config', {}))
+
+
+def get_default_sender_backend_name(backend_type):
+    backend_default_name = '{}_DEFAULT_SENDER_BACKEND_NAME'.format(backend_type)
+    return getattr(settings, backend_default_name)
+
+
+def get_supported_backend_paths(backend_type):
+    return [backend_config_name['backend'] for backend_config_name in _get_backend_config_dict(backend_type)]
 
 
 def get_dialer_template_model():
@@ -190,13 +189,6 @@ def get_dialer_template_model():
     return get_model(settings.DIALER_TEMPLATE_MODEL)
 
 
-def get_dialer_sender():
-    """
-    Function returns dialer sender backend from string defined in Pymess settings
-    """
-    return import_string(settings.DIALER_SENDER_BACKEND)()
-
-
 def get_push_notification_template_model():
     """
     Function returns push notification template model defined in Pymess settings
@@ -204,8 +196,17 @@ def get_push_notification_template_model():
     return get_model(settings.PUSH_NOTIFICATION_TEMPLATE_MODEL)
 
 
-def get_push_notification_sender():
-    """
-    Function returns push notification sender backend from string defined in Pymess settings
-    """
-    return import_string(settings.PUSH_NOTIFICATION_SENDER_BACKEND)()
+def is_turned_on_email_batch_sending():
+    return settings.EMAIL_BATCH_SENDING
+
+
+def is_turned_on_sms_batch_sending():
+    return settings.SMS_BATCH_SENDING
+
+
+def is_turned_on_push_notification_batch_sending():
+    return settings.PUSH_NOTIFICATION_BATCH_SENDING
+
+
+def is_turned_on_dialer_batch_sending():
+    return settings.DIALER_BATCH_SENDING

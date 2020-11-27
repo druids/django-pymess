@@ -1,17 +1,13 @@
 import logging
 
-from datetime import timedelta
-
-from django.db import DatabaseError
-from django.db.models import Q
-from django.core.management.base import BaseCommand, CommandError
-from django.utils.timezone import now
-
-from pymess.config import get_email_sender, get_push_notification_sender, get_dialer_sender, get_sms_sender
-from pymess.models import EmailMessage
-
 from chamber.utils.transaction import atomic_with_signals
+from django.core.management.base import BaseCommand, CommandError
+from django.db import DatabaseError
 
+from pymess.backend.dialer import DialerController
+from pymess.backend.emails import EmailController
+from pymess.backend.push import PushNotificationController
+from pymess.backend.sms import SMSController
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +17,11 @@ class Command(BaseCommand):
     Command for sending messages in batch.
     """
 
-    senders = {
-        'email': get_email_sender,
-        'push-notification': get_push_notification_sender,
-        'dialer': get_dialer_sender,
-        'sms': get_sms_sender
+    controllers = {
+        'email': EmailController(),
+        'push-notification': PushNotificationController(),
+        'dialer': DialerController(),
+        'sms': SMSController()
     }
 
     def __init__(self, *args, **kwargs):
@@ -41,18 +37,18 @@ class Command(BaseCommand):
                                  '(email/push-notification/dialer/sms).')
 
     @atomic_with_signals
-    def _send_message(self, sender):
-        message = sender.get_waiting_or_retry_messages().exclude(
+    def _send_message(self, controller):
+        message = controller.get_waiting_or_retry_messages().exclude(
             pk__in=self.touched_message_pks
         ).select_for_update(
             nowait=True
         ).order_by('priority', 'created_at').first()
-        if not message:
+        if not message or not controller.is_turned_on_batch_sending():
             return False
 
         self.touched_message_pks.add(message.pk)
         try:
-            if sender.publish_or_retry_message(message):
+            if controller.publish_or_retry_message(message):
                 self.send_message_pks.add(message.pk)
             else:
                 self.failed_message_pks.add(message.pk)
@@ -69,17 +65,15 @@ class Command(BaseCommand):
             self.stdout.write('{}: {}'.format(title, len(message_pks)))
 
     def handle(self, type, *args, **options):
-        sender = self.senders[type]()
-
-        if not sender.is_turned_on_batch_sending():
+        controller = self.controllers[type]
+        if not controller.is_turned_on_batch_sending():
             raise CommandError('Batch sending is turned off')
 
         try:
-            for _ in range(sender.get_batch_size()):
-                if not self._send_message(sender):
+            for _ in range(controller.get_batch_size()):
+                if not self._send_message(controller):
                     break
             self._print_result('sent messages', self.send_message_pks)
             self._print_result('failed messages', self.failed_message_pks)
         except DatabaseError:
             self.stdout.write('messages are already locked')
-

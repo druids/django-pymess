@@ -170,7 +170,6 @@ class BaseAbstractTemplate(SmartModel):
     is_active = models.BooleanField(null=False, blank=False, default=True, verbose_name=_('is active'))
     is_allowed_duplicate_messages = models.BooleanField(null=False, blank=False, default=True,
                                                         verbose_name=_('Duplicate messages are allowed'))
-
     def _update_context_data(self, context_data):
         return context_data
 
@@ -205,7 +204,7 @@ class BaseAbstractTemplate(SmartModel):
 
     def exist_duplicate_messages(self, related_objects):
         if related_objects:
-            qs = self.get_backend_sender().model.objects.filter(template=self)
+            qs = self.get_controller().model.objects.filter(template=self)
             for obj in related_objects:
                 qs = qs.filter(
                     related_objects__object_id=obj.pk,
@@ -218,12 +217,12 @@ class BaseAbstractTemplate(SmartModel):
     def can_send(self, recipient, related_objects):
         return self.is_active and self.can_send_for_object(related_objects)
 
-    def get_backend_sender(self):
+    def get_controller(self):
         raise NotImplementedError
 
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
         if self.can_send(recipient, related_objects):
-            return self.get_backend_sender().send(
+            return self.get_controller().send(
                 recipient=recipient,
                 content=self.render_body(context_data),
                 related_objects=related_objects,

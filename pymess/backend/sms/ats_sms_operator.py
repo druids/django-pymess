@@ -1,3 +1,4 @@
+from attrdict import AttrDict
 from bs4 import BeautifulSoup
 
 import requests
@@ -12,7 +13,6 @@ from chamber.utils.datastructures import ChoicesNumEnum, Enum
 from pymess.backend.sms import SMSBackend
 from pymess.models import OutputSMSMessage
 from pymess.utils.logged_requests import generate_session
-from pymess.config import settings
 
 
 class ATSSMSBackend(SMSBackend):
@@ -107,8 +107,14 @@ class ATSSMSBackend(SMSBackend):
         ATS_STATES.LONG_SMS_TEXTID_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
     }
 
-    def __init__(self):
-        self.config = settings.ATS_SMS_CONFIG
+    config = AttrDict({
+        'UNIQ_PREFIX': '',
+        'VALIDITY': 60,
+        'TEXTID': None,
+        'URL': 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',
+        'OPTID': '',
+        'TIMEOUT': 5,  # 5s
+    })
 
     def _get_extra_sender_data(self):
         return {
@@ -118,7 +124,7 @@ class ATSSMSBackend(SMSBackend):
             'textid': self.config.TEXTID,
         }
 
-    def _get_extra_message_kwargs(self):
+    def get_extra_message_kwargs(self):
         return {
             'sender': self.config.OUTPUT_SENDER_NUMBER,
         }
@@ -210,14 +216,14 @@ class ATSSMSBackend(SMSBackend):
                         sms,
                         state=state,
                         error=error,
-                        extra_sender_data={'sender_state': ats_state}
+                        extra_sender_data={'sender_state': ats_state},
                         **change_sms_kwargs
                     )
                 else:
                     self._update_message_after_sending(
                         sms,
                         state=state,
-                        extra_sender_data={'sender_state': ats_state}
+                        extra_sender_data={'sender_state': ats_state},
                         **change_sms_kwargs
                     )
             else:
@@ -225,7 +231,7 @@ class ATSSMSBackend(SMSBackend):
                     sms,
                     state=state,
                     error=error,
-                    extra_sender_data={'sender_state': ats_state}
+                    extra_sender_data={'sender_state': ats_state},
                     **change_sms_kwargs
                 )
 
@@ -281,5 +287,5 @@ class ATSSMSBackend(SMSBackend):
             for code in code_tags if code.attrs.get('uniq')
         }
 
-    def _update_sms_states(self, messages):
+    def update_sms_states(self, messages):
         self._send_requests(messages, request_type=self.REQUEST_TYPES.DELIVERY_REQUEST)

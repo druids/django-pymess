@@ -1,3 +1,4 @@
+from attrdict import AttrDict
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 
@@ -14,6 +15,13 @@ from pymess.utils.logged_requests import generate_session
 
 class OneSignalPushNotificationBackend(PushNotificationBackend):
 
+    config = AttrDict({
+        'APP_ID': None,
+        'API_KEY': None,
+        'LANGUAGE': None,
+        'TIMEOUT': 5,  # 5s
+    })
+
     def _is_result_partial_error(self, result):
         return not result.is_error and result.errors
 
@@ -21,17 +29,17 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
         return result.is_error or self._is_result_partial_error(result)
 
     def publish_message(self, message):
-        onesignal_client = OneSignalClient(settings.PUSH_NOTIFICATION_ONESIGNAL.APP_ID,
-                                           settings.PUSH_NOTIFICATION_ONESIGNAL.API_KEY)
+        onesignal_client = OneSignalClient(self.config.APP_ID,
+                                           self.config.API_KEY)
         onesignal_client.session = generate_session(
             slug='pymess - OneSignal',
             related_objects=(message,),
-            timeout=settings.PUSH_NOTIFICATION_ONESIGNAL.TIMEOUT
+            timeout=self.config.TIMEOUT
         )
 
         languages = {'en'}
-        if settings.PUSH_NOTIFICATION_ONESIGNAL.LANGUAGE is not None:
-            languages.add(settings.PUSH_NOTIFICATION_ONESIGNAL.LANGUAGE)
+        if self.config.LANGUAGE is not None:
+            languages.add(self.config.LANGUAGE)
         notification = DeviceNotification(
             include_external_user_ids=(message.recipient,),
             contents={language: message.content for language in languages},

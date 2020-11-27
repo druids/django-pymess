@@ -1,10 +1,10 @@
 import re
+from attrdict import AttrDict
 
-from chamber.exceptions import PersistenceException
 from django.utils import timezone as tz
 from django.utils.translation import ugettext as _
 
-from pymess.backend.dialer import DialerBackend, DialerSendingError
+from pymess.backend.dialer import DialerBackend
 from pymess.config import settings
 from pymess.models import DialerMessage
 from pymess.utils.logged_requests import generate_session
@@ -16,13 +16,28 @@ class DaktelaDialerBackend(DialerBackend):
     """
 
     SESSION_SLUG = 'pymess-daktela_autodialer'
+    config = AttrDict({
+        'ACCESS_TOKEN':  None,
+        'AUTODIALER_QUEUE': None,
+        'PREDICTIVE_QUEUE': None,
+        'URL': None,
+        'STATES_MAPPING': {
+            '0': 0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+        },
+        'TIMEOUT': 5,  # 5s
+    })
 
-    @staticmethod
-    def _get_dialer_api_url(name=None):
+    def _get_dialer_api_url(self, name=None):
         name = '/{name}'.format(name=name) if name else ''
 
         return '{base_url}{name}.json?accessToken={access_token}'.format(
-            base_url=settings.DIALER_DAKTELA.URL, name=name, access_token=settings.DIALER_DAKTELA.ACCESS_TOKEN,
+            base_url=self.config.URL, name=name, access_token=self.config.ACCESS_TOKEN,
         )
 
     def _get_autodialer_message_states(self, resp_json, state_mapped, resp_message_state):
@@ -36,7 +51,7 @@ class DaktelaDialerBackend(DialerBackend):
             resp_message_state = str(DialerMessage.STATE.NOT_ASSIGNED)
         tts_processed = resp_json['result']['customFields']['ttsprocessed'][0]
         is_final_state = resp_json['result']['action'] == '5' and tts_processed == '1'
-        message_state = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
+        message_state = self.config.STATES_MAPPING[resp_message_state]
         return is_final_state, message_state
 
     def _update_dialer_states(self, messages):
@@ -50,7 +65,7 @@ class DaktelaDialerBackend(DialerBackend):
             response = generate_session(
                 slug=self.SESSION_SLUG,
                 related_objects=(message,),
-                timeout=settings.DIALER_DAKTELA.TIMEOUT
+                timeout=self.config.TIMEOUT
             ).get(client_url)
             resp_json = response.json()
             if response.status_code != 200 and resp_json.get('error'):
@@ -64,7 +79,7 @@ class DaktelaDialerBackend(DialerBackend):
             })
             resp_message_state = resp_json['result']['statuses'][0]['name'] if len(
                 resp_json['result']['statuses']) else resp_json['result']['action']
-            state_mapped = settings.DIALER_DAKTELA.STATES_MAPPING[resp_message_state]
+            state_mapped = self.config.STATES_MAPPING[resp_message_state]
             message_error = resp_json['error'] if len(resp_json['error']) else None
 
             if message.is_autodialer:
@@ -108,19 +123,10 @@ class DaktelaDialerBackend(DialerBackend):
         :param message: dialer message
         """
         client_url = self._get_dialer_api_url()
-        testing_phones = settings.DIALER_DAKTELA.TESTING_PHONES
-        if testing_phones and message.recipient not in testing_phones:
-            self._update_message(
-                message,
-                error=_('Not allowed number to dial. Allowed numbers are: {}').format(', '.join(testing_phones)),
-                state=DialerMessage.STATE.DEBUG,
-                is_final_state=True
-            )
-            return
         try:
             payload = {
-                'queue': (settings.DIALER_DAKTELA.AUTODIALER_QUEUE if message.is_autodialer
-                          else settings.DIALER_DAKTELA.PREDICTIVE_QUEUE),
+                'queue': (self.config.AUTODIALER_QUEUE if message.is_autodialer
+                          else self.config.PREDICTIVE_QUEUE),
                 'number': re.sub(r'^\+', '00', message.recipient),
                 'customFields': {
                     'mall_pay_text': [
@@ -140,7 +146,7 @@ class DaktelaDialerBackend(DialerBackend):
             response = generate_session(
                 slug=self.SESSION_SLUG,
                 related_objects=(message,),
-                timeout=settings.DIALER_DAKTELA.TIMEOUT
+                timeout=self.config.TIMEOUT
             ).post(
                 client_url,
                 json=payload,
@@ -175,29 +181,3 @@ class DaktelaDialerBackend(DialerBackend):
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all
             # and log them into database. Re-raise exception causes transaction rollback (lost of information about
             # exception).
-
-    def create_message(self, recipient, content=None, related_objects=None, tag=None, template=None,
-                       is_autodialer=True, priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
-        """
-        Create dialer message which will be logged in the database (content is not needed for this .
-        :param recipient: phone number of the recipient
-        :param related_objects: list of related objects that will be linked with the dialer message using generic
-        relation
-        :param tag: string mark that will be saved with the message
-        :param kwargs: extra attributes that will be saved with the message
-        """
-        try:
-            return super().create_message(
-                recipient=recipient,
-                content=content,
-                related_objects=related_objects,
-                tag=tag,
-                template=template,
-                state=self.get_initial_dialer_state(recipient),
-                is_autodialer=is_autodialer,
-                priority=priority,
-                **kwargs,
-                **self._get_extra_message_kwargs()
-            )
-        except PersistenceException as ex:
-            raise DialerSendingError(str(ex))
