@@ -42,7 +42,8 @@ class SMSBackend(BaseBackend):
     def get_retry_sending(self):
         return settings.SMS_RETRY_SENDING and self.is_turned_on_batch_sending()
 
-    def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
+    def create_message(self, recipient, content, related_objects, tag, template,
+                       priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
         """
         Create SMS which will be logged in the database.
         :param recipient: phone number of the recipient
@@ -61,6 +62,7 @@ class SMSBackend(BaseBackend):
                 tag=tag,
                 template=template,
                 state=self.get_initial_sms_state(recipient),
+                priority=priority,
                 extra_data=kwargs,
                 **self._get_extra_message_kwargs()
             )

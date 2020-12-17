@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _l
 from django.utils.timezone import now
 
+from pymess.config import settings
 from pymess.utils import fullname
 
 
@@ -95,7 +96,8 @@ class BaseBackend:
             state=self.model.STATE.ERROR,
         )
 
-    def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
+    def create_message(self, recipient, content, related_objects, tag, template,
+                       priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
         """
         Create message which will be logged in the database.
         :param recipient: email or phone number of the recipient
@@ -112,6 +114,7 @@ class BaseBackend:
             tag=tag,
             template=template,
             template_slug=template.slug if template else None,
+            priority=priority,
             **kwargs
         )
         if related_objects:

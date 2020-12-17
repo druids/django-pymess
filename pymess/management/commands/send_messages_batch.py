@@ -46,7 +46,7 @@ class Command(BaseCommand):
             pk__in=self.touched_message_pks
         ).select_for_update(
             nowait=True
-        ).order_by('created_at').first()
+        ).order_by('priority', 'created_at').first()
         if not message:
             return False
 

@@ -17,7 +17,7 @@ class EmailBackend(BaseBackend):
         pass
 
     def create_message(self, sender, sender_name, recipient, subject, content, related_objects, tag, template,
-                       attachments, **kwargs):
+                       attachments, priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
         """
         Create e-mail which will be logged in the database.
         :param sender: e-mail address of the sender
@@ -43,6 +43,7 @@ class EmailBackend(BaseBackend):
                 sender_name=sender_name,
                 subject=subject,
                 state=self.get_initial_email_state(recipient),
+                priority=priority,
                 extra_data=kwargs,
                 **self._get_extra_message_kwargs()
             )
