@@ -4,6 +4,7 @@ from json.decoder import JSONDecodeError
 import requests
 from django.utils import timezone
 from onesignal import DeviceNotification, OneSignalClient
+from onesignal.errors import OneSignalAPIError
 
 from pymess.backend.push import PushNotificationBackend
 from pymess.config import settings
@@ -59,7 +60,7 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
                     sent_at=timezone.now(),
                     extra_sender_data=extra_sender_data,
                 )
-        except (JSONDecodeError, requests.exceptions.RequestException) as ex:
+        except (JSONDecodeError, requests.exceptions.RequestException, OneSignalAPIError) as ex:
             self._update_message_after_sending_error(
                 message, error=str(ex)
             )
