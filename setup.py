@@ -32,7 +32,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
     ],
     install_requires=[
-        'django>=1.11',
+        'django>=3.1',
         'django-chamber>=0.5.8',
         'attrdict>=2.0.1',
         'beautifulsoup4==4.8.0',
