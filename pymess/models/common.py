@@ -2,7 +2,6 @@ from functools import reduce
 
 from operator import or_ as OR
 
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -17,6 +16,8 @@ from chamber.models import SmartModel
 from chamber.utils.datastructures import ChoicesNumEnum
 
 from jsonfield.fields import JSONField
+
+from pymess.config import settings
 
 
 class RelatedObjectQueryset(models.QuerySet):
@@ -131,6 +132,8 @@ class BaseMessage(SmartModel):
     tag = models.SlugField(verbose_name=_('tag'), null=True, blank=True, editable=False)
     number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
                                                           blank=False, default=0)
+    priority = models.PositiveSmallIntegerField(verbose_name=_('priority'), null=False, blank=False,
+                                                default=settings.DEFAULT_MESSAGE_PRIORITY)
 
     objects = MessageManager.from_queryset(MessageQueryset)()
 

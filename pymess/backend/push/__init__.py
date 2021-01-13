@@ -28,7 +28,8 @@ class PushNotificationBackend(BaseBackend):
     def get_retry_sending(self):
         return settings.PUSH_NOTIFICATION_RETRY_SENDING and self.is_turned_on_batch_sending()
 
-    def create_message(self, recipient, content, related_objects, tag, template, **kwargs):
+    def create_message(self, recipient, content, related_objects, tag, template,
+                       priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
         try:
             notification = super().create_message(
                 recipient=recipient,
@@ -36,6 +37,7 @@ class PushNotificationBackend(BaseBackend):
                 related_objects=related_objects,
                 template=template,
                 tag=tag,
+                priority=priority,
                 **kwargs
             )
             return notification

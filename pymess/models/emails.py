@@ -147,7 +147,8 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
     def get_backend_sender(self):
         return get_email_sender()
 
-    def send(self, recipient, context_data, related_objects=None, tag=None, attachments=None, **kwargs):
+    def send(self, recipient, context_data, related_objects=None, tag=None, attachments=None,
+             priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
         return super().send(
             recipient=recipient,
             context_data=context_data,
@@ -156,6 +157,7 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
             sender=self.sender,
             subject=self.render_subject(context_data),
             sender_name=self.sender_name,
+            priority=priority,
             attachments=attachments
         )
 

@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from pymess.backend.dialer import DialerBackend
 from pymess.models import DialerMessage
 
@@ -8,4 +10,4 @@ class DummyDialerBackend(DialerBackend):
     """
 
     def publish_message(self, message):
-        self._update_message_after_sending(message, state=DialerMessage.STATE.DEBUG)
+        self._update_message_after_sending(message, state=DialerMessage.STATE.DEBUG, sent_at=timezone.now())

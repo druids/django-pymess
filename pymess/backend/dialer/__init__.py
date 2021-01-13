@@ -41,7 +41,8 @@ class DialerBackend(BaseBackend):
     def get_retry_sending(self):
         return settings.DIALER_RETRY_SENDING and self.is_turned_on_batch_sending()
 
-    def create_message(self, recipient, content, related_objects, tag, template, is_autodialer=True, **kwargs):
+    def create_message(self, recipient, content, related_objects, tag, template, is_autodialer=True,
+                       priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
         """
         Create dialer message which will be logged in the database.
         :param recipient: phone number of the recipient
@@ -62,6 +63,7 @@ class DialerBackend(BaseBackend):
                 template,
                 state=self.get_initial_dialer_state(recipient),
                 is_autodialer=is_autodialer,
+                priority=priority,
                 extra_data=kwargs,
                 **self._get_extra_message_kwargs()
             )
