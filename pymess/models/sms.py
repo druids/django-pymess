@@ -4,7 +4,7 @@ from django.db import models
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
-from pymess.config import settings, get_sms_sender
+from pymess.config import settings
 from pymess.utils import normalize_phone_number
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
@@ -68,8 +68,9 @@ class OutputSMSRelatedObject(BaseRelatedObject):
 
 class AbstractSMSTemplate(BaseAbstractTemplate):
 
-    def get_backend_sender(self):
-        return get_sms_sender()
+    def get_controller(self):
+        from pymess.backend.sms import SMSController
+        return SMSController()
 
     class Meta(BaseAbstractTemplate.Meta):
         abstract = True

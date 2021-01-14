@@ -188,7 +188,7 @@ Backend is a class that is used for sending messages. Every backend must provide
 
   Configuration of attributes according to push notification operator documentation::
 
-    PYMESS_PUSH_NOTIFICATION_ONESIGNAL = {
+    config = {
         'APP_ID': 'app-id',
         'API_KEY': 'api-key,
         'LANGUAGE': 'language',

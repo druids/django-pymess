@@ -1,9 +1,8 @@
 from chamber.utils.datastructures import ChoicesNumEnum
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from jsonfield.fields import JSONField
 
-from pymess.config import get_push_notification_sender, settings
+from pymess.config import settings
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
 
@@ -65,8 +64,9 @@ class AbstractPushNotificationTemplate(BaseAbstractTemplate):
 
     heading = models.TextField(verbose_name=_('heading'))
 
-    def get_backend_sender(self):
-        return get_push_notification_sender()
+    def get_controller(self):
+        from pymess.backend.push import PushNotificationController
+        return PushNotificationController()
 
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
         return super().send(recipient, context_data, related_objects, tag,

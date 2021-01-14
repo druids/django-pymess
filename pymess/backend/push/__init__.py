@@ -1,32 +1,29 @@
 from chamber.exceptions import PersistenceException
 
-from pymess.backend import BaseBackend, send_template as _send_template, send as _send
-from pymess.config import settings, get_push_notification_template_model, get_push_notification_sender
+from pymess.backend import BaseBackend, send_template as _send_template, send as _send, BaseController
+from pymess.config import (
+    CONTROLLER_TYPES, get_push_notification_template_model, is_turned_on_push_notification_batch_sending, settings
+)
 from pymess.models import PushNotificationMessage
 
 
-class PushNotificationBackend(BaseBackend):
-    """Base class for push notification backend with implementation of push notification service used for sending."""
+class PushNotificationController(BaseController):
+    """Controller class for push notifications delegating message to correct push notification backend"""
 
     model = PushNotificationMessage
+    backend_type_name = CONTROLLER_TYPES.PUSH_NOTIFICATION
 
     class PushNotificationSendingError(Exception):
         pass
 
-    def is_turned_on_batch_sending(self):
-        return settings.PUSH_NOTIFICATION_BATCH_SENDING
+    def get_batch_max_seconds_to_send(self):
+        return settings.PUSH_NOTIFICATION_BATCH_MAX_SECONDS_TO_SEND
 
     def get_batch_size(self):
         return settings.PUSH_NOTIFICATION_BATCH_SIZE
 
-    def get_batch_max_number_of_send_attempts(self):
-        return settings.PUSH_NOTIFICATION_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
-
-    def get_batch_max_seconds_to_send(self):
-        return settings.PUSH_NOTIFICATION_BATCH_MAX_SECONDS_TO_SEND
-
-    def get_retry_sending(self):
-        return settings.PUSH_NOTIFICATION_RETRY_SENDING and self.is_turned_on_batch_sending()
+    def is_turned_on_batch_sending(self):
+        return is_turned_on_push_notification_batch_sending()
 
     def create_message(self, recipient, content, related_objects, tag, template,
                        priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
@@ -43,6 +40,15 @@ class PushNotificationBackend(BaseBackend):
             return notification
         except PersistenceException as ex:
             raise self.PushNotificationSendingError(str(ex))
+
+
+class PushNotificationBackend(BaseBackend):
+
+    def get_batch_max_number_of_send_attempts(self):
+        return settings.PUSH_NOTIFICATION_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
+
+    def get_retry_sending(self):
+        return settings.PUSH_NOTIFICATION_RETRY_SENDING and is_turned_on_push_notification_batch_sending()
 
 
 def send_template(recipient, slug, context_data, related_objects=None, tag=None):
@@ -81,6 +87,6 @@ def send(recipient, content, related_objects=None, tag=None, **kwargs):
         content=content,
         related_objects=related_objects,
         tag=tag,
-        message_sender=get_push_notification_sender(),
+        message_controller=PushNotificationController(),
         **kwargs
     )

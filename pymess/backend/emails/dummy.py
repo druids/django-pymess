@@ -1,7 +1,6 @@
 from django.utils import timezone
 
 from pymess.backend.emails import EmailBackend
-from pymess.models import EmailMessage
 
 
 class DummyEmailBackend(EmailBackend):
@@ -10,7 +9,7 @@ class DummyEmailBackend(EmailBackend):
     """
 
     def publish_message(self, message):
-        self._update_message_after_sending(message, state=EmailMessage.STATE.DEBUG, sent_at=timezone.now())
+        self._update_message_after_sending(message, state=message.STATE.DEBUG, sent_at=timezone.now())
 
     def pull_message_info(self, message):
         self._update_message(

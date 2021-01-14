@@ -4,7 +4,7 @@ from django.db import models
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
-from pymess.config import get_dialer_sender, settings
+from pymess.config import settings
 from pymess.utils import normalize_phone_number
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
@@ -92,8 +92,9 @@ class DialerMessageRelatedObject(BaseRelatedObject):
 
 class AbstractDialerTemplate(BaseAbstractTemplate):
 
-    def get_backend_sender(self):
-        return get_dialer_sender()
+    def get_controller(self):
+        from pymess.backend.dialer import DialerController
+        return DialerController()
 
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
         return super().send(recipient, context_data, related_objects, tag, **kwargs)

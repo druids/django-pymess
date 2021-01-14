@@ -2,6 +2,7 @@ import os
 import base64
 
 import requests
+from attrdict import AttrDict
 
 from json.decoder import JSONDecodeError
 
@@ -39,6 +40,19 @@ class MandrillEmailBackend(EmailBackend):
         MANDRILL_STATES.INVALID: EmailMessage.STATE.ERROR,
     }
 
+    config = AttrDict({
+        'HEADERS': None,
+        'TRACK_OPENS': False,
+        'TRACK_CLICKS': False,
+        'AUTO_TEXT': False,
+        'INLINE_CSS': False,
+        'URL_STRIP_QS': False,
+        'PRESERVE_RECIPIENTS': False,
+        'VIEW_CONTENT_LINK': True,
+        'ASYNC': False,
+        'TIMEOUT': 5,  # 5s
+    })
+
     def _serialize_attachments(self, message):
         return [
             {
@@ -49,11 +63,11 @@ class MandrillEmailBackend(EmailBackend):
         ]
 
     def _create_client(self, message):
-        mandrill_client = mandrill.Mandrill(settings.EMAIL_MANDRILL.KEY)
+        mandrill_client = mandrill.Mandrill(self.config.KEY)
         mandrill_client.session = generate_session(
             slug='pymess - Mandrill',
             related_objects=(message,),
-            timeout=settings.EMAIL_MANDRILL.TIMEOUT
+            timeout=self.config.TIMEOUT
         )
         return mandrill_client
 
@@ -67,14 +81,14 @@ class MandrillEmailBackend(EmailBackend):
                     'from_name': message.sender_name,
                     'html': message.content,
                     'subject': message.subject,
-                    'headers': settings.EMAIL_MANDRILL.HEADERS,
-                    'track_opens': settings.EMAIL_MANDRILL.TRACK_OPENS,
-                    'auto_text': settings.EMAIL_MANDRILL.AUTO_TEXT,
-                    'inline_css': settings.EMAIL_MANDRILL.INLINE_CSS,
-                    'url_strip_qs': settings.EMAIL_MANDRILL.URL_STRIP_QS,
-                    'preserve_recipients': settings.EMAIL_MANDRILL.PRESERVE_RECIPIENTS,
-                    'view_content_link': settings.EMAIL_MANDRILL.VIEW_CONTENT_LINK,
-                    'async': settings.EMAIL_MANDRILL.ASYNC,
+                    'headers': self.config.HEADERS,
+                    'track_opens': self.config.TRACK_OPENS,
+                    'auto_text': self.config.AUTO_TEXT,
+                    'inline_css': self.config.INLINE_CSS,
+                    'url_strip_qs': self.config.URL_STRIP_QS,
+                    'preserve_recipients': self.config.PRESERVE_RECIPIENTS,
+                    'view_content_link': self.config.VIEW_CONTENT_LINK,
+                    'async': self.config.ASYNC,
                     'attachments': self._serialize_attachments(message)
                 },
             )[0]

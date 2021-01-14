@@ -81,18 +81,6 @@ SMS
 
    Defines maximum number of seconds to try to send a SMS message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
 
-.. attribute:: PYMESS_SMS_ATS_CONFIG
-
-  Configuration of ``pymess.backend.sms.ats_sms_operator.ATSSMSBackend``.
-
-.. attribute:: PYMESS_SMS_OPERATOR_CONFIG
-
-  Configuration of ``pymess.backend.sms.sms_operator.SMSOperatorBackend``.
-
-.. attribute:: PYMESS_SMS_SNS_CONFIG
-
-  Configuration of ``pymess.backend.sms.sns.SNSSMSBackend``.
-
 E-MAIL
 ^^^^^^
 
@@ -152,10 +140,6 @@ E-MAIL
 
   Defines delay in seconds from the time the message change notification was received to message info will be pulled from the provider.
 
-.. attribute:: PYMESS_EMAIL_MANDRILL
-
-  Configuration of ``pymess.backend.email.mandrill.MandrillEmailBackend``.
-
 
 DIALER
 ^^^^^^
@@ -192,9 +176,6 @@ DIALER
 
   Number of check attempts to get dialer message state. Default value is ``5``
 
-.. attribute:: PYMESS_DIALER_DAKTELA
-
-  Configuration of ``pymess.backend.dialer.daktela.DaktelaDialerBackend``.
 
 Push notifications
 ^^^^^^^^^^^^^^^^^^
@@ -222,7 +203,3 @@ Push notifications
 .. attribute:: PYMESS_PUSH_NOTIFICATION_BATCH_MAX_SECONDS_TO_SEND
 
   Defines maximum number of seconds to try to send an push notification message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
-
-.. attribute:: PUSH_NOTIFICATION_ONESIGNAL
-
-  Configuration of ``pymess.backend.push.onesignal.OneSignalPushNotificationBackend``.

@@ -8,7 +8,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.template import Template, Context
 from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
 
-from pymess.config import settings, get_email_sender
+from pymess.config import settings
 from pymess.utils.html import raise_error_if_contains_banned_tags
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
@@ -126,6 +126,10 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
     sender = models.EmailField(verbose_name=_('sender'), null=True, blank=True, max_length=200)
     sender_name = models.CharField(verbose_name=_('sender name'), blank=True, null=True, max_length=250)
 
+    def get_controller(self):
+        from pymess.backend.emails import EmailController
+        return EmailController()
+
     def _update_context_data(self, context_data):
         for context_processor_fun_name in settings.EMAIL_TEMPLATE_CONTEXT_PROCESSORS:
             context_data.update(import_string(context_processor_fun_name)(context_data, self))
@@ -143,9 +147,6 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
     def render_subject(self, context_data):
         context_data = self._update_context_data(context_data)
         return Template(self.get_subject()).render(Context(context_data))
-
-    def get_backend_sender(self):
-        return get_email_sender()
 
     def send(self, recipient, context_data, related_objects=None, tag=None, attachments=None,
              priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):

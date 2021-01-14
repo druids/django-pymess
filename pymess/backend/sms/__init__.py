@@ -1,46 +1,45 @@
 import logging
-
 from datetime import timedelta
 
 from django.utils import timezone
-from django.utils.translation import ugettext
+from django.utils.module_loading import import_string
+from django.utils.translation import ugettext_lazy as _
 
 from chamber.exceptions import PersistenceException
 
-from pymess.backend import BaseBackend, send_template as _send_template, send as _send
-from pymess.config import settings, get_sms_template_model, get_sms_sender
+from pymess.backend import BaseBackend, BaseController
+from pymess.backend import send as _send
+from pymess.backend import send_template as _send_template
+from pymess.config import (
+    CONTROLLER_TYPES, get_sms_template_model, get_supported_backend_paths, is_turned_on_sms_batch_sending, settings,
+)
 from pymess.models import OutputSMSMessage
-from pymess.utils import fullname
-
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SMSBackend(BaseBackend):
+class SMSController(BaseController):
     """
-    Base class for SMS backend containing implementation of concrete SMS service that
-    is used for sending SMS messages.
+    Controller class for SMS delegating message to correct SMS backend
     """
-
     model = OutputSMSMessage
+    backend_type_name = CONTROLLER_TYPES.SMS
 
     class SMSSendingError(Exception):
         pass
 
-    def is_turned_on_batch_sending(self):
-        return settings.SMS_BATCH_SENDING
-
     def get_batch_size(self):
         return settings.SMS_BATCH_SIZE
-
-    def get_batch_max_number_of_send_attempts(self):
-        return settings.SMS_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
 
     def get_batch_max_seconds_to_send(self):
         return settings.SMS_BATCH_MAX_SECONDS_TO_SEND
 
-    def get_retry_sending(self):
-        return settings.SMS_RETRY_SENDING and self.is_turned_on_batch_sending()
+    def get_initial_sms_state(self, recipient):
+        """
+        returns initial state for logged SMS instance.
+        :param recipient: phone number of the recipient
+        """
+        return self.model.STATE.WAITING
 
     def create_message(self, recipient, content, related_objects, tag, template,
                        priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
@@ -52,6 +51,7 @@ class SMSBackend(BaseBackend):
         relation
         :param tag: string mark that will be saved with the message
         :param template: template object from which content of the message was created
+        :param priority: priority of sending message 1 (highest) to 3 (lowest)
         :param kwargs: extra attributes that will be saved with the message
         """
         try:
@@ -64,47 +64,56 @@ class SMSBackend(BaseBackend):
                 state=self.get_initial_sms_state(recipient),
                 priority=priority,
                 extra_data=kwargs,
-                **self._get_extra_message_kwargs()
+                **self.get_backend(recipient).get_extra_message_kwargs()
             )
         except PersistenceException as ex:
             raise self.SMSSendingError(str(ex))
 
-    def get_initial_sms_state(self, recipient):
+    def bulk_check_sms_states(self):
         """
-        returns initial state for logged SMS instance.
-        :param recipient: phone number of the recipient
+        Method that find messages that is not in the final state and updates its states.
         """
-        return self.model.STATE.WAITING
+        for backend in get_supported_backend_paths(self.backend_type_name):
+            messages_to_check = self.model.objects.filter(state=self.model.STATE.SENDING,
+                                                                backend=backend)
+            if messages_to_check.exists():
+                import_string(backend)().update_sms_states(messages_to_check)
 
-    def _update_sms_states(self, messages):
+            idle_output_sms = messages_to_check.filter(
+                created_at__lt=timezone.now() - timedelta(minutes=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES),
+            )
+            if settings.SMS_LOG_IDLE_MESSAGES and idle_output_sms.exists():
+                LOGGER.warning('{count_sms} Output SMS is more than {timeout} minutes in state "SENDING"'.format(
+                    count_sms=idle_output_sms.count(), timeout=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES
+                ))
+
+            if settings.SMS_SET_ERROR_TO_IDLE_MESSAGES:
+                idle_output_sms.update(
+                    state=self.model.STATE.ERROR, error=_('timeouted')
+                )
+
+    def is_turned_on_batch_sending(self):
+        return is_turned_on_sms_batch_sending()
+
+
+class SMSBackend(BaseBackend):
+    """
+    Base class for SMS backend containing implementation of concrete SMS service that
+    is used for sending SMS messages.
+    """
+
+    def update_sms_states(self, messages):
         """
         If SMS sender provides check SMS delivery this method can be overridden.
         :param messages: messages which state will be updated
         """
         raise NotImplementedError('Check SMS state is not supported with the backend')
 
-    def bulk_check_sms_states(self):
-        """
-        Method that find messages that is not in the final state and updates its states.
-        """
-        messages_to_check = self.model.objects.filter(state=self.model.STATE.SENDING)
-        if messages_to_check.exists():
-            self._update_sms_states(messages_to_check)
+    def get_batch_max_number_of_send_attempts(self):
+        return settings.SMS_BATCH_MAX_NUMBER_OF_SEND_ATTEMPTS
 
-        idle_output_sms = self.model.objects.filter(
-            state=self.model.STATE.SENDING,
-            created_at__lt=timezone.now() - timedelta(minutes=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES),
-            backend=fullname(self)
-        )
-        if settings.SMS_LOG_IDLE_MESSAGES and idle_output_sms.exists():
-            LOGGER.warning('{count_sms} Output SMS is more than {timeout} minutes in state "SENDING"'.format(
-                count_sms=idle_output_sms.count(), timeout=settings.SMS_IDLE_MESSAGES_TIMEOUT_MINUTES
-            ))
-
-        if settings.SMS_SET_ERROR_TO_IDLE_MESSAGES:
-            idle_output_sms.update(
-                state=self.model.STATE.ERROR, error=ugettext('timeouted')
-            )
+    def get_retry_sending(self):
+        return settings.SMS_RETRY_SENDING and is_turned_on_sms_batch_sending()
 
 
 def send_template(recipient, slug, context_data, related_objects=None, tag=None):
@@ -143,6 +152,6 @@ def send(recipient, content, related_objects=None, tag=None, **kwargs):
         content=content,
         related_objects=related_objects,
         tag=tag,
-        message_sender=get_sms_sender(),
+        message_controller=SMSController(),
         **kwargs
     )

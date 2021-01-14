@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from pymess.config import get_dialer_sender
+from pymess.backend.dialer import DialerController
 
 
 class Command(BaseCommand):
@@ -9,4 +9,4 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **kwargs):
-        get_dialer_sender().bulk_check_dialer_status()
+        DialerController().bulk_check_dialer_status()

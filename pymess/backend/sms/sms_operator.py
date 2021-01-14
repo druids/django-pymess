@@ -1,3 +1,4 @@
+from attrdict import AttrDict
 from bs4 import BeautifulSoup
 
 import requests
@@ -75,8 +76,11 @@ class SMSOperatorBackend(SMSBackend):
         SMS_OPERATOR_STATES.NOT_FOUND: OutputSMSMessage.STATE.ERROR_UPDATE,
     }
 
-    def __init__(self):
-        self.config = settings.SMS_OPERATOR_CONFIG
+    config = AttrDict({
+        'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',
+        'UNIQ_PREFIX': '',
+        'TIMEOUT': 5,  # 5s
+    })
 
     def _get_extra_sender_data(self):
         return {
@@ -223,5 +227,5 @@ class SMSOperatorBackend(SMSBackend):
         return {int(item.smsid.string.lstrip(self.config.UNIQ_PREFIX + '-')): int(item.status.string)
                 for item in soup.find_all('dataitem')}
 
-    def _update_sms_states(self, messages):
+    def update_sms_states(self, messages):
         self._send_requests(messages, request_type=self.REQUEST_TYPES.DELIVERY_REQUEST)
