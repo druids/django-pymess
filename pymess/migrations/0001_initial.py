@@ -2,7 +2,6 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import jsonfield.fields
 
 from pymess.config import settings
 
@@ -50,9 +49,9 @@ class Migration(migrations.Migration):
                  models.CharField(blank=True, editable=False, max_length=250, null=True, verbose_name='backend')),
                 ('error', models.TextField(blank=True, editable=False, null=True, verbose_name='error')),
                 ('extra_data',
-                 jsonfield.fields.JSONField(blank=True, editable=False, null=True, verbose_name='extra data')),
+                 models.TextField(blank=True, editable=False, null=True, verbose_name='extra data')),
                 ('extra_sender_data',
-                 jsonfield.fields.JSONField(blank=True, editable=False, null=True, verbose_name='extra sender data')),
+                 models.TextField(blank=True, editable=False, null=True, verbose_name='extra sender data')),
                 ('tag', models.SlugField(blank=True, editable=False, null=True, verbose_name='tag')),
             ],
             options={
@@ -121,9 +120,9 @@ class Migration(migrations.Migration):
                  models.CharField(blank=True, editable=False, max_length=250, null=True, verbose_name='backend')),
                 ('error', models.TextField(blank=True, editable=False, null=True, verbose_name='error')),
                 ('extra_data',
-                 jsonfield.fields.JSONField(blank=True, editable=False, null=True, verbose_name='extra data')),
+                 models.TextField(blank=True, editable=False, null=True, verbose_name='extra data')),
                 ('extra_sender_data',
-                 jsonfield.fields.JSONField(blank=True, editable=False, null=True, verbose_name='extra sender data')),
+                 models.TextField(blank=True, editable=False, null=True, verbose_name='extra sender data')),
                 ('tag', models.SlugField(blank=True, editable=False, null=True, verbose_name='tag')),
             ],
             options={

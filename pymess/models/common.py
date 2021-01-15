@@ -5,6 +5,7 @@ from operator import or_ as OR
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Cast
@@ -14,8 +15,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from chamber.models import SmartModel
 from chamber.utils.datastructures import ChoicesNumEnum
-
-from jsonfield.fields import JSONField
 
 from pymess.config import settings
 
@@ -127,8 +126,10 @@ class BaseMessage(SmartModel):
     state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
     backend = models.CharField(verbose_name=_('backend'), null=True, blank=True, editable=False, max_length=250)
     error = models.TextField(verbose_name=_('error'), null=True, blank=True, editable=False)
-    extra_data = JSONField(verbose_name=_('extra data'), null=True, blank=True, editable=False)
-    extra_sender_data = JSONField(verbose_name=_('extra sender data'), null=True, blank=True, editable=False)
+    extra_data = models.JSONField(verbose_name=_('extra data'), null=True, blank=True, editable=False,
+                                  encoder=DjangoJSONEncoder)
+    extra_sender_data = models.JSONField(verbose_name=_('extra sender data'), null=True, blank=True, editable=False,
+                                         encoder=DjangoJSONEncoder)
     tag = models.SlugField(verbose_name=_('tag'), null=True, blank=True, editable=False)
     number_of_send_attempts = models.PositiveIntegerField(verbose_name=_('number of send attempts'), null=False,
                                                           blank=False, default=0)
