@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from pymess.backend.sms import bulk_check_sms_states
+from pymess.backend.sms import SMSController
 
 
 class Command(BaseCommand):
@@ -9,4 +9,4 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **kwargs):
-        bulk_check_sms_states()
+        SMSController().bulk_check_sms_states()

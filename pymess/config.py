@@ -179,7 +179,8 @@ def get_default_sender_backend_name(backend_type):
 
 
 def get_supported_backend_paths(backend_type):
-    return [backend_config_name['backend'] for backend_config_name in _get_backend_config_dict(backend_type)]
+    return [backend_config['backend'] for backend_config_name, backend_config in
+            _get_backend_config_dict(backend_type).items()]
 
 
 def get_dialer_template_model():
