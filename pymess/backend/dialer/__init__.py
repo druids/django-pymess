@@ -80,8 +80,8 @@ class DialerController(BaseController):
             created_at__gte=now() - timedelta(minutes=settings.DIALER_IDLE_MESSAGES_TIMEOUT_MINUTES),
         )
         if messages_to_check.exists():
-            for backend, messages_for_backend in self._get_backend_messages_map(messages_to_check):
-                backend._update_dialer_states(messages_to_check)
+            for backend, messages_for_backend in self._get_backend_messages_map(messages_to_check).items():
+                backend._update_dialer_states(messages_for_backend)
 
     def is_turned_on_batch_sending(self):
         return is_turned_on_dialer_batch_sending()
