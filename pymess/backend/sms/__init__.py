@@ -74,8 +74,7 @@ class SMSController(BaseController):
         Method that find messages that is not in the final state and updates its states.
         """
         for backend in get_supported_backend_paths(self.backend_type_name):
-            messages_to_check = self.model.objects.filter(state=self.model.STATE.SENDING,
-                                                                backend=backend)
+            messages_to_check = self.model.objects.filter(state=self.model.STATE.SENDING, backend=backend)
             if messages_to_check.exists():
                 import_string(backend)().update_sms_states(messages_to_check)
 
