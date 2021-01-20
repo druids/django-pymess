@@ -123,7 +123,7 @@ class BaseController:
         can be overridden
         :param messages: list of messages
         """
-        for backend, messages_for_backend in self._get_backend_messages_map(messages):
+        for backend, messages_for_backend in self._get_backend_messages_map(messages).items():
             backend.publish_messages(messages_for_backend)
 
     def bulk_send(self, recipients, content, related_objects=None, tag=None, template=None, **kwargs):
