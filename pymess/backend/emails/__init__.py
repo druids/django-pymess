@@ -67,30 +67,6 @@ class EmailController(BaseController):
         except PersistenceException as ex:
             raise self.EmailSendingError(str(ex))
 
-    def send(self, sender, recipient, subject, content, sender_name=None, related_objects=None, tag=None,
-             template=None, attachments=None, **kwargs):
-        """
-        Send e-mail with defined values
-        :param sender: e-mail address of the sender
-        :param recipient: e-mail address of the receiver
-        :param subject: subject of the e-mail message
-        :param content: content of the e-mail message
-        :param sender_name: friendly name of the sender
-        :param related_objects: list of related objects that will be linked with the e-mail message with generic
-            relation
-        :param tag: string mark that will be saved with the message
-        :param template: template object from which content, subject and sender was created
-        :param attachments: list of files that will be sent with the message as attachments
-        :param kwargs: extra data that will be saved in JSON format in the extra_data model field
-        """
-        message = self.create_message(
-            sender, sender_name, recipient, subject, content, related_objects, tag, template, attachments, **kwargs
-        )
-        backend = self.get_backend(message.recipient)
-        if not self.is_turned_on_batch_sending():
-            backend.publish_message(message)
-        return message
-
     def is_turned_on_batch_sending(self):
         return is_turned_on_email_batch_sending()
 
