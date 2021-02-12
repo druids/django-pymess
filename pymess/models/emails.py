@@ -159,7 +159,8 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
             subject=self.render_subject(context_data),
             sender_name=self.sender_name,
             priority=priority,
-            attachments=attachments
+            attachments=attachments,
+            **kwargs,
         )
 
     class Meta(BaseAbstractTemplate.Meta):
