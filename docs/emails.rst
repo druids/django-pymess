@@ -50,7 +50,7 @@ Models
 
   .. attribute:: content
 
-    ``TextField``, contains content of the e-mail message.
+    ``cached_property``, returns content of the e-mail message, which is saved in a file.
 
   .. attribute:: template_slug
 

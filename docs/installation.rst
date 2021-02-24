@@ -140,6 +140,11 @@ E-MAIL
 
   Defines delay in seconds from the time the message change notification was received to message info will be pulled from the provider.
 
+.. attribute:: PYMESS_EMAIL_STORAGE_PATH
+
+  Path for storing e-mail attachments and contents (bodies).
+  If changed after initial migration, existing files must be moved manually via data migration.
+
 
 DIALER
 ^^^^^^
