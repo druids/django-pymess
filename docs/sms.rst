@@ -5,11 +5,11 @@ SMS
 
 SMS messages that are stored inside Django model class defined later, are sent via SMS backend. There are implemented several SMS backends, every backed uses differend SMS service like twillio or AWS SNS. For sending SMS message you can use function ``pymess.backend.sms.send`` or ``pymwess.backend.sms.send_template``.
 
-.. function:: pymess.backend.sms.send(recipient, content, related_objects=None, tag=None, **sms_attrs)
+.. function:: pymess.backend.sms.send(recipient, content, related_objects=None, tag=None, send_immediately=False, **kwargs)
 
   Function has two required parameters ``recipient`` which is a phone number of the receiver and ``content``. Attribute ``content`` is a text message that will be sent inside the SMS body. If setting ``PYMESS_SMS_USE_ACCENT`` is set to ``False``, accent in the content will be replaced by appropriate ascii characters. Attribute ``related_objects`` should contain a list of objects that you want to connect with the sent message (with generic relation). ``tag`` is string mark which is stored with the sent SMS message . The last non required parameter ``**sms_kwargs`` is extra data that will be stored inside SMS message model in field ``extra_data``.
 
-.. function:: pymess.backend.sms.send_template(recipient, slug, context_data, related_objects=None, tag=None)
+.. function:: pymess.backend.sms.send_template(recipient, slug, context_data, related_objects=None, tag=None, send_immediately=False)
 
   The second function is used for sending prepared templates that are stored inside template model (class that extends ``pymess.models.sms.AbstractSMSTemplate``). The first parameter ``recipient`` is phone number of the receiver, ``slug`` is key of the template, ``context_data`` is a dictionary that contains context data for rendering SMS content from the template, ``related_objects`` should contains list of objects that you want to connect with the sent message and  ``tag`` is string mark which is stored with the sent SMS message.
 

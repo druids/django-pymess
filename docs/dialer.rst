@@ -5,11 +5,11 @@ Dialer
 
 Dialer messages that are stored inside Django model class defined later are sent via dialer backend. Currently there is one implementation of that backend `Daktela`. For sending dialer message you can use function ``pymess.backend.dialer.send`` or ``pymwess.backend.dialer.send_template``.
 
-.. function:: pymess.backend.sms.send(recipient, content, related_objects=None, tag=None, **kwargs)
+.. function:: pymess.backend.sms.send(recipient, content, related_objects=None, tag=None, send_immediately=False, **kwargs)
 
   Function has two required parameters ``recipient`` which is a phone number of the receiver and ``content``. Attribute ``content`` is a text message that will be read via 'text to speech' mechanism to the recipient. Attribute ``related_objects`` should contain a list of objects that you want to connect with the sent message (with generic relation). ``tag`` is string mark which is stored with the sent message. The last non required parameter ``**kwargs`` is extra data that will be stored inside dialer message model in field ``extra_data``.
 
-.. function:: pymess.backend.dialer.send_template(recipient, slug, context_data, related_objects=None, tag=None)
+.. function:: pymess.backend.dialer.send_template(recipient, slug, context_data, related_objects=None, tag=None, send_immediately=False)
 
   The second function is used for sending prepared templates that are stored inside template model (class that extends ``pymess.models.dialer.AbstractDialerTemplate``). The first parameter ``recipient`` is phone number of the receiver, ``slug`` is key of the template, ``context_data`` is a dictionary that contains context data for rendering dialer message content from the template, ``related_objects`` should contains list of objects that you want to connect with the sent message and  ``tag`` is string mark which is stored with the sent message.
 

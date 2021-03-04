@@ -5,11 +5,11 @@ Push notifications
 
 PUSH notifications are stored inside Django model class defined later, are sent via push notifications backend. There are implemented only one push notification backend ``pymess.backend.push.onesignal``.
 
-.. function:: pymess.backend.push.send(recipient, content, related_objects=None, tag=None, **push_nofification_kwargs)
+.. function:: pymess.backend.push.send(recipient, content, related_objects=None, tag=None, send_immediately=False, **kwargs)
 
   Function has two required parameters ``recipient`` which is an identifier of the receiver and ``content``. Attribute ``content`` is a text message that will be sent inside the push notification. Attribute ``related_objects`` should contain a list of objects that you want to connect with the sent message (with generic relation). ``tag`` is string mark which is stored with the sent message . The last non required parameter ``**push_nofification_kwargs`` is extra data that will be stored inside push notification model in field ``extra_data``.
 
-.. function:: pymess.backend.push.send_template(recipient, slug, context_data, related_objects=None, tag=None)
+.. function:: pymess.backend.push.send_template(recipient, slug, context_data, related_objects=None, tag=None, send_immediately=False)
 
   The second function is used for sending prepared templates that are stored inside template model (class that extends ``pymess.models.push.AbstractPushNotificationTemplate``). The first parameter ``recipient`` is identifier of the receiver, ``slug`` is key of the template, ``context_data`` is a dictionary that contains context data for rendering push notification content from the template, ``related_objects`` should contains list of objects that you want to connect with the sent message and  ``tag`` is string mark which is stored with the sent push notification message.
 
