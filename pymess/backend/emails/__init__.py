@@ -91,7 +91,8 @@ class EmailBackend(BaseBackend):
         raise NotImplementedError
 
 
-def send_template(recipient, slug, context_data, related_objects=None, attachments=None, tag=None):
+def send_template(recipient, slug, context_data, related_objects=None, attachments=None, tag=None,
+                  send_immediately=False):
     """
     Helper for building and sending e-mail message from a template.
     :param recipient: e-mail address of the receiver
@@ -101,6 +102,7 @@ def send_template(recipient, slug, context_data, related_objects=None, attachmen
         relation
     :param attachments: list of files that will be sent with the message as attachments
     :param tag: string mark that will be saved with the message
+    :param send_immediately: publishes the message regardless of the `is_turned_on_batch_sending` result
     :return: e-mail message object or None if template cannot be sent
     """
     return _send_template(
@@ -111,11 +113,12 @@ def send_template(recipient, slug, context_data, related_objects=None, attachmen
         tag=tag,
         template_model=get_email_template_model(),
         attachments=attachments,
+        send_immediately=send_immediately
     )
 
 
 def send(sender, recipient, subject, content, sender_name=None, related_objects=None, attachments=None, tag=None,
-         **email_kwargs):
+         send_immediately=False, **kwargs):
     """
     Helper for sending e-mail message.
     :param sender: e-mail address of the sender
@@ -127,7 +130,8 @@ def send(sender, recipient, subject, content, sender_name=None, related_objects=
         relation
     :param tag: string mark that will be saved with the message
     :param attachments: list of files that will be sent with the message as attachments
-    :param email_kwargs: extra data that will be saved in JSON format in the extra_data model field
+    :param send_immediately: publishes the message regardless of the `is_turned_on_batch_sending` result
+    :param kwargs: extra data that will be saved in JSON format in the extra_data model field
     :return: True if e-mail was successfully sent or False if e-mail is in error state
     """
     return EmailController().send(
@@ -139,5 +143,6 @@ def send(sender, recipient, subject, content, sender_name=None, related_objects=
         related_objects=related_objects,
         tag=tag,
         attachments=attachments,
-        **email_kwargs
+        send_immediately=send_immediately,
+        **kwargs
     ).failed

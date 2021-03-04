@@ -51,7 +51,7 @@ class PushNotificationBackend(BaseBackend):
         return settings.PUSH_NOTIFICATION_RETRY_SENDING and is_turned_on_push_notification_batch_sending()
 
 
-def send_template(recipient, slug, context_data, related_objects=None, tag=None):
+def send_template(recipient, slug, context_data, related_objects=None, tag=None, send_immediately=None):
     """
     Helper for building and sending push notification message from a template.
     :param recipient: push notification recipient
@@ -60,6 +60,7 @@ def send_template(recipient, slug, context_data, related_objects=None, tag=None)
     :param related_objects: list of related objects that will be linked with the push notification using generic
         relation
     :param tag: string mark that will be saved with the message
+    :param send_immediately: publishes the message regardless of the `is_turned_on_batch_sending` result
     :return: Push notification message object or None if template cannot be sent
     """
     return _send_template(
@@ -69,10 +70,11 @@ def send_template(recipient, slug, context_data, related_objects=None, tag=None)
         related_objects=related_objects,
         tag=tag,
         template_model=get_push_notification_template_model(),
+        send_immediately=send_immediately
     )
 
 
-def send(recipient, content, related_objects=None, tag=None, **kwargs):
+def send(recipient, content, related_objects=None, tag=None, send_immediately=False, **kwargs):
     """
     Helper for sending push notification.
     :param recipient: push notification recipient
@@ -80,6 +82,7 @@ def send(recipient, content, related_objects=None, tag=None, **kwargs):
     :param related_objects:
     :param tag: string mark that will be saved with the message
     :param kwargs: extra attributes that will be stored with messages
+    :param send_immediately: publishes the message regardless of the `is_turned_on_batch_sending` result
     :return: True if push notification was successfully sent or False if message is in error state
     """
     return _send(
@@ -88,5 +91,6 @@ def send(recipient, content, related_objects=None, tag=None, **kwargs):
         related_objects=related_objects,
         tag=tag,
         message_controller=PushNotificationController(),
+        send_immediately=send_immediately,
         **kwargs
     )

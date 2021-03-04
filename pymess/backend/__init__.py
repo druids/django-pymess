@@ -272,6 +272,7 @@ def send_template(recipient, slug, context_data, related_objects=None, tag=None,
         relation
     :param tag: string mark that will be saved with the message
     :param template_model: template model instance
+    :param kwargs: extra attributes that will be stored with message
     :return: dialer message object or None if template cannot be sent
     """
 
