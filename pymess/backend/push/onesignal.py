@@ -46,6 +46,8 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
             headings={language: message.heading for language in languages},
             data=message.extra_data,
             url=message.url,
+            ios_badge_type=DeviceNotification.IOS_BADGE_TYPE_INCREASE,
+            ios_badge_count=1,
         )
 
         try:
