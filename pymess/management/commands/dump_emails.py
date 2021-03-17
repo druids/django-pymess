@@ -19,7 +19,6 @@ class Command(BaseCommand):
                             help='Specifies the indent level to use when pretty-printing output')
 
     def dump_template_model(self, directory, indent):
-        print(directory)
         EmailTemplate = get_email_template_model()
         if EmailTemplate.objects.exists():
             emails_directory = os.path.join(directory)
