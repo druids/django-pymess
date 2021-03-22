@@ -130,9 +130,9 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
         from pymess.backend.emails import EmailController
         return EmailController()
 
-    def _update_context_data(self, context_data):
+    def _update_context_data(self, context_data, recipient):
         for context_processor_fun_name in settings.EMAIL_TEMPLATE_CONTEXT_PROCESSORS:
-            context_data.update(import_string(context_processor_fun_name)(context_data, self))
+            context_data.update(import_string(context_processor_fun_name)(context_data, self, recipient))
         return context_data
 
     def clean_subject(self, context_data=None):
@@ -144,8 +144,8 @@ class AbstractEmailTemplate(BaseAbstractTemplate):
     def get_subject(self):
         return self.subject
 
-    def render_subject(self, context_data):
-        context_data = self._update_context_data(context_data)
+    def render_subject(self, context_data, recipient=None):
+        context_data = self._update_context_data(context_data, recipient)
         return Template(self.get_subject()).render(Context(context_data))
 
     def send(self, recipient, context_data, related_objects=None, tag=None, attachments=None,
