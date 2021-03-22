@@ -1,5 +1,4 @@
 from functools import reduce
-
 from operator import or_ as OR
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -9,8 +8,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Cast
-from django.template import Template, Context
-from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
+from django.template import Context, Template
+from django.template.exceptions import TemplateDoesNotExist, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
 from chamber.models import SmartModel
@@ -171,15 +170,16 @@ class BaseAbstractTemplate(SmartModel):
     is_active = models.BooleanField(null=False, blank=False, default=True, verbose_name=_('is active'))
     is_allowed_duplicate_messages = models.BooleanField(null=False, blank=False, default=True,
                                                         verbose_name=_('Duplicate messages are allowed'))
-    def _update_context_data(self, context_data):
+
+    def _update_context_data(self, context_data, recipient):
         return context_data
 
-    def render_text_template(self, text, context_data):
-        context_data = self._update_context_data(context_data)
+    def render_text_template(self, text, context_data, recipient):
+        context_data = self._update_context_data(context_data, recipient)
         return Template(text).render(Context(context_data))
 
-    def render_body(self, context_data):
-        return self.render_text_template(self.get_body(), context_data)
+    def render_body(self, context_data, recipient=None):
+        return self.render_text_template(self.get_body(), context_data, recipient)
 
     def clean_body(self, context_data=None):
         try:
@@ -225,7 +225,7 @@ class BaseAbstractTemplate(SmartModel):
         if self.can_send(recipient, related_objects):
             return self.get_controller().send(
                 recipient=recipient,
-                content=self.render_body(context_data),
+                content=self.render_body(context_data, recipient),
                 related_objects=related_objects,
                 tag=tag,
                 template=self,
