@@ -71,7 +71,7 @@ class AbstractPushNotificationTemplate(BaseAbstractTemplate):
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
         return super().send(recipient, context_data, related_objects, tag,
                             state=AbstractPushNotificationMessage.STATE.WAITING,
-                            heading=self.render_text_template(self.heading, context_data), **kwargs)
+                            heading=self.render_text_template(self.heading, context_data, recipient), **kwargs)
 
     class Meta(BaseAbstractTemplate.Meta):
         abstract = True
