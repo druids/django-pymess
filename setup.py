@@ -36,6 +36,7 @@ setup(
         'django-chamber>=0.5.8',
         'attrdict>=2.0.1',
         'beautifulsoup4==4.8.0',
+        'tqdm',
     ],
     zip_safe=False
 )

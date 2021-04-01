@@ -2,10 +2,13 @@
 from django.core.files.base import ContentFile
 from django.db import migrations
 
+from tqdm import tqdm
+
 
 def move_email_contents_to_files(apps, schema_editor):
     EmailMessage = apps.get_model('pymess', 'EmailMessage')
-    for message in EmailMessage.objects.filter(old_content__isnull=False):
+    qs = EmailMessage.objects.filter(old_content__isnull=False)
+    for message in tqdm(qs.iterator(), total=qs.count(), ncols=100):
         message.content_file.save(None, ContentFile(message.old_content.encode()))
         message.old_content = None
         message.save()
