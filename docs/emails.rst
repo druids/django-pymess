@@ -50,7 +50,7 @@ Models
 
   .. attribute:: content
 
-    ``TextField``, contains content of the e-mail message.
+    ``cached_property``, returns content of the e-mail message, which is saved in a file.
 
   .. attribute:: template_slug
 
@@ -300,6 +300,12 @@ E-mail body can be changed in the database therefore reverse operation to ``sync
 ^^^^^^^^^^^^^^^^^^^^
 
 Synchronize e-mail message status from the provider.
+
+
+``migrate_email_contents_to_files``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Migrates e-mail message contents from database to files. Required to be run before updating to version 0.6.0 or above.
 
 Webhooks
 --------
