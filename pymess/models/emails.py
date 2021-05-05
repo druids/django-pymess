@@ -76,15 +76,10 @@ class EmailMessage(BaseMessage):
         blank=True,
         editable=False,
     )
-    old_content = models.TextField(
-        verbose_name=_('content'),
-        null=True,
-        blank=True
-    )
     content_file = models.FileField(
         verbose_name=_('content file'),
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         upload_to=generate_content_filename,
     )
 
@@ -110,7 +105,7 @@ class EmailMessage(BaseMessage):
 
     @cached_property
     def content(self):
-        return self.content_file.read().decode() if self.content_file else self.old_content
+        return self.content_file.read().decode()
 
 
 class EmailRelatedObject(BaseRelatedObject):
