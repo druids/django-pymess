@@ -118,7 +118,7 @@ def send_template(recipient, slug, context_data, related_objects=None, attachmen
 
 
 def send(sender, recipient, subject, content, sender_name=None, related_objects=None, attachments=None, tag=None,
-         send_immediately=False, **kwargs):
+         send_immediately=False, message_backend=None, **kwargs):
     """
     Helper for sending e-mail message.
     :param sender: e-mail address of the sender
@@ -131,6 +131,7 @@ def send(sender, recipient, subject, content, sender_name=None, related_objects=
     :param tag: string mark that will be saved with the message
     :param attachments: list of files that will be sent with the message as attachments
     :param send_immediately: publishes the message regardless of the `is_turned_on_batch_sending` result
+    :param message_backend: message backend instance (if not specified controller will choose the backend)
     :param kwargs: extra data that will be saved in JSON format in the extra_data model field
     :return: True if e-mail was successfully sent or False if e-mail is in error state
     """
@@ -144,5 +145,6 @@ def send(sender, recipient, subject, content, sender_name=None, related_objects=
         tag=tag,
         attachments=attachments,
         send_immediately=send_immediately,
+        message_backend=message_backend,
         **kwargs
     ).failed
