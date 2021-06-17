@@ -55,7 +55,8 @@ class BaseController:
             return True
 
     @transaction.atomic
-    def send(self, recipient, content, related_objects=None, tag=None, template=None, send_immediately=False, **kwargs):
+    def send(self, recipient, content, related_objects=None, tag=None, template=None, send_immediately=False,
+             message_backend=None, **kwargs):
         """
         Send message with the text content to the phone number (recipient)
         :param recipient: email or phone number of the recipient
@@ -65,9 +66,10 @@ class BaseController:
         :param tag: string mark that will be saved with the message
         :param template: template object from which content of the message was create
         :param send_immediately: publishes the message regardless of the `is_turned_on_batch_sending` result
+        :param message_backend: message backend instance
         :param kwargs: extra attributes that will be stored to the message
         """
-        backend = self.get_backend(recipient)
+        backend = message_backend or self.get_backend(recipient)
         message = self.create_message(recipient=recipient, content=content, related_objects=related_objects, tag=tag,
                                       template=template, **kwargs)
         if send_immediately or not self.is_turned_on_batch_sending():
