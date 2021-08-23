@@ -168,6 +168,7 @@ class BaseAbstractTemplate(SmartModel):
                             primary_key=True)
     body = models.TextField(verbose_name=_('message body'), null=True, blank=False)
     is_active = models.BooleanField(null=False, blank=False, default=True, verbose_name=_('is active'))
+    is_locked = models.BooleanField(null=False, blank=False, default=False, verbose_name=_('is locked'))
     is_allowed_duplicate_messages = models.BooleanField(null=False, blank=False, default=True,
                                                         verbose_name=_('Duplicate messages are allowed'))
 

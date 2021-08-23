@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-07-10 13:37+0200\n"
+"POT-Creation-Date: 2021-08-23 13:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,12 +18,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
-#: backend/dialer/daktela.py:120
-msgid "Not allowed number to dial. Allowed numbers are: {}"
-msgstr "Nepovolené číslo k navolávání. Pouze tyto čísla jsou povolena: {}"
-
-#: backend/emails/mandrill.py:28 backend/sms/ats_sms_operator.py:43
-#: models/emails.py:32 models/push.py:23 models/sms.py:28
+#: backend/emails/mandrill.py:28 backend/sms/ats_sms_operator.py:42
+#: models/emails.py:52 models/push.py:22 models/sms.py:28
 msgid "sent"
 msgstr "odeslána"
 
@@ -43,148 +39,148 @@ msgstr "zamítnuto"
 msgid "invalid"
 msgstr "špatný formát"
 
-#: backend/sms/__init__.py:105 backend/sms/sms_operator.py:45
+#: backend/sms/__init__.py:91 backend/sms/sms_operator.py:45
 msgid "timeouted"
 msgstr "vypršel čas na zpracování dotazu"
 
-#: backend/sms/ats_sms_operator.py:41 backend/sms/sms_operator.py:58
+#: backend/sms/ats_sms_operator.py:40 backend/sms/sms_operator.py:58
 msgid "not found"
 msgstr "nenalezeno"
 
-#: backend/sms/ats_sms_operator.py:42
+#: backend/sms/ats_sms_operator.py:41
 msgid "not sent yet"
 msgstr "zatím neodeslána"
 
-#: backend/sms/ats_sms_operator.py:44 backend/sms/sms_operator.py:40
+#: backend/sms/ats_sms_operator.py:43 backend/sms/sms_operator.py:40
 #: models/sms.py:31
 msgid "delivered"
 msgstr "doručena"
 
-#: backend/sms/ats_sms_operator.py:45 backend/sms/sms_operator.py:41
+#: backend/sms/ats_sms_operator.py:44 backend/sms/sms_operator.py:41
 msgid "not delivered"
 msgstr "nedoručena"
 
-#: backend/sms/ats_sms_operator.py:46
+#: backend/sms/ats_sms_operator.py:45
 msgid "not able to determine the state"
 msgstr "není možné zjistit stav"
 
-#: backend/sms/ats_sms_operator.py:48
+#: backend/sms/ats_sms_operator.py:47
 msgid "authentication failed"
 msgstr "ověření se nezdařilo"
 
-#: backend/sms/ats_sms_operator.py:50
+#: backend/sms/ats_sms_operator.py:49
 msgid "DB error"
 msgstr "chyba databáze"
 
-#: backend/sms/ats_sms_operator.py:52
+#: backend/sms/ats_sms_operator.py:51
 msgid "SMS is OK and ready to be sent"
 msgstr "SMS je připravena k odeslání"
 
-#: backend/sms/ats_sms_operator.py:53
+#: backend/sms/ats_sms_operator.py:52
 msgid "unspecified error"
 msgstr "nespecifikovaná chyba"
 
-#: backend/sms/ats_sms_operator.py:54
+#: backend/sms/ats_sms_operator.py:53
 msgid "one of the requests has not unique \"uniq\""
 msgstr "jeden z požadavků nemá unikátní hodnotu \"uniq\""
 
-#: backend/sms/ats_sms_operator.py:55
+#: backend/sms/ats_sms_operator.py:54
 msgid "SMS has not unique \"uniq\""
 msgstr "SMS nemá unikátní hodnotu \"uniq\""
 
-#: backend/sms/ats_sms_operator.py:56
+#: backend/sms/ats_sms_operator.py:55
 msgid "SMS lacks keyword"
 msgstr "SMS postrádá klíčové slovo"
 
-#: backend/sms/ats_sms_operator.py:57
+#: backend/sms/ats_sms_operator.py:56
 msgid "keyword not valid"
 msgstr "neplatné klíčové slovo"
 
-#: backend/sms/ats_sms_operator.py:58
+#: backend/sms/ats_sms_operator.py:57
 msgid "no sender specified"
 msgstr "není specifikován odesílatel"
 
-#: backend/sms/ats_sms_operator.py:59
+#: backend/sms/ats_sms_operator.py:58
 msgid "sender not valid"
 msgstr "číslo odesílatele je neplatné"
 
-#: backend/sms/ats_sms_operator.py:60
+#: backend/sms/ats_sms_operator.py:59
 msgid "MO PR SMS not allowed"
 msgstr "SMS typu MO PR není povolena"
 
-#: backend/sms/ats_sms_operator.py:61
+#: backend/sms/ats_sms_operator.py:60
 msgid "MT PR SMS not allowed"
 msgstr "SMS typu MT PR není povolena"
 
-#: backend/sms/ats_sms_operator.py:62
+#: backend/sms/ats_sms_operator.py:61
 msgid "MT PR SMS daily limit exceeded"
 msgstr "počet SMS typu MT PR překročen denní limit"
 
-#: backend/sms/ats_sms_operator.py:63
+#: backend/sms/ats_sms_operator.py:62
 msgid "MT PR SMS total limit exceeded"
 msgstr "počet SMS typu MT PR překročen celkový limit"
 
-#: backend/sms/ats_sms_operator.py:64
+#: backend/sms/ats_sms_operator.py:63
 msgid "geographic number is not allowed"
 msgstr "geografické číslo není povoleno"
 
-#: backend/sms/ats_sms_operator.py:65
+#: backend/sms/ats_sms_operator.py:64
 msgid "MT SMS to Slovakia not allowed"
 msgstr "SMS typu MT na Slovensko není povolena"
 
-#: backend/sms/ats_sms_operator.py:66
+#: backend/sms/ats_sms_operator.py:65
 msgid "shortcodes not allowed"
 msgstr "zkratky nejsou povoleny"
 
-#: backend/sms/ats_sms_operator.py:67
+#: backend/sms/ats_sms_operator.py:66
 msgid "sender is unknown"
 msgstr "odesílatel je neznámý"
 
-#: backend/sms/ats_sms_operator.py:68
+#: backend/sms/ats_sms_operator.py:67
 msgid "type of SMS not specified"
 msgstr "type SMS zprávny není určen"
 
-#: backend/sms/ats_sms_operator.py:69
+#: backend/sms/ats_sms_operator.py:68
 msgid "SMS too long"
 msgstr "text SMS je moc dlouhý"
 
-#: backend/sms/ats_sms_operator.py:70
+#: backend/sms/ats_sms_operator.py:69
 msgid "too many SMS parts (max. is 10)"
 msgstr "příliš mnoho částí SMS (maximum je 10)"
 
-#: backend/sms/ats_sms_operator.py:71
+#: backend/sms/ats_sms_operator.py:70
 msgid "wrong number of sender/receiver"
 msgstr "špatné číslo odesílatele nebo příjemce"
 
-#: backend/sms/ats_sms_operator.py:72
+#: backend/sms/ats_sms_operator.py:71
 msgid "recipient is missing or in wrong format"
 msgstr "číslo příjemce chybí nebo je ve špatném formátu"
 
-#: backend/sms/ats_sms_operator.py:73
+#: backend/sms/ats_sms_operator.py:72
 msgid "using \"textid\" is not allowed"
 msgstr "použití hodnoty \"texstid\" není povoleno"
 
-#: backend/sms/ats_sms_operator.py:74
+#: backend/sms/ats_sms_operator.py:73
 msgid "\"textid\" is in wrong format"
 msgstr "hodnota \"textid\" má špatný formát"
 
-#: backend/sms/ats_sms_operator.py:75
+#: backend/sms/ats_sms_operator.py:74
 msgid "long SMS with \"textid\" not allowed"
 msgstr "dlouhá SMS s \"textid\" není povolena"
 
-#: backend/sms/ats_sms_operator.py:77
+#: backend/sms/ats_sms_operator.py:76
 msgid "XML body missing"
 msgstr "chybí tělo XML zprávy"
 
-#: backend/sms/ats_sms_operator.py:78
+#: backend/sms/ats_sms_operator.py:77
 msgid "XML is not readable"
 msgstr "XML zpráva není validní"
 
-#: backend/sms/ats_sms_operator.py:79
+#: backend/sms/ats_sms_operator.py:78
 msgid "unknown HTTP method or not HTTP POST"
 msgstr "neznámá HTTP metoda"
 
-#: backend/sms/ats_sms_operator.py:80
+#: backend/sms/ats_sms_operator.py:79
 msgid "XML invalid"
 msgstr "XML má špatný formát"
 
@@ -228,41 +224,41 @@ msgstr "částečně nedoručeno, částečně neznámé"
 msgid "partly delivered, partly not delivered, partly unknown"
 msgstr "částečně doručeno, částečně nedoručeno, částečně neznámé"
 
-#: models/common.py:122
+#: models/common.py:120
 msgid "sent at"
 msgstr "odesláno v"
 
-#: models/common.py:123 models/emails.py:38
+#: models/common.py:121 models/emails.py:58
 msgid "recipient"
 msgstr "příjemce"
 
-#: models/common.py:124 models/dialer.py:54 models/sms.py:36
+#: models/common.py:122 models/dialer.py:54 models/sms.py:36
 msgid "content"
 msgstr "obsah"
 
-#: models/common.py:125 models/common.py:165
+#: models/common.py:123 models/common.py:167
 msgid "slug"
 msgstr "slug"
 
-#: models/common.py:127 models/dialer.py:49 models/emails.py:41
-#: models/push.py:31 models/sms.py:39
+#: models/common.py:125 models/dialer.py:49 models/emails.py:61
+#: models/push.py:30 models/sms.py:39
 msgid "state"
 msgstr "stav"
 
-#: models/common.py:128
+#: models/common.py:126
 msgid "backend"
 msgstr "backend"
 
-#: models/common.py:129 models/dialer.py:43 models/emails.py:33
-#: models/sms.py:32
+#: models/common.py:127 models/dialer.py:43 models/emails.py:53
+#: models/push.py:23 models/sms.py:32
 msgid "error"
 msgstr "chyba"
 
-#: models/common.py:130
+#: models/common.py:128
 msgid "extra data"
 msgstr "extra data"
 
-#: models/common.py:131
+#: models/common.py:130
 msgid "extra sender data"
 msgstr "extra data odesílatele"
 
@@ -274,31 +270,39 @@ msgstr "tag"
 msgid "number of send attempts"
 msgstr "počet pokusů odeslání"
 
-#: models/common.py:148
+#: models/common.py:135
+msgid "priority"
+msgstr "priorita"
+
+#: models/common.py:150
 msgid "content type of the related object"
 msgstr "typ vztaženého objektu"
 
-#: models/common.py:150
+#: models/common.py:152
 msgid "ID of the related object"
 msgstr "identifikátor vztaženého objektu"
 
-#: models/common.py:167
+#: models/common.py:169
 msgid "message body"
 msgstr "tělo zprávy"
 
-#: models/common.py:168
+#: models/common.py:170
 msgid "is active"
 msgstr "je aktivní"
 
-#: models/common.py:170
+#: models/common.py:171
+msgid "is locked"
+msgstr "je uzamčeno"
+
+#: models/common.py:173
 msgid "Duplicate messages are allowed"
 msgstr "Duplicitní zprávy jsou povolené"
 
-#: models/common.py:186
+#: models/common.py:189
 msgid "Error during template body rendering: \"{}\""
 msgstr "Chyba během vykreslování obsahu zprávy: \"{}\""
 
-#: models/dialer.py:26 models/emails.py:30 models/push.py:22 models/sms.py:25
+#: models/dialer.py:26 models/emails.py:50 models/push.py:21 models/sms.py:25
 msgid "waiting"
 msgstr "čeká"
 
@@ -362,17 +366,16 @@ msgstr "odpovězeno - zavěsil zákazník"
 msgid "error message update"
 msgstr "chyba aktualizace zprávy"
 
-#: models/dialer.py:42 models/emails.py:34 models/push.py:25 models/sms.py:30
+#: models/dialer.py:42 models/emails.py:54 models/push.py:24 models/sms.py:30
 msgid "debug"
 msgstr "testovací"
 
-#: models/dialer.py:44 models/emails.py:35 models/push.py:24 models/push.py:26
-#: models/sms.py:33
+#: models/dialer.py:44 models/emails.py:55 models/push.py:25 models/sms.py:33
 msgid "error retry"
 msgstr "chyba (pokus o odeslání bude opakován)"
 
-#: models/dialer.py:47 models/dialer.py:114 models/emails.py:39
-#: models/emails.py:203 models/push.py:29 models/sms.py:37 models/sms.py:87
+#: models/dialer.py:47 models/dialer.py:115 models/emails.py:59
+#: models/emails.py:240 models/push.py:28 models/sms.py:37 models/sms.py:88
 msgid "template"
 msgstr "šablona"
 
@@ -408,127 +411,131 @@ msgstr "vztažený objekt zprávy dialeru"
 msgid "related objects of dialer messages"
 msgstr "vztažené typy zpráv dialeru"
 
-#: models/dialer.py:103
+#: models/dialer.py:104
 msgid "dialer template"
 msgstr "šablona navolávání"
 
-#: models/dialer.py:104
+#: models/dialer.py:105
 msgid "dialer templates"
 msgstr "šablony navolávání"
 
-#: models/dialer.py:123
+#: models/dialer.py:124
 msgid "disallowed object of a dialer template"
 msgstr "zakázaný objekt zprávy dialeru"
 
-#: models/dialer.py:124
+#: models/dialer.py:125
 msgid "disallowed objects of dialer templates"
 msgstr "zakázané objekty zpráv dialeru"
 
-#: models/emails.py:31 models/sms.py:27
+#: models/emails.py:51 models/sms.py:27
 msgid "sending"
 msgstr "odesílá se"
 
-#: models/emails.py:43 models/emails.py:126 models/sms.py:41
+#: models/emails.py:63 models/emails.py:159 models/sms.py:41
 msgid "sender"
 msgstr "odesílatel"
 
-#: models/emails.py:44 models/emails.py:127
+#: models/emails.py:64 models/emails.py:160
 msgid "sender name"
 msgstr "jméno odesílatele"
 
-#: models/emails.py:45 models/emails.py:125
+#: models/emails.py:65 models/emails.py:158
 msgid "subject"
 msgstr "předmět"
 
-#: models/emails.py:46
+#: models/emails.py:66
 msgid "external ID"
 msgstr "externí ID"
 
-#: models/emails.py:48
+#: models/emails.py:68
 msgid "last webhook received at"
 msgstr "Poslední webhook přijat"
 
-#: models/emails.py:54
+#: models/emails.py:74
 msgid "info changed at"
 msgstr "informace změněny"
 
-#: models/emails.py:61 models/emails.py:81 models/emails.py:108
+#: models/emails.py:80
+msgid "content file"
+msgstr "soubor s obsahem"
+
+#: models/emails.py:89 models/emails.py:113 models/emails.py:140
 msgid "e-mail message"
 msgstr "e-mail"
 
-#: models/emails.py:62
+#: models/emails.py:90
 msgid "e-mail messages"
 msgstr "e-maily"
 
-#: models/emails.py:85
+#: models/emails.py:117
 msgid "related object of a e-mail message"
 msgstr "vztažený objekt e-mailové zprávy"
 
-#: models/emails.py:86
+#: models/emails.py:118
 msgid "related objects of e-mail messages"
 msgstr "vztažené typy e-mailových zpráv"
 
-#: models/emails.py:110
+#: models/emails.py:142
 msgid "content type"
 msgstr "typ přílohy"
 
-#: models/emails.py:111
+#: models/emails.py:143
 msgid "file"
 msgstr "soubor"
 
-#: models/emails.py:119
+#: models/emails.py:152
 msgid "attachment"
 msgstr "příloha"
 
-#: models/emails.py:120
+#: models/emails.py:153
 msgid "attachments"
 msgstr "přílohy"
 
-#: models/emails.py:138
+#: models/emails.py:175
 msgid "Error during template subject rendering: \"{}\""
 msgstr "Chyba během vykreslování předmětu zprávy: \"{}\""
 
-#: models/emails.py:164
+#: models/emails.py:201
 msgid "e-mail template"
 msgstr "šablona e-mailu"
 
-#: models/emails.py:165
+#: models/emails.py:202
 msgid "e-mail templates"
 msgstr "šablony e-mailů"
 
-#: models/emails.py:212
+#: models/emails.py:249
 msgid "disallowed object of an e-mail template"
 msgstr "zakázaný objekt e-mailové zprávy"
 
-#: models/emails.py:213
+#: models/emails.py:250
 msgid "disallowed objects of e-mail templates"
 msgstr "zakázané objekty e-mailových zpráv"
 
-#: models/push.py:33 models/push.py:66
+#: models/push.py:32 models/push.py:65
 msgid "heading"
 msgstr "nadpis"
 
-#: models/push.py:34
+#: models/push.py:33
 msgid "URL"
 msgstr "URL adresa"
 
-#: models/push.py:38
+#: models/push.py:37
 msgid "push notification"
 msgstr "push notifikace"
 
-#: models/push.py:39
+#: models/push.py:38
 msgid "push notifications"
 msgstr "push notifikace"
 
-#: models/push.py:55
+#: models/push.py:54
 msgid "push notification message"
 msgstr "zpráva push notifikace"
 
-#: models/push.py:60
+#: models/push.py:59
 msgid "related object of a push notification message"
 msgstr "vztažený objekt zprávy push notifikace"
 
-#: models/push.py:61
+#: models/push.py:60
 msgid "related objects of a push notification message"
 msgstr "vztažené objekty zprávy push notifikace"
 
@@ -556,19 +563,19 @@ msgstr "vztažený objekt SMS zprávy"
 msgid "related objects of SMS messages"
 msgstr "vztažené objekty SMS zpráv"
 
-#: models/sms.py:76
+#: models/sms.py:77
 msgid "SMS template"
 msgstr "SMS šablona"
 
-#: models/sms.py:77
+#: models/sms.py:78
 msgid "SMS templates"
 msgstr "SMS šablony"
 
-#: models/sms.py:96
+#: models/sms.py:97
 msgid "disallowed object of an SMS template"
 msgstr "zakázaný objekt SMS zprávy"
 
-#: models/sms.py:97
+#: models/sms.py:98
 msgid "disallowed objects of SMS templates"
 msgstr "zakázané objekty SMS zpráv"
 
