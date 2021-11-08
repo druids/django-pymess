@@ -1,6 +1,6 @@
 import logging
 
-from chamber.utils.transaction import atomic_with_signals
+from chamber.utils.transaction import smart_atomic
 from django.core.management.base import BaseCommand, CommandError
 from django.db import DatabaseError
 
@@ -36,7 +36,7 @@ class Command(BaseCommand):
                             help='Tells Django what type of messages should be send '
                                  '(email/push-notification/dialer/sms).')
 
-    @atomic_with_signals
+    @smart_atomic
     def _send_message(self, controller):
         message = controller.get_waiting_or_retry_messages().exclude(
             pk__in=self.touched_message_pks

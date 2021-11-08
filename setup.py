@@ -33,7 +33,7 @@ setup(
     ],
     install_requires=[
         'django>=3.1',
-        'django-chamber>=0.5.8',
+        'django-chamber>=0.6.11',
         'attrdict>=2.0.1',
         'beautifulsoup4==4.8.0',
     ],
