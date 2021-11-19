@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import F, Q
 from django.utils.timezone import now
 
-from chamber.utils.transaction import atomic_with_signals
+from chamber.utils.transaction import smart_atomic
 
 from pymess.backend.emails import EmailController
 from pymess.config import settings
@@ -35,7 +35,7 @@ class Command(BaseCommand):
             sent_at__gt=now() - datetime.timedelta(seconds=settings.EMAIL_PULL_INFO_MAX_TIMEOUT_FROM_SENT_SECONDS)
         ).order_by('-sent_at')
 
-    @atomic_with_signals
+    @smart_atomic
     def _pull_message_info(self, email_controller):
         message = self._get_messages_queryset_to_update(email_controller).exclude(
             pk__in=self.touched_message_pks
