@@ -25,6 +25,7 @@ __all__ = (
     'Attachment',
     'AbstractEmailTemplate',
     'EmailTemplateDisallowedObject',
+    'EmailTemplateAttachment',
 )
 
 
@@ -34,6 +35,10 @@ def generate_content_filename(instance, filename):
 
 def generate_attachment_filename(instance, filename):
     return Path(settings.EMAIL_STORAGE_PATH) / 'attachments' / filename
+
+
+def generate_template_attachment_filename(instance, filename):
+    return Path(settings.EMAIL_STORAGE_PATH) / 'template_attachments' / filename
 
 
 class EmailMessageQuerySet(MessageQueryset):
@@ -124,7 +129,8 @@ class AttachmentManager(models.Manager):
         filename, file, content_type = tripple
         attachment = self.model(
             email_message=self.instance,
-            content_type=content_type
+            content_type=content_type,
+            filename=filename
         )
         attachment.file.save(filename, file, save=True)
         return attachment
@@ -142,6 +148,7 @@ class Attachment(SmartModel):
     content_type = models.CharField(verbose_name=_('content type'), blank=False, null=False, max_length=100)
     file = models.FileField(verbose_name=_('file'), null=False, blank=False,
                             upload_to=generate_attachment_filename)
+    filename = models.CharField(verbose_name=_('filename'), blank=True, null=True, max_length=100)
 
     objects = AttachmentManager()
 
@@ -233,6 +240,25 @@ class EmailTemplate(AbstractEmailTemplate):
     def get_body(self):
         return self._extend_body(self.body) if settings.EMAIL_TEMPLATE_EXTEND_BODY else self.body
 
+    def send(self, recipient, context_data, related_objects=None, tag=None, attachments=None, **kwargs):
+        attachments = [] if attachments is None else attachments
+        attachments += [
+            (
+                template_attachment.filename or os.path.basename(template_attachment.file.name),
+                ContentFile(template_attachment.file.read()),
+                template_attachment.content_type,
+            ) for template_attachment in self.template_attachments.all()
+        ]
+
+        return super().send(
+            recipient=recipient,
+            context_data=context_data,
+            related_objects=related_objects,
+            tag=tag,
+            attachments=attachments,
+            **kwargs,
+        )
+
 
 class EmailTemplateDisallowedObject(BaseRelatedObject):
 
@@ -248,3 +274,17 @@ class EmailTemplateDisallowedObject(BaseRelatedObject):
     class Meta(BaseRelatedObject.Meta):
         verbose_name = _('disallowed object of an e-mail template')
         verbose_name_plural = _('disallowed objects of e-mail templates')
+
+
+class EmailTemplateAttachment(SmartModel):
+
+    template = models.ForeignKey(to=settings.EMAIL_TEMPLATE_MODEL, verbose_name=_('template'),
+                                 on_delete=models.CASCADE, related_name='template_attachments')
+    content_type = models.CharField(verbose_name=_('content type'), blank=False, null=False, max_length=100)
+    file = models.FileField(verbose_name=_('file'), null=False, blank=False,
+                            upload_to=generate_template_attachment_filename)
+    filename = models.CharField(verbose_name=_('filename'), blank=True, null=True, max_length=100)
+
+    class Meta:
+        verbose_name = _('e-mail template attachment')
+        verbose_name_plural = _('e-mail template attachments')

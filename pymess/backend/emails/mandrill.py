@@ -57,7 +57,7 @@ class MandrillEmailBackend(EmailBackend):
         return [
             {
                 'type': attachment.content_type,
-                'name': os.path.basename(attachment.file.name),
+                'name': attachment.filename or os.path.basename(attachment.file.name),
                 'content': base64.b64encode(attachment.file.read()).decode('utf-8')
             } for attachment in message.attachments.all()
         ]
