@@ -31,6 +31,7 @@ class AbstractPushNotificationMessage(BaseMessage):
                                         editable=False, db_index=True)
     heading = models.TextField(verbose_name=_('heading'))
     url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
+    redirect_url = models.TextField(verbose_name=_('redirect URL'), null=True, blank=True)
 
     class Meta(BaseMessage.Meta):
         abstract = True
@@ -63,6 +64,7 @@ class PushNotificationMessageRelatedObject(BaseRelatedObject):
 class AbstractPushNotificationTemplate(BaseAbstractTemplate):
 
     heading = models.TextField(verbose_name=_('heading'))
+    redirect_url = models.TextField(verbose_name=_('redirect URL'), null=True, blank=True)
 
     def get_controller(self):
         from pymess.backend.push import PushNotificationController
@@ -71,7 +73,11 @@ class AbstractPushNotificationTemplate(BaseAbstractTemplate):
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
         return super().send(recipient, context_data, related_objects, tag,
                             state=AbstractPushNotificationMessage.STATE.WAITING,
-                            heading=self.render_text_template(self.heading, context_data, recipient), **kwargs)
+                            heading=self.render_text_template(self.heading, context_data, recipient),
+                            redirect_url=self.render_text_template(
+                                self.redirect_url, context_data, recipient
+                            ) if self.redirect_url is not None else None,
+                            **kwargs)
 
     class Meta(BaseAbstractTemplate.Meta):
         abstract = True

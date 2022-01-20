@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-01-07 16:05+0100\n"
+"POT-Creation-Date: 2021-08-23 13:58+0200\n"
 "PO-Revision-Date: 2022-01-07 16:10+0100\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
@@ -512,7 +512,7 @@ msgstr "zakázaný objekt e-mailové zprávy"
 msgid "disallowed objects of e-mail templates"
 msgstr "zakázané objekty e-mailových zpráv"
 
-#: models/push.py:32 models/push.py:65
+#: models/push.py:32 models/push.py:66
 msgid "heading"
 msgstr "nadpis"
 
@@ -520,31 +520,35 @@ msgstr "nadpis"
 msgid "URL"
 msgstr "URL adresa"
 
-#: models/push.py:37
+#: models/push.py:34 models/push.py:67
+msgid "redirect URL"
+msgstr "URL přesměrování"
+
+#: models/push.py:38
 msgid "push notification"
 msgstr "push notifikace"
 
-#: models/push.py:38
+#: models/push.py:39
 msgid "push notifications"
 msgstr "push notifikace"
 
-#: models/push.py:54
+#: models/push.py:55
 msgid "push notification message"
 msgstr "zpráva push notifikace"
 
-#: models/push.py:59
+#: models/push.py:60
 msgid "related object of a push notification message"
 msgstr "vztažený objekt zprávy push notifikace"
 
-#: models/push.py:60
+#: models/push.py:61
 msgid "related objects of a push notification message"
 msgstr "vztažené objekty zprávy push notifikace"
 
-#: models/push.py:78
+#: models/push.py:82
 msgid "push notification template"
 msgstr "šablona push notifikace"
 
-#: models/push.py:79
+#: models/push.py:83
 msgid "push notification templates"
 msgstr "šablony push notifikace"
 

@@ -40,11 +40,14 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
         languages = {'en'}
         if self.config.LANGUAGE is not None:
             languages.add(self.config.LANGUAGE)
+        extra_data = message.extra_data or {}
+        if message.redirect_url:
+            extra_data['redirectUrl'] = message.redirect_url
         notification = DeviceNotification(
             include_external_user_ids=(message.recipient,),
             contents={language: message.content for language in languages},
             headings={language: message.heading for language in languages},
-            data=message.extra_data,
+            data=extra_data,
             url=message.url,
             ios_badge_type=DeviceNotification.IOS_BADGE_TYPE_INCREASE,
             ios_badge_count=1,
