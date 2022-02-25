@@ -6,17 +6,27 @@ from attrdict import AttrDict
 
 from json.decoder import JSONDecodeError
 
+from enum import Enum
+
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
-from chamber.utils.datastructures import ChoicesEnum
+from django.utils.translation import ugettext
 
 import mandrill
 
 from pymess.backend.emails import EmailBackend
-from pymess.models import EmailMessage
+from pymess.enums import EmailMessageState
 from pymess.config import settings
 from pymess.utils.logged_requests import generate_session
+
+
+class MandrillState(str, Enum):
+
+    SENT = 'SENT'
+    QUEUED = 'QUEUED'
+    SCHEDULED = 'SCHEDULED'
+    REJECTED = 'REJECTED'
+    INVALID = 'INVALID'
 
 
 class MandrillEmailBackend(EmailBackend):
@@ -24,20 +34,12 @@ class MandrillEmailBackend(EmailBackend):
     E-mail backend implementing Mandrill service (https://mandrillapp.com/api/docs/index.python.html).
     """
 
-    MANDRILL_STATES = ChoicesEnum(
-        ('SENT', _('sent')),
-        ('QUEUED', _('queued')),
-        ('SCHEDULED', _('scheduled')),
-        ('REJECTED', _('rejected')),
-        ('INVALID', _('invalid')),
-    )
-
     MANDRILL_STATES_MAPPING = {
-        MANDRILL_STATES.SENT: EmailMessage.STATE.SENT,
-        MANDRILL_STATES.QUEUED: EmailMessage.STATE.SENT,
-        MANDRILL_STATES.SCHEDULED: EmailMessage.STATE.SENT,
-        MANDRILL_STATES.REJECTED: EmailMessage.STATE.ERROR,
-        MANDRILL_STATES.INVALID: EmailMessage.STATE.ERROR,
+        MandrillState.SENT: EmailMessageState.SENT,
+        MandrillState.QUEUED: EmailMessageState.SENT,
+        MandrillState.SCHEDULED: EmailMessageState.SENT,
+        MandrillState.REJECTED: EmailMessageState.ERROR,
+        MandrillState.INVALID: EmailMessageState.ERROR,
     }
 
     config = AttrDict({
@@ -92,13 +94,13 @@ class MandrillEmailBackend(EmailBackend):
                     'attachments': self._serialize_attachments(message)
                 },
             )[0]
-            mandrill_state = result['status'].upper()
+            mandrill_state = MandrillState(result['status'].upper())
             state = self.MANDRILL_STATES_MAPPING.get(mandrill_state)
-            error = (
-                self.MANDRILL_STATES.get_label(mandrill_state) if state == EmailMessage.STATE.ERROR else None
-            )
-            if mandrill_state == self.MANDRILL_STATES.REJECTED:
-                error += ', mandrill message: "{}"'.format(result['reject_reason'])
+            error = None
+            if mandrill_state == MandrillState.INVALID:
+                error = ugettext('invalid')
+            elif mandrill_state == MandrillState.REJECTED:
+                error = ugettext('rejected, mandrill message: "{}"').format(result['reject_reason'])
 
             extra_sender_data = message.extra_sender_data or {}
             extra_sender_data['result'] = result

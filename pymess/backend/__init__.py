@@ -39,7 +39,7 @@ class BaseController:
         """
         Return queryset of waiting messages to send
         """
-        return self.model.objects.filter(state__in={self.model.STATE.WAITING, self.model.STATE.ERROR_RETRY})
+        return self.model.objects.filter(state__in={self.model.State.WAITING, self.model.State.ERROR_RETRY})
 
     def is_turned_on_batch_sending(self):
         return False
@@ -213,10 +213,10 @@ class BaseBackend:
 
         if not state:
             state = (
-                message.STATE.ERROR if (
+                message.State.ERROR if (
                     number_of_send_attempts > self.get_batch_max_number_of_send_attempts()
                     or not self.get_retry_sending()
-                ) else message.STATE.ERROR_RETRY
+                ) else message.State.ERROR_RETRY
             )
 
         self._update_message(
@@ -234,7 +234,7 @@ class BaseBackend:
         """
         self._update_message(
             message,
-            state=message.STATE.ERROR,
+            state=message.State.ERROR,
         )
 
     def publish_message(self, message):

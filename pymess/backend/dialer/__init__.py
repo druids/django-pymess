@@ -8,7 +8,7 @@ from pymess.backend import BaseBackend, BaseController
 from pymess.backend import send as _send
 from pymess.backend import send_template as _send_template
 from pymess.config import (
-    CONTROLLER_TYPES, get_dialer_template_model, get_supported_backend_paths, is_turned_on_dialer_batch_sending,
+    ControllerType, get_dialer_template_model, get_supported_backend_paths, is_turned_on_dialer_batch_sending,
     settings
 )
 from pymess.models import DialerMessage
@@ -21,7 +21,7 @@ class DialerController(BaseController):
     """Controller class for dialer delegating message to correct dialer backend"""
 
     model = DialerMessage
-    backend_type_name = CONTROLLER_TYPES.DIALER
+    backend_type_name = ControllerType.DIALER
 
     class DialerSendingError(Exception):
         pass
@@ -37,7 +37,7 @@ class DialerController(BaseController):
         returns initial state for logged dialer instance.
         :param recipient: phone number of the recipient
         """
-        return self.model.STATE.WAITING
+        return self.model.State.WAITING
 
     def create_message(self, recipient, content=None, related_objects=None, tag=None, template=None, is_autodialer=True,
                        priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):

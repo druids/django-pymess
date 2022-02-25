@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from pymess.config import settings
 from pymess.backend.sms import SMSBackend
-from pymess.models import OutputSMSMessage
+from pymess.enums import OutputSMSMessageState
 
 
 class SNSSMSBackend(SMSBackend):
@@ -57,7 +57,7 @@ class SNSSMSBackend(SMSBackend):
             })
         try:
             sns_client.publish(**publish_kwargs)
-            self._update_message_after_sending(message, state=OutputSMSMessage.STATE.SENT, sent_at=timezone.now())
+            self._update_message_after_sending(message, state=OutputSMSMessageState.SENT, sent_at=timezone.now())
         except Exception as ex:
             self._update_message_after_sending_error(
                 message, error=str(ex)

@@ -3,7 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from chamber.models import SmartModel
-from chamber.utils.datastructures import ChoicesNumEnum
+
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.utils.functional import cached_property
@@ -13,6 +13,7 @@ from django.template import Template, Context
 from django.template.exceptions import TemplateSyntaxError, TemplateDoesNotExist
 
 from pymess.config import settings
+from pymess.enums import EmailMessageState
 from pymess.utils.html import raise_error_if_contains_banned_tags
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject, MessageQueryset
@@ -51,19 +52,13 @@ class EmailMessageQuerySet(MessageQueryset):
 
 class EmailMessage(BaseMessage):
 
-    STATE = ChoicesNumEnum(
-        ('WAITING', _('waiting'), 1),
-        ('SENDING', _('sending'), 2),
-        ('SENT', _('sent'), 3),
-        ('ERROR', _('error'), 4),
-        ('DEBUG', _('debug'), 5),
-        ('ERROR_RETRY', _('error retry'), 6),
-    )
+    State = EmailMessageState
 
     recipient = models.EmailField(verbose_name=_('recipient'), blank=False, null=False, db_index=True)
     template = models.ForeignKey(settings.EMAIL_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='email_messages')
-    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False,
+    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False,
+                                choices=EmailMessageState.choices, editable=False,
                                 db_index=True)
     sender = models.EmailField(verbose_name=_('sender'), blank=False, null=False)
     sender_name = models.CharField(verbose_name=_('sender name'), blank=True, null=True, max_length=250)
@@ -106,7 +101,7 @@ class EmailMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
+        return self.state in {EmailMessageState.ERROR, EmailMessageState.ERROR_RETRY}
 
     @cached_property
     def content(self):

@@ -1,11 +1,11 @@
 from chamber.utils import remove_accent
-from chamber.utils.datastructures import ChoicesNumEnum
 from django.db import models
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from pymess.config import settings
 from pymess.utils import normalize_phone_number
+from pymess.enums import OutputSMSMessageState
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
 
@@ -21,22 +21,13 @@ __all__ = (
 
 class OutputSMSMessage(BaseMessage):
 
-    STATE = ChoicesNumEnum(
-        ('WAITING', _('waiting'), 1),
-        ('UNKNOWN', _('unknown'), 2),
-        ('SENDING', _('sending'), 3),
-        ('SENT', _('sent'), 4),
-        ('ERROR_UPDATE', _('error message update'), 5),
-        ('DEBUG', _('debug'), 6),
-        ('DELIVERED', _('delivered'), 7),
-        ('ERROR', _('error'), 8),
-        ('ERROR_RETRY', _('error retry'), 9),
-    )
+    State = OutputSMSMessageState
 
     content = models.TextField(verbose_name=_('content'), null=False, blank=False, max_length=700)
     template = models.ForeignKey(settings.SMS_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='output_sms_messages')
-    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False,
+    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False,
+                                choices=OutputSMSMessageState.choices, editable=False,
                                 db_index=True)
     sender = models.CharField(verbose_name=_('sender'), null=True, blank=True, max_length=20)
 
@@ -53,7 +44,7 @@ class OutputSMSMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
+        return self.state in {OutputSMSMessageState.ERROR, OutputSMSMessageState.ERROR_RETRY}
 
 
 class OutputSMSRelatedObject(BaseRelatedObject):

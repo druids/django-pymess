@@ -8,4 +8,4 @@ class DummyPushNotificationBackend(PushNotificationBackend):
     """Dummy push notification backend used for testing environments. Backend only logs messages to the database."""
 
     def publish_message(self, message):
-        self._update_message_after_sending(message, state=PushNotificationMessage.STATE.DEBUG, sent_at=timezone.now())
+        self._update_message_after_sending(message, state=PushNotificationMessage.State.DEBUG, sent_at=timezone.now())

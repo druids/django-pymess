@@ -3,16 +3,47 @@ from bs4 import BeautifulSoup
 
 import requests
 
+from enum import Enum
+
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 
-from chamber.utils.datastructures import ChoicesNumEnum, Enum
+from enumfields import IntegerChoicesEnum
 
 from pymess.backend.sms import SMSBackend
-from pymess.models import OutputSMSMessage
+from pymess.enums import OutputSMSMessageState
 from pymess.utils.logged_requests import generate_session
 from pymess.config import settings
+
+
+class RequestType(str, Enum):
+
+    SMS = 'SMS'
+    DELIVERY_REQUEST = 'DELIVERY_REQUEST'
+
+
+class SmsOperatorState(IntegerChoicesEnum):
+
+    DELIVERED = 0,  _('delivered')
+    NOT_DELIVERED = 1, _('not delivered')
+    PHONE_NUMBER_NOT_EXISTS = 2, _('number not exists')
+
+    # SMS not moved to GSM operator
+    TIMEOUTED = 3, _('timeouted')
+    INVALID_PHONE_NUMBER = 4, _('wrong number format')
+    ANOTHER_ERROR = 5, _('another error')
+    EVENT_ERROR = 6, _('event error')
+    SMS_TEXT_TOO_LONG = 7, _('SMS text too long')
+
+    # SMS with more parts
+    PARTLY_DELIVERED = 10, _('partly delivered')
+    UNKNOWN = 11, _('unknown')
+    PARLY_DELIVERED_PARTLY_UNKNOWN = 12, _('partly delivered, partly unknown')
+    PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN = 13, _('partly not delivered, partly unknown')
+    PARTLY_DELIVERED_PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN = 14, ('partly delivered, partly not delivered, '
+                                                                'partly unknown')
+    NOT_FOUND = 15, _('not found')
 
 
 class SMSOperatorBackend(SMSBackend):
@@ -24,56 +55,27 @@ class SMSOperatorBackend(SMSBackend):
     class SMSOperatorSendingError(Exception):
         pass
 
-    REQUEST_TYPES = Enum(
-        'SMS',
-        'DELIVERY_REQUEST',
-    )
-
     TEMPLATES = {
         'base': 'pymess/sms/sms_operator/base.xml',
-        REQUEST_TYPES.SMS: 'pymess/sms/sms_operator/sms.xml',
-        REQUEST_TYPES.DELIVERY_REQUEST: 'pymess/sms/sms_operator/delivery_request.xml',
+        RequestType.SMS: 'pymess/sms/sms_operator/sms.xml',
+        RequestType.DELIVERY_REQUEST: 'pymess/sms/sms_operator/delivery_request.xml',
     }
 
-    SMS_OPERATOR_STATES = ChoicesNumEnum(
-        # SMS states
-        ('DELIVERED', _('delivered'), 0),
-        ('NOT_DELIVERED', _('not delivered'), 1),
-        ('PHONE_NUMBER_NOT_EXISTS', _('number not exists'), 2),
-
-        # SMS not moved to GSM operator
-        ('TIMEOUTED', _('timeouted'), 3),
-        ('INVALID_PHONE_NUMBER', _('wrong number format'), 4),
-        ('ANOTHER_ERROR', _('another error'), 5),
-        ('EVENT_ERROR', _('event error'), 6),
-        ('SMS_TEXT_TOO_LONG', _('SMS text too long'), 7),
-
-        # SMS with more parts
-        ('PARTLY_DELIVERED', _('partly delivered'), 10),
-        ('UNKNOWN', _('unknown'), 11),
-        ('PARLY_DELIVERED_PARTLY_UNKNOWN', _('partly delivered, partly unknown'), 12),
-        ('PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN', _('partly not delivered, partly unknown'), 13),
-        ('PARTLY_DELIVERED_PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN',
-         _('partly delivered, partly not delivered, partly unknown'), 14),
-        ('NOT_FOUND', _('not found'), 15),
-    )
-
     SMS_OPERATOR_STATES_MAPPING = {
-        SMS_OPERATOR_STATES.DELIVERED: OutputSMSMessage.STATE.DELIVERED,
-        SMS_OPERATOR_STATES.NOT_DELIVERED: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.PHONE_NUMBER_NOT_EXISTS: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.TIMEOUTED: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.INVALID_PHONE_NUMBER: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.ANOTHER_ERROR: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.EVENT_ERROR: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.SMS_TEXT_TOO_LONG: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.PARTLY_DELIVERED: OutputSMSMessage.STATE.ERROR_UPDATE,
-        SMS_OPERATOR_STATES.UNKNOWN: OutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.PARLY_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.PARTLY_DELIVERED_PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN:
-            OutputSMSMessage.STATE.SENDING,
-        SMS_OPERATOR_STATES.NOT_FOUND: OutputSMSMessage.STATE.ERROR_UPDATE,
+        SmsOperatorState.DELIVERED: OutputSMSMessageState.DELIVERED,
+        SmsOperatorState.NOT_DELIVERED: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.PHONE_NUMBER_NOT_EXISTS: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.TIMEOUTED: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.INVALID_PHONE_NUMBER: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.ANOTHER_ERROR: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.EVENT_ERROR: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.SMS_TEXT_TOO_LONG: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.PARTLY_DELIVERED: OutputSMSMessageState.ERROR_UPDATE,
+        SmsOperatorState.UNKNOWN: OutputSMSMessageState.SENDING,
+        SmsOperatorState.PARLY_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessageState.SENDING,
+        SmsOperatorState.PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessageState.SENDING,
+        SmsOperatorState.PARTLY_DELIVERED_PARTLY_NOT_DELIVERED_PARTLY_UNKNOWN: OutputSMSMessageState.SENDING,
+        SmsOperatorState.NOT_FOUND: OutputSMSMessageState.ERROR_UPDATE,
     }
 
     config = AttrDict({
@@ -101,7 +103,7 @@ class SMSOperatorBackend(SMSBackend):
                 'prefix': str(self.config.UNIQ_PREFIX) + '-',
                 'template_type': self.TEMPLATES[request_type],
                 'messages': messages,
-                'type': 'SMS' if request_type == self.REQUEST_TYPES.SMS else 'SMS-Status',
+                'type': 'SMS' if request_type == RequestType.SMS else 'SMS-Status',
             }
         )
 
@@ -160,10 +162,7 @@ class SMSOperatorBackend(SMSBackend):
         for uniq, sms_operator_state in parsed_response.items():
             sms = messages_dict[uniq]
             state = self.SMS_OPERATOR_STATES_MAPPING.get(sms_operator_state)
-            error = (
-                self.SMS_OPERATOR_STATES.get_label(sms_operator_state)
-                if state == OutputSMSMessage.STATE.ERROR_UPDATE else None
-            )
+            error = sms_operator_state.label if state == OutputSMSMessageState.ERROR_UPDATE else None
             if is_sending:
                 if error:
                     self._update_message_after_sending_error(
@@ -193,14 +192,14 @@ class SMSOperatorBackend(SMSBackend):
         try:
             self._send_requests(
                 [message],
-                request_type=self.REQUEST_TYPES.SMS,
+                request_type=RequestType.SMS.value,
                 is_sending=True,
                 sent_at=timezone.now()
             )
         except self.SMSOperatorSendingError as ex:
             self._update_message_after_sending_error(
                 message,
-                state=OutputSMSMessage.STATE.ERROR,
+                state=OutputSMSMessageState.ERROR,
                 error=str(ex)
             )
         except requests.exceptions.RequestException as ex:
@@ -212,7 +211,7 @@ class SMSOperatorBackend(SMSBackend):
             # about exception).
 
     def publish_messages(self, messages):
-        self._send_requests(messages, request_type=self.REQUEST_TYPES.SMS, is_sending=True, sent_at=timezone.now())
+        self._send_requests(messages, request_type=RequestType.SMS, is_sending=True, sent_at=timezone.now())
 
     def _parse_response_codes(self, xml):
         """
@@ -224,8 +223,8 @@ class SMSOperatorBackend(SMSBackend):
 
         soup = BeautifulSoup(xml, 'html.parser')
 
-        return {int(item.smsid.string.lstrip(self.config.UNIQ_PREFIX + '-')): int(item.status.string)
+        return {int(item.smsid.string.lstrip(self.config.UNIQ_PREFIX + '-')): SmsOperatorState(int(item.status.string))
                 for item in soup.find_all('dataitem')}
 
     def update_sms_states(self, messages):
-        self._send_requests(messages, request_type=self.REQUEST_TYPES.DELIVERY_REQUEST)
+        self._send_requests(messages, request_type=RequestType.DELIVERY_REQUEST)

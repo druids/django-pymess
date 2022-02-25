@@ -10,5 +10,5 @@ class DummyDialerBackend(DialerBackend):
     """
 
     def publish_message(self, message):
-        self._update_message_after_sending(message, state=DialerMessage.STATE.DEBUG, sent_at=timezone.now(),
+        self._update_message_after_sending(message, state=DialerMessage.State.DEBUG, sent_at=timezone.now(),
                                            is_final_state=True)

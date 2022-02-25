@@ -9,7 +9,7 @@ from onesignal.errors import OneSignalAPIError
 
 from pymess.backend.push import PushNotificationBackend
 from pymess.config import settings
-from pymess.models import PushNotificationMessage
+from pymess.enums import PushNotificationMessageState
 from pymess.utils.logged_requests import generate_session
 
 
@@ -62,14 +62,14 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
             if self._is_invalid_result(result):
                 self._update_message_after_sending_error(
                     message,
-                    state=PushNotificationMessage.STATE.ERROR,
+                    state=PushNotificationMessageState.ERROR,
                     error=str(result.errors),
                     extra_sender_data=extra_sender_data,
                 )
             else:
                 self._update_message_after_sending(
                     message,
-                    state=PushNotificationMessage.STATE.SENT,
+                    state=PushNotificationMessageState.SENT,
                     sent_at=timezone.now(),
                     extra_sender_data=extra_sender_data,
                 )

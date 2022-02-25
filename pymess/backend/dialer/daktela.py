@@ -6,7 +6,7 @@ from django.utils.translation import ugettext as _
 
 from pymess.backend.dialer import DialerBackend
 from pymess.config import settings
-from pymess.models import DialerMessage
+from pymess.enums import DialerMessageState
 from pymess.utils.logged_requests import generate_session
 
 
@@ -45,10 +45,10 @@ class DaktelaDialerBackend(DialerBackend):
         tts_processed = custom_fields['ttsprocessed'][0]
         whole_message_heard = ('whole_message_heard' in custom_fields and custom_fields['whole_message_heard']
                                and custom_fields['whole_message_heard'][0] == 'Yes')
-        if state_mapped == DialerMessage.STATE.ANSWERED_PARTIAL and whole_message_heard:
-            resp_message_state = str(DialerMessage.STATE.ANSWERED_COMPLETE)
-        if state_mapped == DialerMessage.STATE.DONE and tts_processed == '0':
-            resp_message_state = str(DialerMessage.STATE.NOT_ASSIGNED)
+        if state_mapped == DialerMessageState.ANSWERED_PARTIAL and whole_message_heard:
+            resp_message_state = str(DialerMessageState.ANSWERED_COMPLETE)
+        if state_mapped == DialerMessageState.DONE and tts_processed == '0':
+            resp_message_state = str(DialerMessageState.NOT_ASSIGNED)
         tts_processed = resp_json['result']['customFields']['ttsprocessed'][0]
         is_final_state = resp_json['result']['action'] == '5' and tts_processed == '1'
         message_state = self.config.STATES_MAPPING[resp_message_state]
@@ -106,7 +106,7 @@ class DaktelaDialerBackend(DialerBackend):
     def _update_message_state_with_error(self, message, error_message):
         is_final_state = message.number_of_status_check_attempts >= settings.DIALER_NUMBER_OF_STATUS_CHECK_ATTEMPTS
         message_kwargs = {
-            'state': DialerMessage.STATE.ERROR_UPDATE,
+            'state': DialerMessageState.ERROR_UPDATE,
             'error': ', '.join(error_message) if isinstance(error_message, list) else str(error_message),
             'is_final_state': is_final_state,
         }
@@ -164,12 +164,12 @@ class DaktelaDialerBackend(DialerBackend):
                 self._update_message_after_sending_error(
                     message,
                     error=', '.join(error_message) if isinstance(error_message, list) else str(error_message),
-                    state=DialerMessage.STATE.ERROR
+                    state=DialerMessageState.ERROR
                 )
             else:
                 self._update_message_after_sending(
                     message,
-                    state=DialerMessage.STATE.READY,
+                    state=DialerMessageState.READY,
                     sent_at=tz.now(),
                     extra_data=message.extra_data,
                 )

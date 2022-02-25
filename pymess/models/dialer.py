@@ -1,13 +1,14 @@
-from chamber.utils.datastructures import ChoicesNumEnum
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from pymess.config import settings
+from pymess.enums import DialerMessageState
 from pymess.utils import normalize_phone_number
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
+
 
 __all__ = (
     'AbstractDialerMessage',
@@ -21,32 +22,12 @@ __all__ = (
 
 class AbstractDialerMessage(BaseMessage):
 
-    STATE = ChoicesNumEnum(
-        # numbers are matching predefined state values in Daktela
-        ('WAITING', _('waiting'), -1),
-        ('NOT_ASSIGNED', _('not assigned'), 0),
-        ('READY', _('ready'), 1),
-        ('RESCHEDULED_BY_DIALER', _('rescheduled by dialer'), 2),
-        ('CALL_IN_PROGRESS', _('call in progress'), 3),
-        ('HANGUP', _('hangup'), 4),
-        ('DONE', _('done'), 5),
-        ('RESCHEDULED', _('rescheduled'), 6),
-        ('ANSWERED_COMPLETE', _('listened up complete message'), 7),
-        ('ANSWERED_PARTIAL', _('listened up partial message'), 8),
-        ('UNREACHABLE', _('unreachable'), 9),
-        ('DECLINED', _('declined'), 10),
-        ('UNANSWERED', _('unanswered'), 11),
-        ('HANGUP_BY_DIALER', _('unanswered - hangup by dialer'), 12),
-        ('HANGUP_BY_CUSTOMER', _('answered - hangup by customer'), 13),
-        ('ERROR_UPDATE', _('error message update'), 66),
-        ('DEBUG', _('debug'), 77),
-        ('ERROR', _('error'), 88),
-        ('ERROR_RETRY', _('error retry'), 99),
-    )
+    State = DialerMessageState
 
     template = models.ForeignKey(settings.DIALER_TEMPLATE_MODEL, verbose_name=_('template'), blank=True, null=True,
                                  on_delete=models.SET_NULL, related_name='dialer_messages')
-    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False,
+    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False,
+                                choices=DialerMessageState.choices, editable=False,
                                 db_index=True)
     is_autodialer = models.BooleanField(verbose_name=_('is autodialer'), null=False, default=True)
     number_of_status_check_attempts = models.PositiveIntegerField(verbose_name=_('number of status check attempts'),
@@ -68,7 +49,7 @@ class AbstractDialerMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
+        return self.state in {DialerMessageState.ERROR, DialerMessageState.ERROR_RETRY}
 
 
 class DialerMessage(AbstractDialerMessage):
