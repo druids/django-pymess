@@ -3,16 +3,69 @@ from bs4 import BeautifulSoup
 
 import requests
 
+from enum import Enum
+
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 
-from chamber.utils.datastructures import ChoicesNumEnum, Enum
+from enumfields import IntegerChoicesEnum
 
 from pymess.backend.sms import SMSBackend
-from pymess.models import OutputSMSMessage
+from pymess.enums import OutputSMSMessageState
 from pymess.utils.logged_requests import generate_session
+
+
+class RequestType(str, Enum):
+
+    SMS = 'SMS'
+    DELIVERY_REQUEST = 'DELIVERY_REQUEST'
+
+
+class AtsState(IntegerChoicesEnum):
+
+    # SMS delivery receipts
+    NOT_FOUND = 20, _('not found')
+    NOT_SENT = 21, _('not sent yet')
+    SENT = 22, _('sent')
+    DELIVERED = 23, _('delivered')
+    NOT_DELIVERED = 24, _('not delivered')
+    UNKNOWN = 25, _('not able to determine the state')
+    # Authentication
+    AUTHENTICATION_FAILED = 100, _('authentication failed')
+    # Internal errors
+    DB_ERROR = 200, _('DB error')
+    # Request states
+    OK = 0, _('SMS is OK and ready to be sent')
+    UNSPECIFIED_ERROR = 1, _('unspecified error')
+    BATCH_WITH_NOT_UNIQUE_UNIQ = 300, _('one of the requests has not unique "uniq"')
+    SMS_NOT_UNIQUE_UNIQ = 310, _('SMS has not unique "uniq"')
+    SMS_NO_KW = 320, _('SMS lacks keyword')
+    KW_INVALID = 321, _('keyword not valid')
+    NO_SENDER = 330, _('no sender specified')
+    SENDER_INVALID = 331, _('sender not valid')
+    MO_PR_NOT_ALLOWED = 332, _('MO PR SMS not allowed')
+    MT_PR_NOT_ALLOWED = 333, _('MT PR SMS not allowed')
+    MT_PR_DAILY_LIMIT = 334, _('MT PR SMS daily limit exceeded')
+    MT_PR_TOTAL_LIMIT = 335, _('MT PR SMS total limit exceeded')
+    GEOGRAPHIC_NOT_ALLOWED = 336, _('geographic number is not allowed')
+    MT_SK_NOT_ALLOWED = 337, _('MT SMS to Slovakia not allowed')
+    SHORTCODES_NOT_ALLOWED = 338, _('shortcodes not allowed')
+    UNKNOWN_SENDER = 339, _('sender is unknown')
+    UNSPECIFIED_SMS_TYPE = 340, _('type of SMS not specified')
+    TOO_LONG = 341, _('SMS too long'),
+    TOO_MANY_PARTS = 342, _('too many SMS parts (max. is 10)')
+    WRONG_SENDER_OR_RECEIVER = 343, _('wrong number of sender/receiver')
+    NO_RECIPIENT_OR_WRONG_FORMAT = 350, _('recipient is missing or in wrong format')
+    TEXTID_NOT_ALLOWED = 360, _('using "textid" is not allowed')
+    WRONG_TEXTID = 361, _('"textid" is in wrong format')
+    LONG_SMS_TEXTID_NOT_ALLOWED = 362, _('long SMS with "textid" not allowed')
+    # XML errors
+    XML_MISSING = 701, _('XML body missing')
+    XML_UNREADABLE = 702, _('XML is not readable')
+    WRONG_HTTP_METHOD = 703, _('unknown HTTP method or not HTTP POST')
+    XML_INVALID = 705, _('XML invalid')
 
 
 class ATSSMSBackend(SMSBackend):
@@ -21,90 +74,41 @@ class ATSSMSBackend(SMSBackend):
     Backend supports check SMS delivery
     """
 
-    REQUEST_TYPES = Enum(
-        'SMS',
-        'DELIVERY_REQUEST',
-    )
-
     TEMPLATES = {
         'base': 'pymess/sms/ats/base.xml',
-        REQUEST_TYPES.SMS: 'pymess/sms/ats/sms.xml',
-        REQUEST_TYPES.DELIVERY_REQUEST: 'pymess/sms/ats/delivery_request.xml',
+        RequestType.SMS: 'pymess/sms/ats/sms.xml',
+        RequestType.DELIVERY_REQUEST: 'pymess/sms/ats/delivery_request.xml',
     }
 
     class ATSSendingError(Exception):
         pass
 
-    ATS_STATES = ChoicesNumEnum(
-        # SMS delivery receipts
-        ('NOT_FOUND', _('not found'), 20),
-        ('NOT_SENT', _('not sent yet'), 21),
-        ('SENT', _('sent'), 22),
-        ('DELIVERED', _('delivered'), 23),
-        ('NOT_DELIVERED', _('not delivered'), 24),
-        ('UNKNOWN', _('not able to determine the state'), 25),
-        # Authentication
-        ('AUTHENTICATION_FAILED', _('authentication failed'), 100),
-        # Internal errors
-        ('DB_ERROR', _('DB error'), 200),
-        # Request states
-        ('OK', _('SMS is OK and ready to be sent'), 0),
-        ('UNSPECIFIED_ERROR', _('unspecified error'), 1),
-        ('BATCH_WITH_NOT_UNIQUE_UNIQ', _('one of the requests has not unique "uniq"'), 300),
-        ('SMS_NOT_UNIQUE_UNIQ', _('SMS has not unique "uniq"'), 310),
-        ('SMS_NO_KW', _('SMS lacks keyword'), 320),
-        ('KW_INVALID', _('keyword not valid'), 321),
-        ('NO_SENDER', _('no sender specified'), 330),
-        ('SENDER_INVALID', _('sender not valid'), 331),
-        ('MO_PR_NOT_ALLOWED', _('MO PR SMS not allowed'), 332),
-        ('MT_PR_NOT_ALLOWED', _('MT PR SMS not allowed'), 333),
-        ('MT_PR_DAILY_LIMIT', _('MT PR SMS daily limit exceeded'), 334),
-        ('MT_PR_TOTAL_LIMIT', _('MT PR SMS total limit exceeded'), 335),
-        ('GEOGRAPHIC_NOT_ALLOWED', _('geographic number is not allowed'), 336),
-        ('MT_SK_NOT_ALLOWED', _('MT SMS to Slovakia not allowed'), 337),
-        ('SHORTCODES_NOT_ALLOWED', _('shortcodes not allowed'), 338),
-        ('UNKNOWN_SENDER', _('sender is unknown'), 339),
-        ('UNSPECIFIED_SMS_TYPE', _('type of SMS not specified'), 340),
-        ('TOO_LONG', _('SMS too long'), 341),
-        ('TOO_MANY_PARTS', _('too many SMS parts (max. is 10)'), 342),
-        ('WRONG_SENDER_OR_RECEIVER', _('wrong number of sender/receiver'), 343),
-        ('NO_RECIPIENT_OR_WRONG_FORMAT', _('recipient is missing or in wrong format'), 350),
-        ('TEXTID_NOT_ALLOWED', _('using "textid" is not allowed'), 360),
-        ('WRONG_TEXTID', _('"textid" is in wrong format'), 361),
-        ('LONG_SMS_TEXTID_NOT_ALLOWED', _('long SMS with "textid" not allowed'), 362),
-        # XML errors
-        ('XML_MISSING', _('XML body missing'), 701),
-        ('XML_UNREADABLE', _('XML is not readable'), 702),
-        ('WRONG_HTTP_METHOD', _('unknown HTTP method or not HTTP POST'), 703),
-        ('XML_INVALID', _('XML invalid'), 705),
-    )
-
     ATS_STATES_MAPPING = {
-        ATS_STATES.NOT_FOUND: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.NOT_SENT: OutputSMSMessage.STATE.SENDING,
-        ATS_STATES.SENT: OutputSMSMessage.STATE.SENT,
-        ATS_STATES.DELIVERED: OutputSMSMessage.STATE.DELIVERED,
-        ATS_STATES.NOT_DELIVERED: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.OK: OutputSMSMessage.STATE.SENDING,
-        ATS_STATES.UNSPECIFIED_ERROR: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.BATCH_WITH_NOT_UNIQUE_UNIQ: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SMS_NOT_UNIQUE_UNIQ: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SMS_NO_KW: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.KW_INVALID: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.NO_SENDER: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SENDER_INVALID: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.MO_PR_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.MT_SK_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.SHORTCODES_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.UNKNOWN_SENDER: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.UNSPECIFIED_SMS_TYPE: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.TOO_LONG: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.TOO_MANY_PARTS: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.WRONG_SENDER_OR_RECEIVER: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.NO_RECIPIENT_OR_WRONG_FORMAT: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.TEXTID_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.WRONG_TEXTID: OutputSMSMessage.STATE.ERROR,
-        ATS_STATES.LONG_SMS_TEXTID_NOT_ALLOWED: OutputSMSMessage.STATE.ERROR,
+        AtsState.NOT_FOUND: OutputSMSMessageState.ERROR,
+        AtsState.NOT_SENT: OutputSMSMessageState.SENDING,
+        AtsState.SENT: OutputSMSMessageState.SENT,
+        AtsState.DELIVERED: OutputSMSMessageState.DELIVERED,
+        AtsState.NOT_DELIVERED: OutputSMSMessageState.ERROR,
+        AtsState.OK: OutputSMSMessageState.SENDING,
+        AtsState.UNSPECIFIED_ERROR: OutputSMSMessageState.ERROR,
+        AtsState.BATCH_WITH_NOT_UNIQUE_UNIQ: OutputSMSMessageState.ERROR,
+        AtsState.SMS_NOT_UNIQUE_UNIQ: OutputSMSMessageState.ERROR,
+        AtsState.SMS_NO_KW: OutputSMSMessageState.ERROR,
+        AtsState.KW_INVALID: OutputSMSMessageState.ERROR,
+        AtsState.NO_SENDER: OutputSMSMessageState.ERROR,
+        AtsState.SENDER_INVALID: OutputSMSMessageState.ERROR,
+        AtsState.MO_PR_NOT_ALLOWED: OutputSMSMessageState.ERROR,
+        AtsState.MT_SK_NOT_ALLOWED: OutputSMSMessageState.ERROR,
+        AtsState.SHORTCODES_NOT_ALLOWED: OutputSMSMessageState.ERROR,
+        AtsState.UNKNOWN_SENDER: OutputSMSMessageState.ERROR,
+        AtsState.UNSPECIFIED_SMS_TYPE: OutputSMSMessageState.ERROR,
+        AtsState.TOO_LONG: OutputSMSMessageState.ERROR,
+        AtsState.TOO_MANY_PARTS: OutputSMSMessageState.ERROR,
+        AtsState.WRONG_SENDER_OR_RECEIVER: OutputSMSMessageState.ERROR,
+        AtsState.NO_RECIPIENT_OR_WRONG_FORMAT: OutputSMSMessageState.ERROR,
+        AtsState.TEXTID_NOT_ALLOWED: OutputSMSMessageState.ERROR,
+        AtsState.WRONG_TEXTID: OutputSMSMessageState.ERROR,
+        AtsState.LONG_SMS_TEXTID_NOT_ALLOWED: OutputSMSMessageState.ERROR,
     }
 
     config = AttrDict({
@@ -209,7 +213,7 @@ class ATSSMSBackend(SMSBackend):
         for uniq, ats_state in parsed_response.items():
             sms = messages_dict[uniq]
             state = self.ATS_STATES_MAPPING.get(ats_state)
-            error = self.ATS_STATES.get_label(ats_state) if state == OutputSMSMessage.STATE.ERROR else None
+            error = ats_state.label if state == OutputSMSMessageState.ERROR else None
             if is_sending:
                 if error:
                     self._update_message_after_sending_error(
@@ -236,20 +240,20 @@ class ATSSMSBackend(SMSBackend):
                 )
 
     def publish_messages(self, messages):
-        self._send_requests(messages, request_type=self.REQUEST_TYPES.SMS, is_sending=True, sent_at=timezone.now())
+        self._send_requests(messages, request_type=RequestType.SMS, is_sending=True, sent_at=timezone.now())
 
     def publish_message(self, message):
         try:
             self._send_requests(
                 [message],
-                request_type=self.REQUEST_TYPES.SMS,
+                request_type=RequestType.SMS,
                 is_sending=True,
                 sent_at=timezone.now()
             )
         except self.ATSSendingError as ex:
             self._update_message_after_sending_error(
                 message,
-                state=OutputSMSMessage.STATE.ERROR,
+                state=OutputSMSMessageState.ERROR,
                 error=str(ex),
             )
         except requests.exceptions.RequestException as ex:
@@ -272,20 +276,21 @@ class ATSSMSBackend(SMSBackend):
         soup = BeautifulSoup(xml, 'html.parser')
         code_tags = soup.find_all('code')
 
-        error_message = ', '.join(
-            [(str(self.ATS_STATES.get_label(c))
-              if c in self.ATS_STATES.all
-              else 'ATS returned an unknown state {}.'.format(c))
-             for c in [int(error_code.string) for error_code in code_tags if not error_code.attrs.get('uniq')]],
-        )
+        error_messages = []
+        for c in [int(error_code.string) for error_code in code_tags if not error_code.attrs.get('uniq')]:
+            try:
+                error_messages.append(AtsState(c).label)
+            except ValueError:
+                error_messages.append('ATS returned an unknown state {}.'.format(c))
+        error_message = ', '.join(error_messages)
 
         if error_message:
             raise self.ATSSendingError('Error returned from ATS operator: {}'.format(error_message))
 
         return {
-            int(code.attrs['uniq'].lstrip(str(self.config.UNIQ_PREFIX) + '-')): int(code.string)
+            int(code.attrs['uniq'].lstrip(str(self.config.UNIQ_PREFIX) + '-')): AtsState(int(code.string))
             for code in code_tags if code.attrs.get('uniq')
         }
 
     def update_sms_states(self, messages):
-        self._send_requests(messages, request_type=self.REQUEST_TYPES.DELIVERY_REQUEST)
+        self._send_requests(messages, request_type=RequestType.DELIVERY_REQUEST)

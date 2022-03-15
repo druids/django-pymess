@@ -10,7 +10,7 @@ class DefaultTimeoutSessionMixin:
 
 
 try:
-    from security.transport.security_requests import SecuritySession
+    from security.requests import SecuritySession
 
     class DefaultTimeoutSecuritySession(DefaultTimeoutSessionMixin, SecuritySession):
         pass

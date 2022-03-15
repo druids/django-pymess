@@ -2,7 +2,7 @@ from chamber.exceptions import PersistenceException
 
 from pymess.backend import BaseBackend, send_template as _send_template, send as _send, BaseController
 from pymess.config import (
-    CONTROLLER_TYPES, get_push_notification_template_model, is_turned_on_push_notification_batch_sending, settings
+    ControllerType, get_push_notification_template_model, is_turned_on_push_notification_batch_sending, settings
 )
 from pymess.models import PushNotificationMessage
 
@@ -11,7 +11,7 @@ class PushNotificationController(BaseController):
     """Controller class for push notifications delegating message to correct push notification backend"""
 
     model = PushNotificationMessage
-    backend_type_name = CONTROLLER_TYPES.PUSH_NOTIFICATION
+    backend_type_name = ControllerType.PUSH_NOTIFICATION
 
     class PushNotificationSendingError(Exception):
         pass

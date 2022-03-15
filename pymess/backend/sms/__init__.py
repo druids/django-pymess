@@ -11,7 +11,7 @@ from pymess.backend import BaseBackend, BaseController
 from pymess.backend import send as _send
 from pymess.backend import send_template as _send_template
 from pymess.config import (
-    CONTROLLER_TYPES, get_sms_template_model, get_supported_backend_paths, is_turned_on_sms_batch_sending, settings,
+    ControllerType, get_sms_template_model, get_supported_backend_paths, is_turned_on_sms_batch_sending, settings,
 )
 from pymess.models import OutputSMSMessage
 
@@ -23,7 +23,7 @@ class SMSController(BaseController):
     Controller class for SMS delegating message to correct SMS backend
     """
     model = OutputSMSMessage
-    backend_type_name = CONTROLLER_TYPES.SMS
+    backend_type_name = ControllerType.SMS
 
     class SMSSendingError(Exception):
         pass
@@ -39,7 +39,7 @@ class SMSController(BaseController):
         returns initial state for logged SMS instance.
         :param recipient: phone number of the recipient
         """
-        return self.model.STATE.WAITING
+        return self.model.State.WAITING
 
     def create_message(self, recipient, content, related_objects, tag, template,
                        priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):
@@ -74,7 +74,7 @@ class SMSController(BaseController):
         Method that find messages that is not in the final state and updates its states.
         """
         for backend in get_supported_backend_paths(self.backend_type_name):
-            messages_to_check = self.model.objects.filter(state=self.model.STATE.SENDING, backend=backend)
+            messages_to_check = self.model.objects.filter(state=self.model.State.SENDING, backend=backend)
             if messages_to_check.exists():
                 import_string(backend)().update_sms_states(messages_to_check)
 
@@ -88,7 +88,7 @@ class SMSController(BaseController):
 
             if settings.SMS_SET_ERROR_TO_IDLE_MESSAGES:
                 idle_output_sms.update(
-                    state=self.model.STATE.ERROR, error=_('timeouted')
+                    state=self.model.State.ERROR, error=_('timeouted')
                 )
 
     def is_turned_on_batch_sending(self):

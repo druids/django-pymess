@@ -27,7 +27,7 @@ class SMTPEmailBackend(EmailBackend):
             )
         try:
             email_message.send()
-            self._update_message_after_sending(message, state=message.STATE.SENT, sent_at=timezone.now())
+            self._update_message_after_sending(message, state=message.State.SENT, sent_at=timezone.now())
         except Exception as ex:
             self._update_message_after_sending_error(message, error=str(ex))
             # Do not re-raise caught exception. We do not know exact exception to catch so we catch them all

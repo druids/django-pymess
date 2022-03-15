@@ -1,8 +1,8 @@
-from chamber.utils.datastructures import ChoicesNumEnum
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from pymess.config import settings
+from pymess.enums import PushNotificationMessageState
 
 from .common import BaseAbstractTemplate, BaseMessage, BaseRelatedObject
 
@@ -17,17 +17,12 @@ __all__ = (
 
 class AbstractPushNotificationMessage(BaseMessage):
 
-    STATE = ChoicesNumEnum(
-        ('WAITING', _('waiting'), 1),
-        ('SENT', _('sent'), 2),
-        ('ERROR', _('error'), 3),
-        ('DEBUG', _('debug'), 4),
-        ('ERROR_RETRY', _('error retry'), 5),
-    )
+    State = PushNotificationMessageState
 
     template = models.ForeignKey(settings.PUSH_NOTIFICATION_TEMPLATE_MODEL, verbose_name=_('template'), blank=True,
                                  null=True, on_delete=models.SET_NULL, related_name='push_notifications')
-    state = models.PositiveIntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices,
+    state = models.PositiveIntegerField(verbose_name=_('state'), null=False, blank=False,
+                                        choices=PushNotificationMessageState.choices,
                                         editable=False, db_index=True)
     heading = models.TextField(verbose_name=_('heading'))
     url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
@@ -40,7 +35,7 @@ class AbstractPushNotificationMessage(BaseMessage):
 
     @property
     def failed(self):
-        return self.state in {self.STATE.ERROR, self.STATE.ERROR_RETRY}
+        return self.state in {PushNotificationMessageState.ERROR, PushNotificationMessageState.ERROR_RETRY}
 
 
 class PushNotificationMessage(AbstractPushNotificationMessage):
@@ -72,7 +67,7 @@ class AbstractPushNotificationTemplate(BaseAbstractTemplate):
 
     def send(self, recipient, context_data, related_objects=None, tag=None, **kwargs):
         return super().send(recipient, context_data, related_objects, tag,
-                            state=AbstractPushNotificationMessage.STATE.WAITING,
+                            state=AbstractPushNotificationMessage.State.WAITING,
                             heading=self.render_text_template(self.heading, context_data, recipient),
                             redirect_url=self.render_text_template(
                                 self.redirect_url, context_data, recipient

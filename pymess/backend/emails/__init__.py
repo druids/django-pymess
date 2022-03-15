@@ -2,7 +2,7 @@ from chamber.exceptions import PersistenceException
 
 from pymess.backend import BaseBackend, send_template as _send_template, BaseController
 from pymess.config import (
-    CONTROLLER_TYPES, get_email_template_model, is_turned_on_email_batch_sending, settings,
+    ControllerType, get_email_template_model, is_turned_on_email_batch_sending, settings,
 )
 from pymess.models import EmailMessage
 
@@ -11,7 +11,7 @@ class EmailController(BaseController):
     """Controller class for E-mail delegating message to correct E-mail backend"""
 
     model = EmailMessage
-    backend_type_name = CONTROLLER_TYPES.EMAIL
+    backend_type_name = ControllerType.EMAIL
 
     class EmailSendingError(Exception):
         pass
@@ -27,7 +27,7 @@ class EmailController(BaseController):
         returns initial state for logged e-mail message.
         :param recipient: e-mail address of the recipient
         """
-        return self.model.STATE.WAITING
+        return self.model.State.WAITING
 
     def create_message(self, sender, sender_name, recipient, subject, content, related_objects, tag, template,
                        attachments, priority=settings.DEFAULT_MESSAGE_PRIORITY, **kwargs):

@@ -1,7 +1,8 @@
 from collections import OrderedDict
 import re
 
-from chamber.utils.datastructures import Enum
+from enum import Enum, auto
+
 from django.apps import apps
 from django.conf import settings as django_settings
 from django.utils.module_loading import import_string
@@ -10,12 +11,14 @@ from attrdict import AttrDict
 
 DEFAULT_SENDER_BACKEND_NAME = 'default'
 
-CONTROLLER_TYPES = Enum(
-    'SMS',
-    'EMAIL',
-    'DIALER',
-    'PUSH_NOTIFICATION',
-)
+
+class ControllerType(Enum):
+
+    SMS = auto()
+    EMAIL = auto()
+    DIALER = auto()
+    PUSH_NOTIFICATION = auto()
+
 
 DEFAULTS = {
     # SMS configuration
@@ -160,12 +163,12 @@ def get_email_template_model():
     return get_model(settings.EMAIL_TEMPLATE_MODEL)
 
 def get_router(backend_type):
-    router_option_name = '{}_BACKEND_ROUTER'.format(backend_type)
+    router_option_name = '{}_BACKEND_ROUTER'.format(backend_type.name)
     return import_string(getattr(settings, router_option_name))()
 
 
 def _get_backend_config_dict(backend_type):
-    backends_option_name = '{}_BACKENDS'.format(backend_type)
+    backends_option_name = '{}_BACKENDS'.format(backend_type.name)
     return getattr(settings, backends_option_name)
 
 
@@ -175,7 +178,7 @@ def get_backend(backend_type, backend_name):
 
 
 def get_default_sender_backend_name(backend_type):
-    backend_default_name = '{}_DEFAULT_SENDER_BACKEND_NAME'.format(backend_type)
+    backend_default_name = '{}_DEFAULT_SENDER_BACKEND_NAME'.format(backend_type.name)
     return getattr(settings, backend_default_name)
 
 

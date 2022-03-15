@@ -13,7 +13,6 @@ from django.template.exceptions import TemplateDoesNotExist, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
 from chamber.models import SmartModel
-from chamber.utils.datastructures import ChoicesNumEnum
 
 from pymess.config import settings
 
@@ -115,14 +114,11 @@ class MessageManager(models.Manager):
 
 class BaseMessage(SmartModel):
 
-    STATE = ChoicesNumEnum()
-
     sent_at = models.DateTimeField(verbose_name=_('sent at'), null=True, blank=True, editable=False)
     recipient = models.CharField(verbose_name=_('recipient'), null=False, blank=False, max_length=20, db_index=True)
     content = models.TextField(verbose_name=_('content'), null=False, blank=False)
     template_slug = models.SlugField(verbose_name=_('slug'), max_length=100, null=True, blank=True, editable=False,
                                      db_index=True)
-    state = models.IntegerField(verbose_name=_('state'), null=False, blank=False, choices=STATE.choices, editable=False)
     backend = models.CharField(verbose_name=_('backend'), null=True, blank=True, editable=False, max_length=250)
     error = models.TextField(verbose_name=_('error'), null=True, blank=True, editable=False)
     extra_data = models.JSONField(verbose_name=_('extra data'), null=True, blank=True, editable=False,
