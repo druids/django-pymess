@@ -46,9 +46,9 @@ class DaktelaDialerBackend(DialerBackend):
         whole_message_heard = ('whole_message_heard' in custom_fields and custom_fields['whole_message_heard']
                                and custom_fields['whole_message_heard'][0] == 'Yes')
         if state_mapped == DialerMessageState.ANSWERED_PARTIAL and whole_message_heard:
-            resp_message_state = str(DialerMessageState.ANSWERED_COMPLETE)
+            resp_message_state = str(DialerMessageState.ANSWERED_COMPLETE.value)
         if state_mapped == DialerMessageState.DONE and tts_processed == '0':
-            resp_message_state = str(DialerMessageState.NOT_ASSIGNED)
+            resp_message_state = str(DialerMessageState.NOT_ASSIGNED.value)
         tts_processed = resp_json['result']['customFields']['ttsprocessed'][0]
         is_final_state = resp_json['result']['action'] == '5' and tts_processed == '1'
         message_state = self.config.STATES_MAPPING[resp_message_state]
