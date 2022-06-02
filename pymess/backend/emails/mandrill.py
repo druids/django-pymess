@@ -52,7 +52,7 @@ class MandrillEmailBackend(EmailBackend):
         'PRESERVE_RECIPIENTS': False,
         'VIEW_CONTENT_LINK': True,
         'ASYNC': False,
-        'TIMEOUT': 5,  # 5s
+        'TIMEOUT': 7,  # 7s
     })
 
     def _serialize_attachments(self, message):
