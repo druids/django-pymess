@@ -18,8 +18,8 @@ class DaktelaDialerBackend(DialerBackend):
     SESSION_SLUG = 'pymess-daktela_autodialer'
     config = AttrDict({
         'ACCESS_TOKEN':  None,
-        'AUTODIALER_QUEUE': None,
-        'PREDICTIVE_QUEUE': None,
+        'AUTODIALER_RECORD_TYPE': None,
+        'PREDICTIVE_RECORD_TYPE': None,
         'URL': None,
         'STATES_MAPPING': {
             '0': 0,
@@ -125,20 +125,13 @@ class DaktelaDialerBackend(DialerBackend):
         client_url = self._get_dialer_api_url()
         try:
             payload = {
-                'queue': (self.config.AUTODIALER_QUEUE if message.is_autodialer
-                          else self.config.PREDICTIVE_QUEUE),
+                'record_type': (
+                    self.config.AUTODIALER_RECORD_TYPE if message.is_autodialer
+                    else self.config.PREDICTIVE_RECORD_TYPE
+                ),
                 'number': re.sub(r'^\+', '00', message.recipient),
-                'customFields': {
-                    'mall_pay_text': [
-                        message.content,
-                    ],
-                    'ttsprocessed': [
-                        0,
-                    ],
-                },
+                'customFields': {'autodialer_text': [message.content]},
             }
-            if message.is_autodialer:
-                payload['action'] = 5
             custom_fields = message.extra_data.get('custom_fields')
             if custom_fields:
                 payload['customFields'].update(**custom_fields)
