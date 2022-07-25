@@ -40,20 +40,6 @@ class DaktelaDialerBackend(DialerBackend):
             base_url=self.config.URL, name=name, access_token=self.config.ACCESS_TOKEN,
         )
 
-    def _get_autodialer_message_states(self, resp_json, state_mapped, resp_message_state):
-        custom_fields = resp_json['result']['customFields']
-        tts_processed = custom_fields['ttsprocessed'][0]
-        whole_message_heard = ('whole_message_heard' in custom_fields and custom_fields['whole_message_heard']
-                               and custom_fields['whole_message_heard'][0] == 'Yes')
-        if state_mapped == DialerMessageState.ANSWERED_PARTIAL and whole_message_heard:
-            resp_message_state = str(DialerMessageState.ANSWERED_COMPLETE.value)
-        if state_mapped == DialerMessageState.DONE and tts_processed == '0':
-            resp_message_state = str(DialerMessageState.NOT_ASSIGNED.value)
-        tts_processed = resp_json['result']['customFields']['ttsprocessed'][0]
-        is_final_state = resp_json['result']['action'] == '5' and tts_processed == '1'
-        message_state = self.config.STATES_MAPPING[resp_message_state]
-        return is_final_state, message_state
-
     def _update_dialer_states(self, messages):
         """
         Method uses Daktela API to get info about autodialer call status
@@ -82,17 +68,12 @@ class DaktelaDialerBackend(DialerBackend):
             state_mapped = self.config.STATES_MAPPING[resp_message_state]
             message_error = resp_json['error'] if len(resp_json['error']) else None
 
-            if message.is_autodialer:
-                is_final_state, message_state = self._get_autodialer_message_states(resp_json, state_mapped,
-                                                                                    resp_message_state)
-            else:
-                message_state = state_mapped
-                is_final_state = resp_json['result']['action'] == '5'
+            is_final_state = resp_json['result']['action'] == '5'
 
             try:
                 self._update_message(
                     message,
-                    state=message_state,
+                    state=state_mapped,
                     error=message_error,
                     extra_data=message.extra_data,
                     is_final_state=is_final_state,
