@@ -1,5 +1,4 @@
 import re
-from attrdict import AttrDict
 
 from django.utils import timezone as tz
 from django.utils.translation import ugettext as _
@@ -16,7 +15,7 @@ class DaktelaDialerBackend(DialerBackend):
     """
 
     SESSION_SLUG = 'pymess-daktela_autodialer'
-    config = AttrDict({
+    config = {
         'ACCESS_TOKEN':  None,
         'AUTODIALER_RECORD_TYPE': None,
         'PREDICTIVE_RECORD_TYPE': None,
@@ -31,13 +30,13 @@ class DaktelaDialerBackend(DialerBackend):
             '6': 6,
         },
         'TIMEOUT': 5,  # 5s
-    })
+    }
 
     def _get_dialer_api_url(self, name=None):
         name = '/{name}'.format(name=name) if name else ''
 
         return '{base_url}{name}.json?accessToken={access_token}'.format(
-            base_url=self.config.URL, name=name, access_token=self.config.ACCESS_TOKEN,
+            base_url=self.config['URL'], name=name, access_token=self.config['ACCESS_TOKEN'],
         )
 
     def _update_dialer_states(self, messages):
@@ -51,7 +50,7 @@ class DaktelaDialerBackend(DialerBackend):
             response = generate_session(
                 slug=self.SESSION_SLUG,
                 related_objects=(message,),
-                timeout=self.config.TIMEOUT
+                timeout=self.config['TIMEOUT']
             ).get(client_url)
             resp_json = response.json()
             if response.status_code != 200 and resp_json.get('error'):
@@ -65,7 +64,7 @@ class DaktelaDialerBackend(DialerBackend):
             })
             resp_message_state = resp_json['result']['statuses'][0]['name'] if len(
                 resp_json['result']['statuses']) else resp_json['result']['action']
-            state_mapped = self.config.STATES_MAPPING[resp_message_state]
+            state_mapped = self.config['STATES_MAPPING'][resp_message_state]
             message_error = resp_json['error'] if len(resp_json['error']) else None
 
             is_final_state = resp_json['result']['action'] == '5'
@@ -107,8 +106,8 @@ class DaktelaDialerBackend(DialerBackend):
         try:
             payload = {
                 'record_type': (
-                    self.config.AUTODIALER_RECORD_TYPE if message.is_autodialer
-                    else self.config.PREDICTIVE_RECORD_TYPE
+                    self.config['AUTODIALER_RECORD_TYPE'] if message.is_autodialer
+                    else self.config['PREDICTIVE_RECORD_TYPE']
                 ),
                 'number': re.sub(r'^\+', '00', message.recipient),
                 'customFields': {'autodialer_text': [message.content]},
@@ -120,7 +119,7 @@ class DaktelaDialerBackend(DialerBackend):
             response = generate_session(
                 slug=self.SESSION_SLUG,
                 related_objects=(message,),
-                timeout=self.config.TIMEOUT
+                timeout=self.config['TIMEOUT']
             ).post(
                 client_url,
                 json=payload,

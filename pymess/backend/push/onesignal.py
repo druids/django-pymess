@@ -1,4 +1,3 @@
-from attrdict import AttrDict
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 
@@ -15,12 +14,12 @@ from pymess.utils.logged_requests import generate_session
 
 class OneSignalPushNotificationBackend(PushNotificationBackend):
 
-    config = AttrDict({
+    config = {
         'APP_ID': None,
         'API_KEY': None,
         'LANGUAGE': None,
         'TIMEOUT': 5,  # 5s
-    })
+    }
 
     def _is_result_partial_error(self, result):
         return not result.is_error and result.errors
@@ -29,17 +28,17 @@ class OneSignalPushNotificationBackend(PushNotificationBackend):
         return result.is_error or self._is_result_partial_error(result)
 
     def publish_message(self, message):
-        onesignal_client = OneSignalClient(self.config.APP_ID,
-                                           self.config.API_KEY)
+        onesignal_client = OneSignalClient(self.config['APP_ID'],
+                                           self.config['API_KEY'])
         onesignal_client.session = generate_session(
             slug='pymess - OneSignal',
             related_objects=(message,),
-            timeout=self.config.TIMEOUT
+            timeout=self.config['TIMEOUT']
         )
 
         languages = {'en'}
-        if self.config.LANGUAGE is not None:
-            languages.add(self.config.LANGUAGE)
+        if self.config['LANGUAGE'] is not None:
+            languages.add(self.config['LANGUAGE'])
         extra_data = message.extra_data or {}
         if message.redirect_url:
             extra_data['redirectUrl'] = message.redirect_url

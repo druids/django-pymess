@@ -1,4 +1,3 @@
-from attrdict import AttrDict
 from bs4 import BeautifulSoup
 
 import requests
@@ -111,26 +110,26 @@ class ATSSMSBackend(SMSBackend):
         AtsState.LONG_SMS_TEXTID_NOT_ALLOWED: OutputSMSMessageState.ERROR,
     }
 
-    config = AttrDict({
+    config = {
         'UNIQ_PREFIX': '',
         'VALIDITY': 60,
         'TEXTID': None,
         'URL': 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',
         'OPTID': '',
         'TIMEOUT': 5,  # 5s
-    })
+    }
 
     def _get_extra_sender_data(self):
         return {
-            'prefix': self.config.UNIQ_PREFIX,
-            'validity': self.config.VALIDITY,
-            'kw': self.config.PROJECT_KEYWORD,
-            'textid': self.config.TEXTID,
+            'prefix': self.config['UNIQ_PREFIX'],
+            'validity': self.config['VALIDITY'],
+            'kw': self.config['PROJECT_KEYWORD'],
+            'textid': self.config['TEXTID'],
         }
 
     def get_extra_message_kwargs(self):
         return {
-            'sender': self.config.OUTPUT_SENDER_NUMBER,
+            'sender': self.config['OUTPUT_SENDER_NUMBER'],
         }
 
     def _serialize_messages(self, messages, request_type):
@@ -142,19 +141,19 @@ class ATSSMSBackend(SMSBackend):
         """
         return render_to_string(
             self.TEMPLATES['base'], {
-                'username': self.config.USERNAME,
-                'password': self.config.PASSWORD,
+                'username': self.config['USERNAME'],
+                'password': self.config['PASSWORD'],
                 'template_type': self.TEMPLATES[request_type],
                 'messages': messages,
-                'prefix': str(self.config.UNIQ_PREFIX) + '-',
-                'sender': self.config.OUTPUT_SENDER_NUMBER,
+                'prefix': str(self.config['UNIQ_PREFIX']) + '-',
+                'sender': self.config['OUTPUT_SENDER_NUMBER'],
                 'dlr': 1,
-                'validity': self.config.VALIDITY,
-                'kw': self.config.PROJECT_KEYWORD,
+                'validity': self.config['VALIDITY'],
+                'kw': self.config['PROJECT_KEYWORD'],
                 'billing': 0,
                 'extra': mark_safe(' textid="{textid}"'.format(
-                    textid=self.config.TEXTID
-                )) if self.config.TEXTID else '',
+                    textid=self.config['TEXTID']
+                )) if self.config['TEXTID'] else '',
             }
         )
 
@@ -169,10 +168,10 @@ class ATSSMSBackend(SMSBackend):
         requests_xml = self._serialize_messages(messages, request_type)
         try:
             resp = generate_session(slug='pymess - ATS SMS', related_objects=list(messages)).post(
-                self.config.URL,
+                self.config['URL'],
                 data=requests_xml,
                 headers={'Content-Type': 'text/xml'},
-                timeout=self.config.TIMEOUT
+                timeout=self.config['TIMEOUT']
             )
             if resp.status_code != 200:
                 raise self.ATSSendingError(
@@ -288,7 +287,7 @@ class ATSSMSBackend(SMSBackend):
             raise self.ATSSendingError('Error returned from ATS operator: {}'.format(error_message))
 
         return {
-            int(code.attrs['uniq'].lstrip(str(self.config.UNIQ_PREFIX) + '-')): AtsState(int(code.string))
+            int(code.attrs['uniq'].lstrip(str(self.config['UNIQ_PREFIX']) + '-')): AtsState(int(code.string))
             for code in code_tags if code.attrs.get('uniq')
         }
 

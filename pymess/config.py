@@ -7,7 +7,6 @@ from django.apps import apps
 from django.conf import settings as django_settings
 from django.utils.module_loading import import_string
 
-from attrdict import AttrDict
 
 DEFAULT_SENDER_BACKEND_NAME = 'default'
 
@@ -132,9 +131,10 @@ class Settings(object):
         value = getattr(django_settings, 'PYMESS_{}'.format(attr), DEFAULTS[attr])
 
         if isinstance(default_value, dict) and isinstance(value, dict):
-            default_value = default_value.copy()
-            default_value.update(value)
-            value = AttrDict(default_value)
+            value = {
+                **default_value.copy(),
+                **value
+            }
 
         return value
 

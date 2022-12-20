@@ -1,4 +1,3 @@
-from attrdict import AttrDict
 from collections import OrderedDict, defaultdict
 from datetime import timedelta
 
@@ -152,10 +151,10 @@ class BaseController:
 
 class BaseBackend:
 
-    config = AttrDict()
+    config = {}
 
     def __init__(self, config=None):
-        self.config = AttrDict({**self.config, **(config or {})})
+        self.config = {**self.config, **(config or {})}
 
     def _get_extra_sender_data(self):
         """
