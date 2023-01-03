@@ -1,4 +1,3 @@
-from attrdict import AttrDict
 from bs4 import BeautifulSoup
 
 import requests
@@ -78,15 +77,15 @@ class SMSOperatorBackend(SMSBackend):
         SmsOperatorState.NOT_FOUND: OutputSMSMessageState.ERROR_UPDATE,
     }
 
-    config = AttrDict({
+    config = {
         'URL': 'https://www.sms-operator.cz/webservices/webservice.aspx',
         'UNIQ_PREFIX': '',
         'TIMEOUT': 5,  # 5s
-    })
+    }
 
     def _get_extra_sender_data(self):
         return {
-            'prefix': self.config.UNIQ_PREFIX,
+            'prefix': self.config['UNIQ_PREFIX'],
         }
 
     def _serialize_messages(self, messages, request_type):
@@ -98,9 +97,9 @@ class SMSOperatorBackend(SMSBackend):
         """
         return render_to_string(
             self.TEMPLATES['base'], {
-                'username': self.config.USERNAME,
-                'password': self.config.PASSWORD,
-                'prefix': str(self.config.UNIQ_PREFIX) + '-',
+                'username': self.config['USERNAME'],
+                'password': self.config['PASSWORD'],
+                'prefix': str(self.config['UNIQ_PREFIX']) + '-',
                 'template_type': self.TEMPLATES[request_type],
                 'messages': messages,
                 'type': 'SMS' if request_type == RequestType.SMS else 'SMS-Status',
@@ -118,10 +117,10 @@ class SMSOperatorBackend(SMSBackend):
         requests_xml = self._serialize_messages(messages, request_type)
         try:
             resp = generate_session(slug='pymess - SMS operator', related_objects=list(messages)).post(
-                self.config.URL,
+                self.config['URL'],
                 data=requests_xml,
                 headers={'Content-Type': 'text/xml'},
-                timeout=self.config.TIMEOUT
+                timeout=self.config['TIMEOUT']
             )
             if resp.status_code != 200:
                 raise self.SMSOperatorSendingError(
@@ -223,7 +222,7 @@ class SMSOperatorBackend(SMSBackend):
 
         soup = BeautifulSoup(xml, 'html.parser')
 
-        return {int(item.smsid.string.lstrip(self.config.UNIQ_PREFIX + '-')): SmsOperatorState(int(item.status.string))
+        return {int(item.smsid.string.lstrip(self.config['UNIQ_PREFIX'] + '-')): SmsOperatorState(int(item.status.string))
                 for item in soup.find_all('dataitem')}
 
     def update_sms_states(self, messages):
