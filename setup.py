@@ -10,14 +10,14 @@ def read(fname):
 
 
 setup(
-    name="django-pymess",
+    name="skip-django-pymess",
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
     version=get_version(),
     description="Pymess is a Django framework for sending messages",
     author='Lubos Matl,Oskar Hollman',
     author_email='matllubos@gmail.com',
-    url='https://github.com/druids/django-pymess',
+    url='https://github.com/skip-pay/django-pymess',
     license='LGPL',
     package_dir={'pymess': 'pymess'},
     include_package_data=True,
@@ -33,9 +33,9 @@ setup(
     ],
     install_requires=[
         'django>=3.1',
-        'django-chamber>=0.6.11',
+        'skip-django-chamber>=0.6.16.3',
         'beautifulsoup4==4.8.0',
-        'django-choice-enumfields>=1.1.1',
+        'skip-django-choice-enumfields>=1.1.3.2',
     ],
     zip_safe=False
 )
