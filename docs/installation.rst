@@ -61,9 +61,44 @@ SMS
 
   Country code that is set to the recipient if phone number doesn't contain another one.
 
-.. attribute:: PYMESS_SMS_SENDER_BACKEND
+.. attribute:: PYMESS_SMS_BACKENDS
 
-  Path to the SMS backend that will be used for sending SMS messages. Default value is ``'pymess.backend.sms.dummy.DummySMSBackend'``.
+  Path to the SMS backends that will be used for sending SMS messages. The default value is::
+
+    PYMESS_SMS_BACKENDS = {
+        'default': {
+            'backend': 'pymess.backend.sms.dummy.DummySMSBackend'
+        }
+    }
+
+  It can be used more backends with different names (like ``DATABASES`` Django setting)
+
+.. attribute:: PYMESS_SMS_DEFAULT_SENDER_BACKEND_NAME
+
+  Name of the default SMS sender backend. The default value is ``default``.
+
+.. attribute:: PYMESS_SMS_BACKEND_ROUTER
+
+  Path to the router class which select SMS backend name according to a recipient value. The default value is ``'pymess.backend.routers.DefaultBackendRouter'`` which returns None (None value means the default backend name should be set). You can implement custom router with::
+
+    # sms_routers.py file
+    from pymess.backend.routers import BaseRouter
+
+    class CustomRouter(BaseRouter):
+
+        def get_backend_name(self, recipient):
+            return 'admin' if recipient in ADMIN_PHONES else None
+
+    # django settings file
+    PYMESS_SMS_BACKEND_ROUTER = 'sms_routers.CustomRouter'
+    PYMESS_SMS_BACKENDS = {
+        'default': {
+            'backend': 'pymess.backend.sms.dummy.DummySMSBackend'
+        },
+        'admin': {
+            'backend': 'path.to.the.SomeAdminBackend'
+        }
+    }
 
 .. attribute:: PYMESS_SMS_BATCH_SENDING
 
@@ -80,6 +115,11 @@ SMS
 .. attribute:: PYMESS_SMS_BATCH_MAX_SECONDS_TO_SEND
 
    Defines maximum number of seconds to try to send a SMS message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
+
+.. attribute:: PYMESS_SMS_RETRY_SENDING
+
+   Setting defines if sending should be retried if fails. Works only together with batch sending. Default value is ``True``.
+
 
 E-MAIL
 ^^^^^^
@@ -112,9 +152,23 @@ E-MAIL
 
   List of HTML tags which cannot be used in the e-mail content.
 
-.. attribute:: PYMESS_EMAIL_SENDER_BACKEND
+.. attribute:: PYMESS_EMAIL_BACKENDS
 
-  Path to the E-mail backend that will be used for sending e-mail messages. Default value is ``'pymess.backend.emails.dummy.DummyEmailBackend'``.
+  Path to the e-mail backends that will be used for sending E-mail messages. The default value is::
+
+    PYMESS_EMAIL_BACKENDS = {
+        'default': {
+            'backend': 'pymess.backend.emails.dummy.DummyEmailBackend'
+        }
+    }
+
+.. attribute:: PYMESS_EMAIL_DEFAULT_SENDER_BACKEND_NAME
+
+  Name of the default E-mail sender backend. The default value is ``default``.
+
+.. attribute:: PYMESS_EMAIL_BACKEND_ROUTER
+
+  Path to the router class which select e-mail backend name according to a recipient value. The default value is ``'pymess.backend.routers.DefaultBackendRouter'`` which returns None (None value means the default backend name should be set).
 
 .. attribute:: PYMESS_EMAIL_BATCH_SENDING
 
@@ -145,6 +199,10 @@ E-MAIL
   Path for storing e-mail attachments and contents (bodies).
   If changed after initial migration, existing files must be moved manually via data migration.
 
+.. attribute:: PYMESS_EMAIL_RETRY_SENDING
+
+   Setting defines if sending should be retried if fails. Works only together with batch sending. Default value is ``True``.
+
 
 DIALER
 ^^^^^^
@@ -156,6 +214,24 @@ DIALER
 .. attribute:: PYMESS_DIALER_SENDER_BACKEND
 
   Path to the dialer backend that will be used for sending dialer messages. Default value is ``'pymess.backend.dialer.dummy.DummyDialerBackend'``.
+
+.. attribute:: PYMESS_DIALER_BACKENDS
+
+  Path to the dialer backends that will be used for sending dialer messages. The default value is::
+
+    PYMESS_DIALER_BACKENDS = {
+        'default': {
+            'backend': 'pymess.backend.dialer.dummy.DummyDialerBackend'
+        }
+    }
+
+.. attribute:: PYMESS_DIALER_DEFAULT_SENDER_BACKEND_NAME
+
+  Name of the default dialer sender backend. The default value is ``default``.
+
+.. attribute:: PYMESS_DIALER_BACKEND_ROUTER
+
+  Path to the router class which select dialer backend name according to a recipient value. The default value is ``'pymess.backend.routers.DefaultBackendRouter'`` which returns None (None value means the default backend name should be set).
 
 .. attribute:: PYMESS_DIALER_BATCH_SENDING
 
@@ -181,6 +257,10 @@ DIALER
 
   Number of check attempts to get dialer message state. Default value is ``5``
 
+.. attribute:: PYMESS_DIALER_RETRY_SENDING
+
+   Setting defines if sending should be retried if fails. Works only together with batch sending. Default value is ``True``.
+
 
 Push notifications
 ^^^^^^^^^^^^^^^^^^
@@ -189,9 +269,23 @@ Push notifications
 
   If you want to use your own push notification template model you must set this setting with your custom push notification template model that extends ``pymess.models.push.AbstractPushNotificationMessage`` otherwise is used ``pymess.models.push.PushNotificationMessage``.
 
-.. attribute:: PYMESS_PUSH_NOTIFICATION_SENDER_BACKEND
+.. attribute:: PYMESS_PUSH_NOTIFICATION_BACKENDS
 
-  Path to the push notification backend that will be used for sending push notifications. Default value is ``'pymess.backend.push.dummy.DummyPushNotificationBackend'``.
+  Path to the push notification backends that will be used for sending dialer messages. The default value is::
+
+    PYMESS_PUSH_NOTIFICATION_BACKENDS = {
+        'default': {
+            'backend': 'pymess.backend.push.dummy.DummyPushNotificationBackend'
+        }
+    }
+
+.. attribute:: PYMESS_PUSH_NOTIFICATION_DEFAULT_SENDER_BACKEND_NAME
+
+  Name of the default push notification sender backend. The default value is ``default``.
+
+.. attribute:: PYMESS_PUSH_NOTIFICATION_BACKEND_ROUTER
+
+  Path to the router class which select push notification backend name according to a recipient value. The default value is ``'pymess.backend.routers.DefaultBackendRouter'`` which returns None (None value means the default backend name should be set).
 
 .. attribute:: PYMESS_PUSH_NOTIFICATION_BATCH_SENDING
 
@@ -208,3 +302,8 @@ Push notifications
 .. attribute:: PYMESS_PUSH_NOTIFICATION_BATCH_MAX_SECONDS_TO_SEND
 
   Defines maximum number of seconds to try to send an push notification message that ended in an ``ERROR_RETRY`` state. Default value is ``60 * 60`` (1 hour).
+
+.. attribute:: PYMESS_PUSH_NOTIFICATION_RETRY_SENDING
+
+   Setting defines if sending should be retried if fails. Works only together with batch sending. Default value is ``True``.
+
