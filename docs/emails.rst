@@ -305,3 +305,32 @@ Webhooks
 --------
 
 Mandrill provides notification system which notifies your URL endpoint that some message status was changed. For this purpose pymess provides view ``pymess.webhooks.mandrill.MandrillWebhookView`` which you simply add to your ``django urls``. Every notification will mark message to be updated with the ``pull_emails_info`` command.
+
+
+Migrations
+----------
+
+The library provides utilities to migrate e-mail templates into database. The e-mail bodies can be stored in the files with path defined in the setting ``EMAIL_HTML_DATA_DIRECTORY``. Every file should be named its the template slug. You can use the ``pymess.utils.migrations.SyncEmailTemplates`` migration helper to sync e-mail body as in the example::
+
+    # Django settings
+    EMAIL_HTML_DATA_DIRECTORY = '/data/emails
+
+    # data/emails directory
+    data/emails
+        - set-pasword.html
+        - welcome.html
+
+    # Migration
+    from django.db import migrations
+    from pymess.utils.migrations import SyncEmailTemplates
+
+
+    class Migration(migrations.Migration):
+
+        dependencies = [
+            ('communication', '0001_migration'),
+        ]
+
+        operations = [
+            migrations.RunPython(SyncEmailTemplates(('set-password', 'welcome))),  # Body of the e-mails will be updated (e-mail templates must exist in the database)
+        ]

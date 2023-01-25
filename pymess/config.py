@@ -74,7 +74,7 @@ DEFAULTS = {
     'EMAIL_PULL_INFO_DELAY_SECONDS': 60 * 60,  # 1 hour
     'EMAIL_PULL_INFO_MAX_TIMEOUT_FROM_SENT_SECONDS': 60 * 60 * 24 * 30,  # 30 days
     'EMAIL_RETRY_SENDING': True,
-    'EMAIL_STORAGE_PATH' : 'pymess/emails',
+    'EMAIL_STORAGE_PATH': 'pymess/emails',
 
     # Dialer configuration
     'DIALER_BACKENDS': {
