@@ -23,8 +23,10 @@ class SyncEmailTemplates:
         email_template_qs = email_template_class.objects.all()
         if self.template_slugs:
             email_template_qs = email_template_qs.filter(slug__in=self.template_slugs)
-        email_template_list = list(email_template_qs)
-        for email_template in email_template_list:
+        email_templates_found = list(email_template_qs)
+        if self.template_slugs:
+            email_templates_not_found = set(self.template_slugs) - {t.slug for t in email_templates_found}
+            assert not email_templates_not_found, f"Email templates {email_templates_not_found} were not found."
+        for email_template in email_templates_found:
             email_template.body = get_email_template_body_from_file(email_template.slug)
-        email_template_class.objects.bulk_update(email_template_list, ['body'])
-
+        email_template_class.objects.bulk_update(email_templates_found, ['body'])
